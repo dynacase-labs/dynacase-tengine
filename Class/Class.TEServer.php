@@ -1,0 +1,235 @@
+<?php
+/**
+ * Function to dialog with transformation server engine
+ *
+ * @author Anakeen 2002
+ * @version $Id: Class.TEServer.php,v 1.1 2007/05/28 14:45:42 eric Exp $
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
+ * @package FREEDOM-TE
+ */
+/**
+ */
+
+include_once("Class/Lib.TEUtil.php");
+include_once("Class/Class.Task.php");
+
+// for signal handler function
+declare (ticks = 1);
+
+Class TEServer {
+  public $cur_client=0;
+  public $max_client=2;
+  public $address = '0.0.0.0';
+  public $port = 10000;
+  public $dbaccess="dbname=te user=postgres";
+  function decrease_child($sig) {
+    $this->cur_client--;
+    echo "One Less [$sig]  ".$this->cur_client."\n";
+    pcntl_wait($status); // to suppress zombies
+  
+  }
+  function closesockets($sig) {
+    print "\nCLOSE SOCKET ".$this->msgsock."\n";
+    @fclose($this->msgsock);
+    if (isset($this->task)) {
+      $this->task->status='I'; // interrupted
+      $this->task->Modify();
+    }
+    exit(0);
+  }
+
+
+  function listenLoop() {
+   
+
+    error_reporting(E_ALL);
+
+    /* Autorise l'exécution infinie du script, en attente de connexion. */
+    set_time_limit(0);
+
+    /* Active le vidage implicite des buffers de sortie, pour que nous
+     * puissions voir ce que nous lisons au fur et à mesure. */
+    ob_implicit_flush();
+
+
+    pcntl_signal(SIGCHLD, array(&$this,"decrease_child"));
+    pcntl_signal(SIGPIPE, array(&$this,"decrease_child"));
+    pcntl_signal(SIGINT, array(&$this,"closesockets"));
+
+
+
+    $this->sock = stream_socket_server("tcp://".$this->address.":".$this->port, $errno, $errstr);
+
+
+    echo "Listen on :"."tcp://".$this->address.":".$this->port."\n";
+
+    while (true) {
+      $this->msgsock = @stream_socket_accept($this->sock,3,$peername);
+      if ($this->msgsock === false) {
+	if ($errno==0) echo "Accept : ".$this->cur_client." childs in work\n";
+	else       echo "accept : $errstr ($errno)<br />\n";    
+      } else {
+	echo "Accept [".$this->cur_client."]\n";
+
+
+	if ($this->cur_client> $this->max_client) {
+
+	  $talkback = "Too many child [".$this->cur_client."] Reject\n";
+	  //$childpid=pcntl_wait($wstatus); 
+	  if (@fputs($this->msgsock, $talkback, strlen($talkback))=== false) {
+	    echo "$errstr ($errno)<br />\n";
+	  }
+	  fclose($this->msgsock);
+	} else {
+	  $this->cur_client++;
+	  $pid = pcntl_fork();
+            
+	  if ( $pid == -1 ) {       
+	    // Fork failed           
+	    exit(1);
+	  } else if ( $pid ) {
+	    // We are the parent
+    
+	    echo "Parent Waiting Accept:".$this->cur_client."\n";
+    
+
+	  } else {
+	    // We are the child
+	    // Do something with the inherited connection here
+	    // It will get closed upon exit
+	    /* Send instructions. */
+	    $talkback = "Continue\n";
+	    //$childpid=pcntl_wait($wstatus); 
+	    if (@fputs($this->msgsock, $talkback, strlen($talkback))=== false) {
+	      echo "fputs $errstr ($errno)<br />\n";
+
+	    }
+   
+	    if (false === ($command = @fgets($this->msgsock))) {
+	      echo "fget $errstr ($errno)<br />\n";
+	      break;
+	    }
+	    $command=trim($command);
+	    switch ($command) {
+	    case "CONVERT":
+	      $this->transfertFile();
+	      break;
+	    case "STATUS":
+	      $this->getStatus();
+	      break;
+	    case "ABORT":
+	      $this->setAbord();
+	      break;
+	    }
+	    echo "COMMAND:$command\n";
+	    exit(0);
+	  }
+	}
+      }
+    } 
+
+    fclose($sock);
+  }
+
+  function transfertFile() {
+   if (false === ($buf = @fgets($this->msgsock))) {
+	      echo "fget $errstr ($errno)<br />\n";
+	      break;
+	    }
+	    $tename=false;
+	    if (preg_match_all("/name=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
+	      $tename=$match[1][0];
+	    }
+	    if (preg_match_all("/fkey=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
+	      $fkey=$match[1][0];
+	    }
+	    if (preg_match_all("/size=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
+	      $size=intval($match[1][0]);
+	    }
+    // normal case : now the file	  
+
+    $filename="/var/tmp/eric".posix_getpid();
+    $this->task=new Task($this->dbaccess);
+    $this->task->engine=$tename;
+    $this->task->infile=$filename;
+    $this->task->fkey=$fkey;
+    $this->task->status='T'; // transferring
+    $peername=stream_socket_get_name($this->msgsock,true);
+    if  ($peername) {
+      $this->task->comment=sprintf(_("transferring from %s"),$peername);
+    }
+    $err=$this->task->Add();
+    if ($err=="") {
+      $mb=microtime();
+      $trbytes=0;
+      $handle = @fopen($filename, "w");
+      if ($handle) {
+	do {
+	  if ($size >= 2048) {
+	    $rsize=2048;
+	    $size-=2048;
+	  } else {
+	    $rsize=$size;
+	    $size=0;
+	  }
+
+	   
+	  $out = @fread($this->msgsock, $rsize);
+	  $l=strlen($out);
+	  $trbytes+=$l;
+	     
+	  fwrite($handle,$out);
+	     
+	  //echo "file:$l []";
+	} while ($size>0);
+	fclose($handle);
+	//sleep(3);
+	$this->task->comment.="\n".sprintf("%d bytes transferred in %.03f sec",$trbytes,
+					   microtime_diff(microtime(),$mb));
+      }
+    }
+    echo "\nEND FILE $trbytes bytes\n";
+
+    /* if ($binary_mode) {
+     //ignore last \0
+     if (false === ($buf = @socket_read($this->msgsock, 2048, PHP_NORMAL_READ))) {
+     echo "socket_read() a échoué : raison : " . socket_strerror(socket_last_error($this->msgsock)) . "\n";
+     break;
+     }
+     echo "SKIP [$buf]\n";
+     }*/
+    if (false === ($buf = @fgets($this->msgsock))) {
+      echo "fget $errstr ($errno)<br />\n";
+
+      break;
+    }
+    echo "FOOT [$buf]\n";
+    
+
+    $talkback = "Transfert OK.\n";
+    if (@fputs($this->msgsock, $talkback, strlen($talkback))=== false) {
+      echo "fput $errstr ($errno)<br />\n";
+    }
+	
+
+	
+    
+    //posix_kill(posix_getppid(), SIGUSR1);
+    //echo "send signal:".posix_getpid() .",parent:". posix_getppid();
+    echo "\nBefore close\n";
+    fclose($this->msgsock);
+    echo "Working child:".posix_getpid() .",parent:". posix_getppid()."\n";
+    sleep(3); // store request
+    $this->task->status='W'; // waiting
+    $this->task->Modify();
+    echo "Finish child:".posix_getpid() .",parent:". posix_getppid()."\n";
+      
+  }
+}
+
+
+$s=new TEServer();
+$s->listenloop();
+
+
+?>

@@ -3,7 +3,7 @@
  * Function to dialog with transformation server engine
  *
  * @author Anakeen 2002
- * @version $Id: te_client.php,v 1.1 2007/05/25 12:27:43 eric Exp $
+ * @version $Id: te_client.php,v 1.2 2007/05/28 14:45:42 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -29,7 +29,7 @@ Class TransformationEngine {
 
     error_reporting(E_ALL);
 
-    echo "<h2>Connexion TCP/IP</h2>\n";
+   
 
   
 
@@ -38,30 +38,41 @@ Class TransformationEngine {
     $service_port = $this->port;
 
     /* Cree une socket TCP/IP. */
-    $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+    /* $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
     if ($socket === false) {
       echo "socket_create() a échoué : raison :  " . socket_strerror(socket_last_error()) . "\n";
     } else {
       echo "OK.\n";
     }
+    */
+    echo "Essai de connexion à '$address' sur le port '$service_port'...\n";
+    //    $result = socket_connect($socket, $address, $service_port);
 
-    echo "Essai de connexion à '$address' sur le port '$service_port'...";
-    $result = socket_connect($socket, $address, $service_port);
-    if ($socket === false) {
-      echo "socket_connect() a échoué : raison : ($result) " . socket_strerror(socket_last_error($socket)) . "\n";
+    $fp = stream_socket_client("tcp://$address:$service_port", $errno, $errstr, 30);
+
+    if (!$fp) {
+      echo "$errstr ($errno)<br />\n";//echo "socket_connect() a échoué : raison : ($result) " . socket_strerror(socket_last_error($socket)) . "\n";
     } else {
       echo "OK.\n";
     }
 
-    $in = "<TE name=\"$te_name\" fkey=\"$fkey\">\n";
+    
+
+    $in = "CONVERT\n";
+    echo "Envoi de la commande $in ...";    
+    fputs($fp,$in);
 
 
-    echo "Envoi de la requête $in ...";
-    socket_write($socket, $in, strlen($in));
-    //socket_send($socket, $in, strlen($in),0x8);
-    //    socket_send($socket, "\0", 1,0x8);
-    echo "OK.\n";
-    echo "Envoi du fichier ...";
+    $out = trim(fgets($fp, 2048));
+
+    echo "[$out].\n";
+    if ($out=="Continue") {
+
+    $size=filesize ($filename);
+    $in = "<TE name=\"$te_name\" fkey=\"$fkey\" size=\"$size\">\n";
+    echo "Envoi du header $in ...";    
+    fputs($fp,$in);
+    echo "Envoi du fichier $filename ...";
 
 
     if (file_exists($filename)) {
@@ -69,32 +80,37 @@ Class TransformationEngine {
       if ($handle) {
 	while (!feof($handle)) {
 	  $buffer = fread($handle, 2048);
-	   socket_write($socket, $buffer,strlen($buffer));
+	  //socket_write($socket, $buffer,strlen($buffer));
+	   fputs($fp,$buffer,strlen($buffer));
 	   //$lue=socket_send($socket, $buffer, strlen($buffer),0x8);
 	  //if ($lue < 2048)  socket_send($socket, "\0", 1,0x8);
 	  //print "send $lue ";
-	}
+	}	
 	fclose($handle);
       }
-      echo "SEND END\n";
+
+     
       //socket_write($socket, "\n\0", 2);
-      sleep(1);
+      fflush($fp);
+      // sleep(2);
       //socket_send($socket, "==\0", 3,0x8);
       echo "OK.\n";
       $in = "<\TE> \r\n";
-      socket_write($socket, $in, strlen($in));
+      //socket_write($socket, $in, strlen($in));
+    fputs($fp,$in);
       //socket_send($socket, $in, strlen($in),0x8);
       //      socket_send($socket, "\0", 1,0x8);
 
-      echo "Lire la réponse : \n\n";
-       $out = socket_read($socket, 2048, PHP_NORMAL_READ);
-       echo "response [$out]\n";
+      // echo "Lire la réponse : \n\n";
+    $out = fgets($fp, 2048);
+       echo "Response [$out]\n";
        /*while ($out = socket_read($socket, 2048, PHP_NORMAL_READ)) {
 	 echo $out;
 	 }*/
     }
-    echo "Fermeture de la socket...\n";
-    socket_close($socket);
+    }
+    echo "Fermeture de la socket...";
+    fclose($fp);
     echo "OK.\n\n";
   }
 
