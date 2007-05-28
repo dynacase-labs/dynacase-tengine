@@ -3,7 +3,7 @@
  * Function to dialog with transformation server engine
  *
  * @author Anakeen 2002
- * @version $Id: te_client.php,v 1.2 2007/05/28 14:45:42 eric Exp $
+ * @version $Id: te_client.php,v 1.3 2007/05/28 15:37:47 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -69,7 +69,7 @@ Class TransformationEngine {
     if ($out=="Continue") {
 
     $size=filesize ($filename);
-    $in = "<TE name=\"$te_name\" fkey=\"$fkey\" size=\"$size\">\n";
+    $in = "<TE name=\"$te_name\" fkey=\"$fkey\" size=\"$size\" />\n";
     echo "Envoi du header $in ...";    
     fputs($fp,$in);
     echo "Envoi du fichier $filename ...";
@@ -95,18 +95,16 @@ Class TransformationEngine {
       // sleep(2);
       //socket_send($socket, "==\0", 3,0x8);
       echo "OK.\n";
-      $in = "<\TE> \r\n";
-      //socket_write($socket, $in, strlen($in));
-    fputs($fp,$in);
-      //socket_send($socket, $in, strlen($in),0x8);
-      //      socket_send($socket, "\0", 1,0x8);
+     
 
       // echo "Lire la réponse : \n\n";
-    $out = fgets($fp, 2048);
-       echo "Response [$out]\n";
-       /*while ($out = socket_read($socket, 2048, PHP_NORMAL_READ)) {
-	 echo $out;
-	 }*/
+      $outcode = trim(fgets($fp, 2048));
+      echo "Response [$outcode]\n";
+      $outmsg = trim(fgets($fp, 2048));
+      echo "Message [$outmsg]\n";
+      
+      
+      
     }
     }
     echo "Fermeture de la socket...";

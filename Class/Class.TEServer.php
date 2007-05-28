@@ -3,7 +3,7 @@
  * Function to dialog with transformation server engine
  *
  * @author Anakeen 2002
- * @version $Id: Class.TEServer.php,v 1.1 2007/05/28 14:45:42 eric Exp $
+ * @version $Id: Class.TEServer.php,v 1.2 2007/05/28 15:37:47 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -112,7 +112,10 @@ Class TEServer {
 	    $command=trim($command);
 	    switch ($command) {
 	    case "CONVERT":
-	      $this->transfertFile();
+	      $msg=$this->transfertFile();
+	      if (@fputs($this->msgsock, $msg,strlen($msg))=== false) {
+		 echo "fputs $errstr ($errno)<br />\n";		 
+	       }
 	      break;
 	    case "STATUS":
 	      $this->getStatus();
@@ -122,6 +125,7 @@ Class TEServer {
 	      break;
 	    }
 	    echo "COMMAND:$command\n";
+	    fclose($this->msgsock);
 	    exit(0);
 	  }
 	}
@@ -130,7 +134,14 @@ Class TEServer {
 
     fclose($sock);
   }
-
+  
+  /**
+   * read file transmition request header + content file
+   * header like : <TE name="latin" fkey="134" size="2022123" />
+   * followed by file content
+   * 
+   * @return string  message to return 
+   */
   function transfertFile() {
    if (false === ($buf = @fgets($this->msgsock))) {
 	      echo "fget $errstr ($errno)<br />\n";
@@ -190,40 +201,22 @@ Class TEServer {
     }
     echo "\nEND FILE $trbytes bytes\n";
 
-    /* if ($binary_mode) {
-     //ignore last \0
-     if (false === ($buf = @socket_read($this->msgsock, 2048, PHP_NORMAL_READ))) {
-     echo "socket_read() a échoué : raison : " . socket_strerror(socket_last_error($this->msgsock)) . "\n";
-     break;
-     }
-     echo "SKIP [$buf]\n";
-     }*/
-    if (false === ($buf = @fgets($this->msgsock))) {
-      echo "fget $errstr ($errno)<br />\n";
-
-      break;
-    }
-    echo "FOOT [$buf]\n";
     
-
-    $talkback = "Transfert OK.\n";
-    if (@fputs($this->msgsock, $talkback, strlen($talkback))=== false) {
-      echo "fput $errstr ($errno)<br />\n";
-    }
-	
+    
+    $talkback = "OK\n";
+    
+		       
 
 	
-    
-    //posix_kill(posix_getppid(), SIGUSR1);
-    //echo "send signal:".posix_getpid() .",parent:". posix_getppid();
     echo "\nBefore close\n";
-    fclose($this->msgsock);
     echo "Working child:".posix_getpid() .",parent:". posix_getppid()."\n";
     sleep(3); // store request
     $this->task->status='W'; // waiting
     $this->task->Modify();
+    $talkback.=sprintf("<task id=\"%s\" status=\"%s\"><comment>%s</comment></task>\n",
+		       $this->task->tid,$this->task->status,str_replace("\n","; ",$this->task->comment));
     echo "Finish child:".posix_getpid() .",parent:". posix_getppid()."\n";
-      
+    return $talkback;
   }
 }
 
