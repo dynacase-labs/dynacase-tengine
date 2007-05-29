@@ -1,9 +1,9 @@
 <?php
 /**
- * Function to dialog with transformation server engine
+ * Transformation server engine
  *
- * @author Anakeen 2002
- * @version $Id: Class.TEServer.php,v 1.2 2007/05/28 15:37:47 eric Exp $
+ * @author Anakeen 2007
+ * @version $Id: Class.TEServer.php,v 1.3 2007/05/29 13:33:15 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -24,7 +24,7 @@ Class TEServer {
   public $dbaccess="dbname=te user=postgres";
   function decrease_child($sig) {
     $this->cur_client--;
-    echo "One Less [$sig]  ".$this->cur_client."\n";
+    //    echo "One Less [$sig]  ".$this->cur_client."\n";
     pcntl_wait($status); // to suppress zombies
   
   }
@@ -38,7 +38,9 @@ Class TEServer {
     exit(0);
   }
 
-
+  /**
+   * main loop to listen socket
+   */
   function listenLoop() {
    
 
@@ -54,7 +56,7 @@ Class TEServer {
 
     pcntl_signal(SIGCHLD, array(&$this,"decrease_child"));
     pcntl_signal(SIGPIPE, array(&$this,"decrease_child"));
-    pcntl_signal(SIGINT, array(&$this,"closesockets"));
+    pcntl_signal(SIGINT,  array(&$this,"closesockets"));
 
 
 
@@ -117,8 +119,17 @@ Class TEServer {
 		 echo "fputs $errstr ($errno)<br />\n";		 
 	       }
 	      break;
-	    case "STATUS":
-	      $this->getStatus();
+	    case "INFO":
+	      $msg=$this->getInfo();
+	      if (@fputs($this->msgsock, $msg,strlen($msg))=== false) {
+		 echo "fputs $errstr ($errno)<br />\n";		 
+	       }
+	      break;
+	    case "GET":
+	      $msg=$this->retrieveFile();
+	      if (@fputs($this->msgsock, $msg,strlen($msg))=== false) {
+		 echo "fputs $errstr ($errno)<br />\n";		 
+	       }
 	      break;
 	    case "ABORT":
 	      $this->setAbord();
@@ -144,19 +155,19 @@ Class TEServer {
    */
   function transfertFile() {
    if (false === ($buf = @fgets($this->msgsock))) {
-	      echo "fget $errstr ($errno)<br />\n";
-	      break;
-	    }
-	    $tename=false;
-	    if (preg_match_all("/name=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
-	      $tename=$match[1][0];
-	    }
-	    if (preg_match_all("/fkey=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
-	      $fkey=$match[1][0];
-	    }
-	    if (preg_match_all("/size=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
-	      $size=intval($match[1][0]);
-	    }
+     echo "fget $errstr ($errno)<br />\n";
+     break;
+   }
+   $tename=false;
+   if (preg_match("/name=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
+     $tename=$match[1];
+   }
+   if (preg_match("/fkey=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
+     $fkey=$match[1];
+   }
+   if (preg_match("/size=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
+     $size=intval($match[1]);
+   }
     // normal case : now the file	  
 
     $filename="/var/tmp/eric".posix_getpid();
@@ -182,9 +193,7 @@ Class TEServer {
 	  } else {
 	    $rsize=$size;
 	    $size=0;
-	  }
-
-	   
+	  }	   
 	  $out = @fread($this->msgsock, $rsize);
 	  $l=strlen($out);
 	  $trbytes+=$l;
@@ -201,28 +210,126 @@ Class TEServer {
     }
     echo "\nEND FILE $trbytes bytes\n";
 
-    
-    
-    $talkback = "OK\n";
-    
-		       
-
+    $talkback = "<response status=\"OK\">";    		       
 	
-    echo "\nBefore close\n";
-    echo "Working child:".posix_getpid() .",parent:". posix_getppid()."\n";
     sleep(3); // store request
     $this->task->status='W'; // waiting
     $this->task->Modify();
-    $talkback.=sprintf("<task id=\"%s\" status=\"%s\"><comment>%s</comment></task>\n",
+    $talkback.=sprintf("<task id=\"%s\" status=\"%s\"><comment>%s</comment></task>",
 		       $this->task->tid,$this->task->status,str_replace("\n","; ",$this->task->comment));
-    echo "Finish child:".posix_getpid() .",parent:". posix_getppid()."\n";
+
+    $talkback.="</response>\n";
     return $talkback;
+  }
+
+ /**
+   * read file transmition request header + content file
+   * header like : <TE name="latin" fkey="134" size="2022123" />
+   * followed by file content
+   * 
+   * @return string  message to return 
+   */
+  function getInfo() {
+    $err="";
+    if (false === ($buf = @fgets($this->msgsock))) {
+      $err= "getInfo::fget $errstr ($errno)";     
+    }
+    if ($err=="") {
+      if (preg_match("/ id=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
+	$tid=$match[1];
+      }
+      $this->task=new Task($this->dbaccess,$tid);
+   
+      if ($this->task->isAffected()) {     
+	$message="<response status=\"OK\">";
+	$message.="<TASK>";
+	foreach ($this->task->fields as $k=>$v) {
+	  $message .= "<$v>".str_replace("\n","; ",$this->task->$v)."</$v>";
+	}
+	$message.="</TASK></response>\n";
+      } else {
+	$err=sprintf(_("unknow task [%s]"),$tid);
+	$message="<response status=\"KO\">$err</response>\n";
+      }
+    } else {
+      $message="<response status=\"KO\">$err</response>\n";
+    }
+    return $message;
+  }
+
+  /**
+   * return  file content in
+   * header like : <Task id="134" />
+   * 
+   * 
+   * @return string  message to return 
+   */
+  function retrieveFile() {
+    $err="";
+    if (false === ($buf = @fgets($this->msgsock))) {
+      echo "fget $errstr ($errno)<br />\n";
+      break;
+    }
+    if (preg_match("/ id=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
+      $tid=$match[1];
+    } else {
+      $err= sprintf(_("header [%s] : syntax error"),$buf);     
+    }
+    if ($err=="") {
+      $this->task=new Task($this->dbaccess,$tid);
+      if ($this->task->isAffected()) {
+	// normal case : now the file	  
+	$filename=$this->task->outfile;
+	if ($this->task->status != 'D') $err=sprintf("status is not Done [%s] for task %s",
+						     $this->task->status,
+						     $this->task->tid);
+	else if ($this->task->outfile == '') $err=sprintf("empty generated file for task %s",
+							  $this->task->tid);
+	else if (!file_exists($this->task->outfile)) $err=sprintf("Generated file [%s] not found for task %s",
+								  $this->task->outfile,
+								  $this->task->tid);
+	if ($err=="") {		
+	  $peername=stream_socket_get_name($this->msgsock,true);
+	  if  ($peername) {
+	    $this->task->comment.="\n".sprintf(_("transferring to %s"),$peername);
+	  }
+	  if ($err=="") {
+	    $mb=microtime();
+	    $trbytes=0;
+	    $handle = @fopen($this->task->outfile, "r");
+	    if ($handle) {
+	      $size=filesize($this->task->outfile);
+	      
+	      $buffer=sprintf("<response status=\"OK\"><task id=\"%s\" size=\"%d\"></response>",$this->task->tid,$size);
+	      fputs($this->msgsock,$buffer,strlen($buffer));
+	      while (!feof($handle)) {
+		$buffer = fread($handle, 2048);
+		fputs($this->msgsock,$buffer,strlen($buffer));
+	      }	
+	      fclose($handle);
+	    }
+
+	    fflush($this->msgsock);
+	    //sleep(3);
+	    $this->task->comment.="\n".sprintf("%d bytes transferred in %.03f sec",$size,
+					       microtime_diff(microtime(),$mb));
+	  }
+	}
+	echo "\nEND FILE $trbytes bytes\n";   		       		  
+	$this->task->Modify();	
+      } 
+    } else {
+      $err = sprintf(_("task [%s] not exist",$tid));
+    }
+    print "RECIEVE ERROOR :$err\n";
+    if ($err!="") {
+      $err=str_replace("\n","; ",$err);
+      return "<response status=\"KO\">$err</response>";
+    }
+    return "<response status=\"OK\"></response>";
   }
 }
 
-
-$s=new TEServer();
-$s->listenloop();
 
 
 ?>

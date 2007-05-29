@@ -1,0 +1,23 @@
+# ============================================
+# $Id: Makefile.in,v 1.1 2007/05/29 13:33:15 eric Exp $
+# ============================================
+PACKAGE = @PACKAGE@
+VERSION = @VERSION@
+utildir=@PUBRULE@
+appname = @PACKAGE@
+pubdir = @prefix@
+srcdir = @srcdir@
+
+export pubdir utildir appname
+
+TAR = gtar
+GZIP_ENV = --best
+
+export targetdir PACKAGE
+
+SUBDIR=  Class 
+
+include $(utildir)/PubRule
+
+DISTFILES += $(SUBDIR) \
+            RELEASE VERSION
