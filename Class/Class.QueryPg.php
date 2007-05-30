@@ -3,7 +3,7 @@
  * Query to Database
  *
  * @author Anakeen 2000 
- * @version $Id: Class.QueryDb.php,v 1.1 2007/05/28 14:45:42 eric Exp $
+ * @version $Id: Class.QueryPg.php,v 1.1 2007/05/30 15:54:22 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package WHAT
  * @subpackage CORE
@@ -12,9 +12,8 @@
  */
 
 
-include_once('Class.Log.php');
 
-Class QueryDb  {
+Class QueryPg  {
 
 var $nb=0;
 var $LastQuery="";
@@ -59,15 +58,12 @@ var $criteria="";
 var $order_by="";
  var $list= array();
 
-function QueryDb ($dbaccess,$class) 
-    {
-      // 
-      $this->log = new Log("","Query","$class");
-      $this->basic_elem = new $class($dbaccess);
-      $this->dbaccess = $this->basic_elem->dbaccess;
-      $this->class = $class;
-
-    }
+function __construct($dbaccess,$class)     {
+  // 
+  $this->basic_elem = new $class($dbaccess);
+  $this->dbaccess = $this->basic_elem->dbaccess;
+  $this->class = $class;  
+}
 
 
  private function initQuery($start=0,$slice=0,$p_query="",$onlycont=false) {

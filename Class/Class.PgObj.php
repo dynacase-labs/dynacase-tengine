@@ -4,7 +4,7 @@
  * based on the description of a DB Table. 
  *
  * @author Anakeen 2000 
- * @version $Id: Class.DbObj.php,v 1.1 2007/05/28 14:45:42 eric Exp $
+ * @version $Id: Class.PgObj.php,v 1.1 2007/05/30 15:54:22 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package WHAT
  * @subpackage CORE
@@ -21,66 +21,65 @@
  * inherit from this basic Class.
  *
  */
-Class DbObj 
-{
+Class PgObj {
 
-/**
- * the database connection resource
- * @var resource 
- */
-var $dbid = -1;
-/**
- * coordinates to access to database
- * @var string 
- */
-var $dbaccess = '';
+  /**
+   * the database connection resource
+   * @var resource 
+   */
+  var $dbid = -1;
+  /**
+   * coordinates to access to database
+   * @var string 
+   */
+  var $dbaccess = '';
 
-/**
- * array of SQL fields use for the object 
- * @var array 
- */
-var $fields=array ('*');
+  /**
+   * array of SQL fields use for the object 
+   * @var array 
+   */
+  var $fields=array ('*');
 
-/**
- * name of the SQL table
- * @var string  
- */
-var $dbtable='';
+  /**
+   * name of the SQL table
+   * @var string  
+   */
+  var $dbtable='';
 
-var $criterias=array();
-/**
- * array of other SQL fields, not in attribute of object
- * @var array 
- */
-var $sup_fields=array ();
-var $sup_where=array ();
-var $sup_tables=array ();
-var $fulltextfields=array ();
+  var $criterias=array();
+  /**
+   * array of other SQL fields, not in attribute of object
+   * @var array 
+   */
+  var $sup_fields=array ();
+  var $sup_where=array ();
+  var $sup_tables=array ();
+  var $fulltextfields=array ();
 
-/**
- * sql field to order
- * @var string 
- */
-var $order_by="";
-/**
- * indicates if fields has been affected 
- * @var string 
- * @see Affect()
- */
-var $isset = false; // indicate if fields has been affected (call affect methods)
+  /**
+   * sql field to order
+   * @var string 
+   */
+  var $order_by="";
+  /**
+   * indicates if fields has been affected 
+   * @var string 
+   * @see Affect()
+   */
+  var $isset = false; // indicate if fields has been affected (call affect methods)
 
-//----------------------------------------------------------------------------
-/** 
- * Database Object constructor
- * 
- * 
- * @param string $dbaccess database specification
- * @param int $id identificator of the object
- * @param array $res array of result issue to QueryDb {@link QueryDb::Query()}
- * @param resource $dbid the database connection resource
- * @return bool false if error occured
- */
-function __construct($dbaccess='', $id='',$res='',$dbid=0)
+  //----------------------------------------------------------------------------
+  /** 
+   * Database Object constructor
+   * 
+   * 
+   * @param string $dbaccess database specification
+   * @param int $id identificator of the object
+   * @param array $res array of result issue to QueryDb {@link QueryDb::Query()}
+   * @param resource $dbid the database connection resource
+   * @return bool false if error occured
+   */
+  function __construct($dbaccess='', $id='',$res='',$dbid=0)
   {
     
     $this->dbaccess = $dbaccess;
@@ -131,7 +130,7 @@ function __construct($dbaccess='', $id='',$res='',$dbid=0)
 
 
 
-function Select($id)
+  function Select($id)
   {
     if ($this->dbid == -1) return FALSE;
     
@@ -159,7 +158,7 @@ function Select($id)
 	if ($count >0) {
 	  $wherestr=$wherestr." AND ";
 	}
-	$wherestr=$wherestr."( ".$this->dbtable.".".$v."='".$id[$k]."' )";
+	$wherestr=$wherestr."( ".$this->dbtable.".".$v."='".pg_escape_string($id[$k])."' )";
 	$count=$count+1;
 	
 	//$this->$v = $id[$k];
@@ -168,7 +167,7 @@ function Select($id)
       if (isset($this->id_fields[0])) {
 	$k = $this->id_fields[0];
 	//$this->$k = $id;
-	$wherestr= "where ".$this->dbtable.".".$this->id_fields[0]."='".$id."'" ;
+	$wherestr= "where ".$this->dbtable.".".$this->id_fields[0]."='".pg_escape_string($id)."'" ;
       } else {
 	$wherestr="";
       }
@@ -199,7 +198,7 @@ function Select($id)
   }
 
 
-function Affect($array)
+  function Affect($array)
   {
     reset($array);
     while(list($k,$v) = each($array)) {
@@ -210,93 +209,93 @@ function Affect($array)
     $this->Complete();
     $this->isset = true;
   }
- /**
+  /**
    * verify that the object exists 
    *
    * if true values of the object has been set
    * @return bool
    */
-function isAffected()
+  function isAffected()
   {
     return $this->isset;
   }
 
-function Complete()
+  function Complete()
   {
     // This function should be replaced by the Child Class
   }
 
-/** 
- * Method use before Add method
- * This method should be replaced by the Child Class
- * 
- * @return string error message, if no error empty string
- * @see Add()
- */
-function PreInsert()
+  /** 
+   * Method use before Add method
+   * This method should be replaced by the Child Class
+   * 
+   * @return string error message, if no error empty string
+   * @see Add()
+   */
+  function PreInsert()
   {
     // This function should be replaced by the Child Class
   }
-/** 
- * Method use after Add method
- * This method should be replaced by the Child Class
- * 
- * @return string error message, if no error empty string, if message
- * error not empty the Add method is not completed
- * @see Add()
- */
-function PostInsert()
+  /** 
+   * Method use after Add method
+   * This method should be replaced by the Child Class
+   * 
+   * @return string error message, if no error empty string, if message
+   * error not empty the Add method is not completed
+   * @see Add()
+   */
+  function PostInsert()
   {
     // This function should be replaced by the Child Class
   }
-/** 
- * Method use before Modify method
- * This method should be replaced by the Child Class
- * 
- * @return string error message, if no error empty string
- * @see Modify()
- */
-function PreUpdate()
+  /** 
+   * Method use before Modify method
+   * This method should be replaced by the Child Class
+   * 
+   * @return string error message, if no error empty string
+   * @see Modify()
+   */
+  function PreUpdate()
   {
     // This function should be replaced by the Child Class
   }
-/** 
- * Method use after Modify method
- * This method should be replaced by the Child Class
- * 
- * @return string error message, if no error empty string, if message
- * error not empty the Modify method is not completed
- * @see Modify()
- */
-function PostUpdate()
+  /** 
+   * Method use after Modify method
+   * This method should be replaced by the Child Class
+   * 
+   * @return string error message, if no error empty string, if message
+   * error not empty the Modify method is not completed
+   * @see Modify()
+   */
+  function PostUpdate()
   {
     // This function should be replaced by the Child Class
   }
-function PreDelete()
+  function PreDelete()
   {
     // This function should be replaced by the Child Class
   }
-function PostDelete()
+  function PostDelete()
   {
     // This function should be replaced by the Child Class
   }
-function PreSelect($id)
+  function PreSelect($id)
   {
     // This function should be replaced by the Child Class
   }
-function PostSelect($id)
+  function PostSelect($id)
   {
     // This function should be replaced by the Child Class
   }
 
-/** 
- * Add the object to the database
- * @param bool $nopost PostInsert method not apply if true
- * @return string error message, if no error empty string
- * @see PreInsert()
- * @see PostInsert()
- */
-function Add($nopost=false)
+  /** 
+   * Add the object to the database
+   * @param bool $nopost PostInsert method not apply if true
+   * @return string error message, if no error empty string
+   * @see PreInsert()
+   * @see PostInsert()
+   */
+  function Add($nopost=false)
   {
     if ($this->dbid == -1) return FALSE;
     
@@ -315,7 +314,7 @@ function Add($nopost=false)
     $sql=$sql.$valstring.")";
     
     // requery execution
-      $msg_err = $this->exec_query($sql);
+    $msg_err = $this->exec_query($sql);
     
     if ($msg_err!=''){
       return $msg_err;
@@ -324,16 +323,16 @@ function Add($nopost=false)
     if (!$nopost) $msg=$this->PostInsert();
     if ($msg!='') return $msg;
   }
-/** 
- * Add the object to the database
- * @param bool $nopost PostUpdate() and method not apply if true
- * @param string $sfields only this column will ne updated if empty all fields
- * @param bool $nopre PreUpdate() method not apply if true
- * @return string error message, if no error empty string
- * @see PreUpdate()
- * @see PostUpdate()
- */
-function Modify($nopost=false,$sfields="",$nopre=false)
+  /** 
+   * Add the object to the database
+   * @param bool $nopost PostUpdate() and method not apply if true
+   * @param string $sfields only this column will ne updated if empty all fields
+   * @param bool $nopre PreUpdate() method not apply if true
+   * @return string error message, if no error empty string
+   * @see PreUpdate()
+   * @see PostUpdate()
+   */
+  function Modify($nopost=false,$sfields="",$nopre=false)
   {
     if ($this->dbid == -1) return FALSE;
     if (!$nopre) $msg=$this->PreUpdate();
@@ -375,16 +374,16 @@ function Modify($nopost=false,$sfields="",$nopre=false)
     $msg_err = $this->exec_query($sql);
 
     // sortie
-      if ($msg_err!=''){
-	return $msg_err;
-      }
+    if ($msg_err!=''){
+      return $msg_err;
+    }
     
     if (!$nopost) $msg=$this->PostUpdate();
     
     if ($msg!='') return $msg;
   }	
 
-function Delete($nopost=false)
+  function Delete($nopost=false)
   {
     $msg=$this->PreDelete();
     if ($msg!='') return $msg;
@@ -401,7 +400,7 @@ function Delete($nopost=false)
     }
     
     // suppression de l'enregistrement
-      $sql = "delete from ".$this->dbtable." where ".$wherestr.";";
+    $sql = "delete from ".$this->dbtable." where ".$wherestr.";";
     
     $msg_err = $this->exec_query($sql);
     
@@ -412,15 +411,15 @@ function Delete($nopost=false)
     if (!$nopost) $msg=$this->PostDelete();
     if ($msg!='') return $msg;
   }
-/** 
- * Add several objects to the database
- * no post neither preInsert are called
- * @param bool $nopost PostInsert method not apply if true
- * @return string error message, if no error empty string
- * @see PreInsert()
- * @see PostInsert()
- */
-function Adds(&$tcopy, $nopost=false)
+  /** 
+   * Add several objects to the database
+   * no post neither preInsert are called
+   * @param bool $nopost PostInsert method not apply if true
+   * @return string error message, if no error empty string
+   * @see PreInsert()
+   * @see PostInsert()
+   */
+  function Adds(&$tcopy, $nopost=false)
   {
     if ($this->dbid == -1) return FALSE;
     if (! is_array($tcopy)) return FALSE;
@@ -440,24 +439,24 @@ function Adds(&$tcopy, $nopost=false)
     // query execution
     $berr= pg_copy_from($this->dbid,$this->dbtable,$trow,"\t");
 	 
-    if (! $berr) return sprintf(_("DbObj::Adds error in multiple insertion"));
+    if (! $berr) return sprintf(_("Pgobj::Adds error in multiple insertion"));
 
     
     if (!$nopost) $msg=$this->PostInsert();
     if ($msg!='') return $msg;
   }
-function lw($prop)
+  function lw($prop)
   {
     $result = ($prop==''?"null":"'".pg_escape_string($prop)."'");
     return $result;
   }
-function CloseConnect()
+  function CloseConnect()
   {
     pg_close("$this->dbid");
     return TRUE;
   }
 
-function Create($nopost=false)
+  function Create($nopost=false)
   {
     $msg = "";
     if (isset($this->sqlcreate)) {
@@ -486,24 +485,17 @@ function Create($nopost=false)
     return($msg);
   }  
 
-function PostInit() {
-}
-
-function init_dbid() {
-  global $_DBID;
-  if ($this->dbaccess=="") {
-    // don't test if file exist or must be searched in include_path 
-    return false;
-    
+  function PostInit() {
   }
-  if (!isset($_DBID) || !isset($_DBID[$this->dbaccess])) {
-           $_DBID[$this->dbaccess] = pg_connect($this->dbaccess);
-  } 
-  $this->dbid= $_DBID[$this->dbaccess];
-  return $this->dbid;
+
+  function init_dbid() {
+    //global $_DBID;
+    $this->dbid= pg_pconnect($this->dbaccess);
+    return $this->dbid;
   
-}
-function exec_query($sql,$lvl=0)
+  
+  }
+  function exec_query($sql,$lvl=0)
   {
     global $SQLDELAY,$SQLDEBUG;
 
@@ -527,19 +519,19 @@ function exec_query($sql,$lvl=0)
     $action_needed= "";
     if ($lvl==0) { // to avoid recursivity
       if ($this->msg_err != "") {
-		     if ((eregi("Relation ['\"]([a-zA-Z_]*)['\"] does not exist",$this->msg_err) ||
-			  eregi("Relation (.*) n'existe pas",$this->msg_err) ||
-			  eregi("class \"([a-zA-Z_]*)\" not found",$this->msg_err)) ) {
-		       $action_needed = "create";
-		     } else if ((eregi("No such attribute or function '([a-zA-Z_0-9]*)'",$this->msg_err)) ||
-				(eregi("Attribute ['\"]([a-zA-Z_0-9]*)['\"] not found",$this->msg_err))) {
-		       $action_needed = "update";
-		     } else if (eregi("relation ['\"](.*)['\"] already exists",$this->msg_err) ||
-				eregi("relation (.*) existe d",$this->msg_err)){
-		       $action_needed = "none";		       
-		     }
-		     //print "\n\t\t[".$this->msg_err."]:$action_needed\n";
-		     error_log("DbObj::exec_query [".$this->msg_err."]:$action_needed.[$sql]");
+	if ((eregi("Relation ['\"]([a-zA-Z_]*)['\"] does not exist",$this->msg_err) ||
+	     eregi("Relation (.*) n'existe pas",$this->msg_err) ||
+	     eregi("class \"([a-zA-Z_]*)\" not found",$this->msg_err)) ) {
+	  $action_needed = "create";
+	} else if ((eregi("No such attribute or function '([a-zA-Z_0-9]*)'",$this->msg_err)) ||
+		   (eregi("Attribute ['\"]([a-zA-Z_0-9]*)['\"] not found",$this->msg_err))) {
+	  $action_needed = "update";
+	} else if (eregi("relation ['\"](.*)['\"] already exists",$this->msg_err) ||
+		   eregi("relation (.*) existe d",$this->msg_err)){
+	  $action_needed = "none";		       
+	}
+	//		     print "\n\t\t".$this->dbaccess."[".$this->msg_err."]:$action_needed\n";
+	error_log("Pgobj::exec_query [".$this->msg_err."]:$action_needed.[$sql]");
 		     
       }
     }
@@ -573,15 +565,15 @@ function exec_query($sql,$lvl=0)
 
     }
     
-     if ($SQLDEBUG) {
-       global $TSQLDELAY;
-       $SQLDELAY+=microtime_diff(microtime(),$sqlt1);// to test delay of request
-       $TSQLDELAY[]=array("t"=>sprintf("%.04f",microtime_diff(microtime(),$sqlt1)),"s"=>str_replace("from","<br/>from",$sql));
-     }
+    if ($SQLDEBUG) {
+      global $TSQLDELAY;
+      $SQLDELAY+=microtime_diff(microtime(),$sqlt1);// to test delay of request
+      $TSQLDELAY[]=array("t"=>sprintf("%.04f",microtime_diff(microtime(),$sqlt1)),"s"=>str_replace("from","<br/>from",$sql));
+    }
     return ($this->msg_err);
   }
 
-function numrows()
+  function numrows()
   {
     if ($this->msg_err == "") {
       return(pg_num_rows($this->res));
@@ -590,26 +582,26 @@ function numrows()
     }
   }
 
-function fetch_array($c,$type=PGSQL_ASSOC)
+  function fetch_array($c,$type=PGSQL_ASSOC)
   {
     
     return(pg_fetch_array($this->res,$c,$type));
   }
 
-function Update()
+  function Update()
   {
-	print $this->msg_err;
+    print $this->msg_err;
     print(" - need update table ".$this->dbtable);
 
     exit;
 
     
     // need to exec altering queries
-      $objupdate = new DbObj($this->dbaccess);
+    $objupdate = new Pgobj($this->dbaccess);
     
     // ------------------------------
-      // first : save table to updated
-	$dumpfile = uniqid("/tmp/".$this->dbtable);
+    // first : save table to updated
+    $dumpfile = uniqid("/tmp/".$this->dbtable);
     $err = $objupdate-> exec_query("COPY ".$this->dbtable.
 				   "  TO '".$dumpfile."'");
 
@@ -620,8 +612,8 @@ function Update()
     
     
     // ------------------------------
-      // second : rename table to save data
-	//$err = $objupdate-> exec_query("CREATE  TABLE ".$this->dbtable."_old ( ) INHERITS (".$this->dbtable.")",1);
+    // second : rename table to save data
+    //$err = $objupdate-> exec_query("CREATE  TABLE ".$this->dbtable."_old ( ) INHERITS (".$this->dbtable.")",1);
     //$err = $objupdate-> exec_query("COPY ".$this->dbtable."_old FROM '".$dumpfile."'",				1 );
     $err = $objupdate-> exec_query("ALTER TABLE ".$this->dbtable.
 				   " RENAME TO ".$this->dbtable."_old",
@@ -631,7 +623,7 @@ function Update()
     if ($err != "") return ($err);
     
     // remove index : will be recreated in the following step (create)
-      $err = $this-> exec_query("select indexname from pg_indexes where tablename='".$this->dbtable."_old'",1);
+    $err = $this-> exec_query("select indexname from pg_indexes where tablename='".$this->dbtable."_old'",1);
     $nbidx = $this->numrows();
     for ($c=0; $c < $nbidx; $c++) {
       
@@ -643,14 +635,14 @@ function Update()
     
     
     // --------------------------------------------
-      // third : Create new table with new attributes
-	$this->Create(true);
+    // third : Create new table with new attributes
+    $this->Create(true);
     
     
     
     // ---------------------------------------------------
-      // 4th : copy compatible data from old table to new table
-	$first=true;
+    // 4th : copy compatible data from old table to new table
+    $first=true;
     
     $this->exec_query("SELECT * FROM ".$this->dbtable."_old");
     $nbold = $this->numrows();
@@ -661,40 +653,40 @@ function Update()
       
       if ($first) {
 	// compute compatible fields
-	  $inter_fields = array_intersect(array_keys($row),$this->fields);
+	$inter_fields = array_intersect(array_keys($row),$this->fields);
 	reset($this->fields);
 	$fields = "(";
 	while (list($k,$v)=each($inter_fields)) {
 	  $fields .= $v.",";
 	}
 	$fields=substr($fields,0,strlen($fields)-1); // remove last comma
-	  $fields .= ")";
+	$fields .= ")";
 	$first=false;
       }
       
       // compute compatible values
-	$values = "(";
+      $values = "(";
       reset($inter_fields);
       while (list($k,$v)=each($inter_fields)) {
 	$values.= "'".addslashes($row[$v])."',";
       }
       $values=substr($values,0,strlen($values)-1); // remove last comma
-	$values .= ")";
+      $values .= ")";
       
       // copy compatible values
-	$err = $objupdate-> exec_query ("INSERT INTO ".$this->dbtable." ".$fields.
-					" VALUES ".$values,1);
+      $err = $objupdate-> exec_query ("INSERT INTO ".$this->dbtable." ".$fields.
+				      " VALUES ".$values,1);
       if ($err != "") return ($err);
       
     }
     
     // ---------------------------------------------------
-      // 5th :delete old table (has been saved before - dump file)
-	$err = $objupdate-> exec_query ("DROP TABLE ".$this->dbtable."_old",1);
+    // 5th :delete old table (has been saved before - dump file)
+    $err = $objupdate-> exec_query ("DROP TABLE ".$this->dbtable."_old",1);
     
     return ($err);
   }
 
-// FIN DE CLASSE
+  // FIN DE CLASSE
 }
 ?>

@@ -3,7 +3,7 @@
  * Tranformation Engine Definition
  *
  * @author Anakeen 2005
- * @version $Id: Class.Engine.php,v 1.1 2007/05/28 14:45:42 eric Exp $
+ * @version $Id: Class.Engine.php,v 1.2 2007/05/30 15:54:22 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -11,8 +11,8 @@
  */
 
 
-include_once("Class.DbObj.php");
-Class Engine extends DbObj {
+include_once("Class.PgObj.php");
+Class Engine extends PgObj {
   public $fields = array ( "name", 
                            "mime",
 			   "command",
@@ -58,14 +58,14 @@ create table engine ( name text not null,
 
       if (! $this->isAffected()) {
 	$mime=strtok($mime,";");
-	$eng=new Engine($this->dbaccess,array($engine,$mime));
+	$eng=new Engine($this->dbaccess,array($engine,($mime)));
       }
       if (! $eng->isAffected()) {
 	$mime=strtok($mime,"/");
-	$eng=new Engine($this->dbaccess,array($engine,$mime));
+	$eng=new Engine($this->dbaccess,array($engine,($mime)));
       }
       if (! $eng->isAffected()) {
-	$eng=new Engine($this->dbaccess,array($engine,$mime.'/*'));
+	$eng=new Engine($this->dbaccess,array($engine,($mime).'/*'));
       }
       if (! $eng->isAffected()) {
 	$eng=new Engine($this->dbaccess,array($engine,'*'));

@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEServer.php,v 1.3 2007/05/29 13:33:15 eric Exp $
+ * @version $Id: Class.TEServer.php,v 1.4 2007/05/30 15:54:22 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -22,6 +22,8 @@ Class TEServer {
   public $address = '0.0.0.0';
   public $port = 10000;
   public $dbaccess="dbname=te user=postgres";
+  public $tmppath="/var/tmp";
+
   function decrease_child($sig) {
     $this->cur_client--;
     //    echo "One Less [$sig]  ".$this->cur_client."\n";
@@ -168,13 +170,18 @@ Class TEServer {
    if (preg_match("/size=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
      $size=intval($match[1]);
    }
+   if (preg_match("/callback=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
+     $callback=$match[1];
+
+   }
     // normal case : now the file	  
 
-    $filename="/var/tmp/eric".posix_getpid();
+    $filename=$this->tmppath."/eric".posix_getpid();
     $this->task=new Task($this->dbaccess);
     $this->task->engine=$tename;
     $this->task->infile=$filename;
     $this->task->fkey=$fkey;
+    $this->task->callback=$callback;
     $this->task->status='T'; // transferring
     $peername=stream_socket_get_name($this->msgsock,true);
     if  ($peername) {
@@ -212,7 +219,7 @@ Class TEServer {
 
     $talkback = "<response status=\"OK\">";    		       
 	
-    sleep(3); // store request
+
     $this->task->status='W'; // waiting
     $this->task->Modify();
     $talkback.=sprintf("<task id=\"%s\" status=\"%s\"><comment>%s</comment></task>",

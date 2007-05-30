@@ -1,0 +1,3 @@
+#!/bin/bash
+
+ooffice -display :0  -headless "macro:///FreeDom.FreeDom.exportUTF8($1,$2)"

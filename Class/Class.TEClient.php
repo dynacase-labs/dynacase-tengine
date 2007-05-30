@@ -3,7 +3,7 @@
  * Function to dialog with transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEClient.php,v 1.1 2007/05/29 13:33:15 eric Exp $
+ * @version $Id: Class.TEClient.php,v 1.2 2007/05/30 15:54:22 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -21,11 +21,12 @@ Class TransformationEngine {
    * @param string $te_name Engine name
    * @param string $fkey foreign key
    * @param string $filename the path where is the original file
+   * @param string $callback url to activate after transformation is done
    * @param array &$info transformation task info return "tid"=> ,"status"=> ,"comment=>
    * 
    * @return string error message, if no error empty string
    */
-  function sendTransformation($te_name,$fkey,$filename,&$info) {
+  function sendTransformation($te_name,$fkey,$filename,$callback,&$info) {
 
   
     $err="";
@@ -56,7 +57,7 @@ Class TransformationEngine {
       if ($out=="Continue") {
 
 	$size=filesize ($filename);
-	$in = "<TE name=\"$te_name\" fkey=\"$fkey\" size=\"$size\" />\n";
+	$in = "<TE name=\"$te_name\" fkey=\"$fkey\" size=\"$size\" callback=\"$callback\"/>\n";
 	echo "Envoi du header $in ...";    
 	fputs($fp,$in);
 	echo "Envoi du fichier $filename ...";
