@@ -4,7 +4,7 @@ charset=`file -i $1  | cut -d= -f2`
 
 if [ $charset ]; then
    
-   iconv  -f $charset -t latin1 $1 > $2
+   iconv  -f $charset -t latin1//TRANSLIT $1 > $2
 else
    cat $1 > $2
 fi

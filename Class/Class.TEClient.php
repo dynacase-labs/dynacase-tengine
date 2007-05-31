@@ -3,7 +3,7 @@
  * Function to dialog with transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEClient.php,v 1.2 2007/05/30 15:54:22 eric Exp $
+ * @version $Id: Class.TEClient.php,v 1.3 2007/05/31 16:20:04 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -36,7 +36,7 @@ Class TransformationEngine {
     $service_port = $this->port;
 
     /* Cree une socket TCP/IP. */
-    echo "Essai de connexion à '$address' sur le port '$service_port'...\n";
+    //  echo "Essai de connexion à '$address' sur le port '$service_port'...\n";
     //    $result = socket_connect($socket, $address, $service_port);
 
     $fp = stream_socket_client("tcp://$address:$service_port", $errno, $errstr, 30);
@@ -48,26 +48,29 @@ Class TransformationEngine {
     
     if ($err=="") {
       $in = "CONVERT\n";
-      echo "Envoi de la commande $in ...";    
+      // echo "Envoi de la commande $in ...";    
       fputs($fp,$in);
 
 
       $out = trim(fgets($fp, 2048));
-      echo "[$out].\n";
+      //      echo "[$out].\n";
       if ($out=="Continue") {
+	clearstatcache(); // to reset filesize
+	$size=filesize($filename);
 
-	$size=filesize ($filename);
+
 	$in = "<TE name=\"$te_name\" fkey=\"$fkey\" size=\"$size\" callback=\"$callback\"/>\n";
-	echo "Envoi du header $in ...";    
+	//echo "Envoi du header $in ...";    
 	fputs($fp,$in);
-	echo "Envoi du fichier $filename ...";
-
+	//echo "Envoi du fichier $filename ...";
+	$size=filesize($filename);
 
 	if (file_exists($filename)) {
 	  $handle = @fopen($filename, "r");
 	  if ($handle) {
 	    while (!feof($handle)) {
 	      $buffer = fread($handle, 2048);
+	      error_log("BUF:$buffer");
 	      fputs($fp,$buffer,strlen($buffer));
 	    }	
 	    fclose($handle);
@@ -75,7 +78,7 @@ Class TransformationEngine {
 
      
 	  fflush($fp);
-	  echo "OK.\n";
+	  //echo "OK.\n";
      
 
 	  // echo "Lire la réponse : \n\n";
@@ -86,8 +89,8 @@ Class TransformationEngine {
 	  if (preg_match("/<response[^>]*>(.*)<\/response>/i",$out,$match)) {
 	    $outmsg=$match[1];
 	  }
-	  echo "Response [$status]\n";
-	  echo "Message [$outmsg]\n";
+	  //echo "Response [$status]\n";
+	  //echo "Message [$outmsg]\n";
 	  if ($status == "OK") {
 	    if (preg_match("/ id=[ ]*\"([^\"]*)\"/i",$outmsg,$match)) {
 	      $tid=$match[1];
@@ -107,7 +110,7 @@ Class TransformationEngine {
       
 	}
       }
-      echo "Fermeture de la socket...";
+      //echo "Fermeture de la socket...";
       fclose($fp);
     }
     return $err;
@@ -121,7 +124,7 @@ Class TransformationEngine {
    */
   function getInfo($tid,&$info) {
 
-    error_reporting(E_ALL);
+
   
     $err="";
 
@@ -130,7 +133,7 @@ Class TransformationEngine {
     $service_port = $this->port;
 
     /* Cree une socket TCP/IP. */
-    echo "Essai de connexion à '$address' sur le port '$service_port'...\n";
+    //    echo "Essai de connexion à '$address' sur le port '$service_port'...\n";
     //    $result = socket_connect($socket, $address, $service_port);
 
     $fp = stream_socket_client("tcp://$address:$service_port", $errno, $errstr, 30);
@@ -143,40 +146,40 @@ Class TransformationEngine {
     if ($err=="") {
 
       $in = "INFO\n";
-      echo "Envoi de la commande $in ...";    
+      //echo "Envoi de la commande $in ...";    
       fputs($fp,$in);
 
       $out = trim(fgets($fp, 2048));
-      echo "[$out].\n";
+      //echo "[$out].\n";
       if ($out=="Continue") {
     
 	$in = "<TASK id=\"$tid\" />\n";
-	echo "Envoi du header $in ...";    
+	//echo "Envoi du header $in ...";    
 	fputs($fp,$in);
      
 
-	$out = trim(fgets($fp, 2048));
+	$out = trim(fgets($fp));
 	if (preg_match("/status=[ ]*\"([^\"]*)\"/i",$out,$match)) {
 	  $status=$match[1];
-	}
-	echo "Response [$out]\n";
+	}	
+	
 	if ($status == "OK") {
 
+	  //echo "<br>Response <b>$out</b>";
 
 	  if (preg_match("/<task[^>]*>(.*)<\/task>/i",$out,$match)) {
 	    $body=$match[1];
-	    print "BODY:$body\n";
+	    //	echo "Response $body";
 	    if (preg_match_all("|<[^>]+>(.*)</([^>]+)>|U",
 			       $body,
 			       $reg,
-			       PREG_SET_ORDER) ) {	
+			       PREG_SET_ORDER) ) {
+	      
 	      foreach ($reg as $v) {
 		$info[$v[2]]=$v[1];
 	      }
 	    }
-	  }
-	      
-
+	  }	      
 	} else {
 	  $msg="";
 	  if (preg_match("/<response[^>]*>(.*)<\/response>/i",$out,$match)) {
@@ -188,7 +191,7 @@ Class TransformationEngine {
       
     
     
-      echo "Fermeture de la socket...";
+      //echo "Fermeture de la socket...";
       fclose($fp);
     }
 
@@ -206,7 +209,6 @@ Class TransformationEngine {
    */
   function getTransformation($tid,$filename,&$info) {
 
-    error_reporting(E_ALL);
   
     $err="";
 
@@ -221,7 +223,7 @@ Class TransformationEngine {
     $service_port = $this->port;
 
     /* Cree une socket TCP/IP. */
-    echo "Essai de connexion à '$address' sur le port '$service_port'...\n";
+    //echo "Essai de connexion à '$address' sur le port '$service_port'...\n";
     //    $result = socket_connect($socket, $address, $service_port);
 
     $fp = stream_socket_client("tcp://$address:$service_port", $errno, $errstr, 30);
@@ -233,22 +235,22 @@ Class TransformationEngine {
     
     if ($err=="") {
       $in = "GET\n";
-      echo "Envoi de la commande $in ...";    
+      //echo "Envoi de la commande $in ...";    
       fputs($fp,$in);
 
 
       $out = trim(fgets($fp, 2048));
-      echo "[$out].\n";
+      //echo "[$out].\n";
       if ($out=="Continue") {
 
 	$size=filesize ($filename);
 	$in = "<task id=\"$tid\" />\n";
-	echo "Envoi du header $in ...";    
+	//echo "Envoi du header $in ...";    
 	fputs($fp,$in);
-	echo "Recept du file size ...";
+	//echo "Recept du file size ...";
 	$out = trim(fgets($fp, 2048));
 	
-	echo "[$out]\n";
+	//echo "[$out]\n";
 	if (preg_match("/status=[ ]*\"([^\"]*)\"/i",$out,$match)) {
 	  $status=$match[1];
 	}
@@ -258,8 +260,8 @@ Class TransformationEngine {
 	    $size=$match[1];
 	  }
 	
-	  echo "$size bytes\n";
-	  echo "Recept du fichier $filename ...";
+	  //echo "$size bytes\n";
+	  //echo "Recept du fichier $filename ...";
 
 
 	  if ($handle) {
@@ -287,7 +289,7 @@ Class TransformationEngine {
 	    fclose($handle);
 	  }
 
-	  echo "Wroted  $filename\n.";
+	  //echo "Wroted  $filename\n.";
     
 	  // echo "Lire la réponse : \n\n";
 	  $out = trim(fgets($fp, 2048));
@@ -310,7 +312,7 @@ Class TransformationEngine {
 	}
       }
     }
-    echo "Fermeture de la socket...";
+    //echo "Fermeture de la socket...";
     fclose($fp);
     return $err;
   }

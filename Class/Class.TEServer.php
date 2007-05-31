@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEServer.php,v 1.4 2007/05/30 15:54:22 eric Exp $
+ * @version $Id: Class.TEServer.php,v 1.5 2007/05/31 16:20:04 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -187,6 +187,8 @@ Class TEServer {
     if  ($peername) {
       $this->task->comment=sprintf(_("transferring from %s"),$peername);
     }
+
+    error_log("READ $buf");
     $err=$this->task->Add();
     if ($err=="") {
       $mb=microtime();
