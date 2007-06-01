@@ -1,3 +1,6 @@
 #!/bin/bash
-
-ooffice -display :0  -headless "macro:///FreeDom.FreeDom.exportUTF8($1,$2)"
+#/usr/lib/openoffice.org2.0/program/unopkg add --shared OOo-FreeDom.uno.pkg
+UF=$2.t
+ooffice -display :0  -headless "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
+iconv  -f utf-8 -t latin1//TRANSLIT $UF > $2
+/bin/rm $UF
