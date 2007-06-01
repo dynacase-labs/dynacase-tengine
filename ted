@@ -1,0 +1,144 @@
+#!/bin/sh
+# ted	This is the init script for starting up the Transformation Engine
+#		server
+#
+# chkconfig: - 64 36
+# description: Starts and stops the request and rendering backend daemon 
+# processname: postmaster
+# pidfile: /var/run/ted_request.pid /var/run/ted_rendering.pid
+
+
+
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Get function listing for cross-distribution logic.
+TYPESET=`typeset -f|grep "declare"`
+
+
+
+# Find the name of the script
+NAME=`basename $0`
+if [ ${NAME:0:1} = "S" -o ${NAME:0:1} = "K" ]
+then
+	NAME=${NAME:3}
+fi
+
+# For SELinux we need to use 'runuser' not 'su'
+if [ -x /sbin/runuser ]
+then
+    SU=runuser
+else
+    SU=su
+fi
+
+
+# Set defaults for configuration variables
+TE_REQUEST_PID=/var/run/te_request.pid
+TE_RENDERING_PID=/var/run/te_rendering.pid
+TE_PATH=/usr/share/pear/TE
+
+
+script_result=0
+
+start(){
+	PSQL_START=$"Starting ${NAME} service: "
+	if  [ ! -d "$TE_PATH/" ]
+	    then
+	    echo "Transformation Engine not installed in $TE_PATH"
+	    echo_failure
+	    script_result=1
+	    exit 1;
+	fi
+	echo -n "$PSQL_START"
+	#$SU -l postgres -c "$PGENGINE/postmaster -p '$PGPORT' -D '$PGDATA' ${PGOPTS} &" >> "$PGLOG" 2>&1 < /dev/null
+	
+	if [ ! -f "$TE_REQUEST_PID" ]
+	    then
+	    php $TE_PATH/te_request_server.php >/dev/null 2>&1 &
+	fi
+	if [ ! -f "$TE_RENDERING_PID" ]
+	    then
+	    php $TE_PATH/te_rendering_server.php >/dev/null 2>&1 &
+	fi
+	sleep 2
+	    pid=`pidof -s "php"`
+	    if [ $pid ] && [ -f "$TE_REQUEST_PID" ] && [ -f "$TE_RENDERING_PID" ]
+		then
+		success "$PSQL_START"
+		echo
+	    else
+		failure "$PSQL_START"
+		echo
+		script_result=1
+	    fi
+	
+}
+
+stop(){
+    tepid=`cat $TE_REQUEST_PID`
+    echo -n $"Stopping ${NAME} service: "
+    kill 
+	if [ $ret -eq 0 ]
+	then
+		echo_success
+	else
+		echo_failure
+		script_result=1
+	fi
+	echo
+	rm -f "/var/run/postmaster.${PGPORT}.pid"
+	rm -f "/var/lock/subsys/${NAME}"
+}
+
+restart(){
+    stop
+    start
+}
+
+condrestart(){
+    [ -e /var/lock/subsys/${NAME} ] && restart
+}
+
+condstop(){
+    [ -e /var/lock/subsys/${NAME} ] && stop
+}
+
+reload(){
+    $SU -l postgres -c "$PGENGINE/pg_ctl reload -D '$PGDATA' -s" > /dev/null 2>&1 < /dev/null
+}
+
+# This script is slightly unusual in that the name of the daemon (postmaster)
+# is not the same as the name of the subsystem (postgresql)
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  status)
+	status postmaster
+	script_result=$?
+	;;
+  restart)
+	restart
+	;;
+  condrestart)
+	condrestart
+	;;
+  condstop)
+	condstop
+	;;
+  reload|force-reload)
+	reload
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|status|restart|condrestart|condstop|reload|force-reload}"
+	exit 1
+esac
+
+exit $script_result
