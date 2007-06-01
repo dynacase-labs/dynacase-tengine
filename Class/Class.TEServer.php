@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEServer.php,v 1.5 2007/05/31 16:20:04 eric Exp $
+ * @version $Id: Class.TEServer.php,v 1.6 2007/06/01 15:39:27 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -24,6 +24,7 @@ Class TEServer {
   public $dbaccess="dbname=te user=postgres";
   public $tmppath="/var/tmp";
 
+  private $good=true; // main loop condition
   function decrease_child($sig) {
     $this->cur_client--;
     //    echo "One Less [$sig]  ".$this->cur_client."\n";
@@ -37,7 +38,7 @@ Class TEServer {
       $this->task->status='I'; // interrupted
       $this->task->Modify();
     }
-    exit(0);
+    $this->good=false;
   }
 
   /**
@@ -45,7 +46,7 @@ Class TEServer {
    */
   function listenLoop() {
    
-
+    
     error_reporting(E_ALL);
 
     /* Autorise l'exécution infinie du script, en attente de connexion. */
@@ -67,7 +68,7 @@ Class TEServer {
 
     echo "Listen on :"."tcp://".$this->address.":".$this->port."\n";
 
-    while (true) {
+    while ($this->good) {
       $this->msgsock = @stream_socket_accept($this->sock,3,$peername);
       if ($this->msgsock === false) {
 	if ($errno==0) echo "Accept : ".$this->cur_client." childs in work\n";
@@ -145,7 +146,7 @@ Class TEServer {
       }
     } 
 
-    fclose($sock);
+    @fclose($sock);
   }
   
   /**
@@ -309,7 +310,7 @@ Class TEServer {
 	    if ($handle) {
 	      $size=filesize($this->task->outfile);
 	      
-	      $buffer=sprintf("<response status=\"OK\"><task id=\"%s\" size=\"%d\"></response>",$this->task->tid,$size);
+	      $buffer=sprintf("<response status=\"OK\"><task id=\"%s\" size=\"%d\"></response>\n",$this->task->tid,$size);
 	      fputs($this->msgsock,$buffer,strlen($buffer));
 	      while (!feof($handle)) {
 		$buffer = fread($handle, 2048);

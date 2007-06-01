@@ -3,7 +3,7 @@
  * Function to dialog with transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEClient.php,v 1.3 2007/05/31 16:20:04 eric Exp $
+ * @version $Id: Class.TEClient.php,v 1.4 2007/06/01 15:39:27 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -125,6 +125,7 @@ Class TransformationEngine {
   function getInfo($tid,&$info) {
 
 
+    error_reporting(E_ALL);
   
     $err="";
 
@@ -243,13 +244,12 @@ Class TransformationEngine {
       //echo "[$out].\n";
       if ($out=="Continue") {
 
-	$size=filesize ($filename);
 	$in = "<task id=\"$tid\" />\n";
 	//echo "Envoi du header $in ...";    
 	fputs($fp,$in);
 	//echo "Recept du file size ...";
 	$out = trim(fgets($fp, 2048));
-	
+
 	//echo "[$out]\n";
 	if (preg_match("/status=[ ]*\"([^\"]*)\"/i",$out,$match)) {
 	  $status=$match[1];
@@ -260,7 +260,6 @@ Class TransformationEngine {
 	    $size=$match[1];
 	  }
 	
-	  //echo "$size bytes\n";
 	  //echo "Recept du fichier $filename ...";
 
 
@@ -274,14 +273,12 @@ Class TransformationEngine {
 		$rsize=$size;
 		$size=0;
 	      }
-
 	   
-	      $out = @fread($fp, $rsize);
-	      $l=strlen($out);
+	      $buf = fread($fp, $rsize);
+	      $l=strlen($buf);
 	      $trbytes+=$l;
-	     
-	      fwrite($handle,$out);
-	     
+
+	      $wb=fwrite($handle,$buf);	     
 	      //echo "file:$l []";
 	    } while ($size>0);
 

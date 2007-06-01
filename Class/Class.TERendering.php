@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TERendering.php,v 1.2 2007/05/31 16:20:04 eric Exp $
+ * @version $Id: Class.TERendering.php,v 1.3 2007/06/01 15:39:27 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -26,6 +26,7 @@ Class TERendering {
   public $login="admin";
   public $tmppath="/var/tmp";
 
+  private $good=true; // main loop condition
   function decrease_child($sig) {
     $this->cur_client--;
         echo "One Less [$sig]  ".$this->cur_client."\n";
@@ -41,6 +42,9 @@ Class TERendering {
     exit(0);
   }
 
+  function breakloop($sig) {    
+    $this->good=false;
+  }
   /**
    * main loop to listen socket
    */
@@ -61,9 +65,10 @@ Class TERendering {
     pcntl_signal(SIGPIPE, array(&$this,"decrease_child"));
 
 
+    pcntl_signal(SIGINT,  array(&$this,"breakloop"));
 
 
-    while (true) {
+    while ($this->good) {
       $this->task=$this->getNextTask();
      
       echo "Wait [".$this->cur_client."]\n";
