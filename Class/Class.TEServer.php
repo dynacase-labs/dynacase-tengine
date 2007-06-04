@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEServer.php,v 1.7 2007/06/04 08:44:51 eric Exp $
+ * @version $Id: Class.TEServer.php,v 1.8 2007/06/04 12:13:27 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -18,7 +18,7 @@ declare (ticks = 1);
 
 Class TEServer {
   public $cur_client=0;
-  public $max_client=2;
+  public $max_client=15;
   public $address = '0.0.0.0';
   public $port = 10000;
   public $dbaccess="dbname=te user=postgres";

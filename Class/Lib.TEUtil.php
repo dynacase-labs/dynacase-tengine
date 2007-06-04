@@ -3,7 +3,7 @@
  * Common util functions
  *
  * @author Anakeen 200T
- * @version $Id: Lib.TEUtil.php,v 1.2 2007/05/30 15:54:22 eric Exp $
+ * @version $Id: Lib.TEUtil.php,v 1.3 2007/06/04 12:13:27 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -27,7 +27,23 @@ function microtime_diff($a,$b) {
         return ($b_int-$a_int)+($b_micro-$a_micro);
      }
 }
-
+/**
+ * If the argument is of the form %Gâ%@NAME=VALUE it will be represented in the array as an element with the key NAME and the value VALUE. I the argument is a flag of the form -NAME it will be represented as a boolean with the name NAME with a value of true in the associative array.
+ * @param string argv global argv 
+ * @return array
+ */
+function getArgv($argv) {
+    $_ARG = array();
+    foreach ($argv as $arg) {
+      if (ereg('--([^=]+)=(.*)',$arg,$reg)) {
+	    $_ARG[$reg[1]] = $reg[2];
+      } elseif(ereg('-([a-zA-Z0-9])',$arg,$reg)) {
+            $_ARG[$reg[1]] = 'true';
+        }
+   
+    }
+    return $_ARG;
+}
 /**
  * return system file mime
  * @param string $f filename

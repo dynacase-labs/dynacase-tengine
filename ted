@@ -34,12 +34,15 @@ else
 fi
 
 
+
 # Set defaults for configuration variables
 TE_REQUEST_PID=/var/run/te_request.pid
 TE_RENDERING_PID=/var/run/te_rendering.pid
 TE_PATH=/usr/share/pear/TE
 
-
+# Get config.
+. /etc/te.conf
+echo $PORT
 script_result=0
 
 start(){
@@ -52,15 +55,14 @@ start(){
 	    exit 1;
 	fi
 	echo -n "$PSQL_START"
-	#$SU -l postgres -c "$PGENGINE/postmaster -p '$PGPORT' -D '$PGDATA' ${PGOPTS} &" >> "$PGLOG" 2>&1 < /dev/null
 	
 	if [ ! -f "$TE_REQUEST_PID" ]
 	    then
-	    $TE_PATH/te_request_server $TE_REQUEST_PID >/dev/null 2>&1 &
+	    $TE_PATH/te_request_server --fpid=$TE_REQUEST_PID --port=$PORT --laddr=$LISTEN_ADDRESS --db="$DB" --maxclient=$REQUEST_MAX_CLIENT --directory=$REQUEST_DIRECTORY >/dev/null 2>&1 &
 	fi
 	if [ ! -f "$TE_RENDERING_PID" ]
 	    then
-	    $TE_PATH/te_rendering_server $TE_RENDERING_PID >/dev/null 2>&1 &
+	    $TE_PATH/te_rendering_server  --fpid=$TE_RENDERING_PID  --db="$DB" --maxclient=$RENDERING_MAX_CLIENT --directory=$RENDERING_DIRECTORY --clogin="$URL_CALLBACK_LOGIN" --cpassword="$URL_CALLBACK_PASSWORD"> /dev/null 2>&1 &
 	fi
 	sleep 1
 	    pid=`pidof -s "php"`
