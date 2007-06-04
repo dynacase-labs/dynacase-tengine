@@ -3,17 +3,17 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TERendering.php,v 1.3 2007/06/01 15:39:27 eric Exp $
+ * @version $Id: Class.TERendering.php,v 1.4 2007/06/04 08:44:51 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
 /**
  */
 
-include_once("Lib.TEUtil.php");
-include_once("Class.Task.php");
-include_once("Class.QueryPg.php");
-include_once("Class.Engine.php");
+include_once("TE/Lib.TEUtil.php");
+include_once("TE/Class.Task.php");
+include_once("TE/Class.QueryPg.php");
+include_once("TE/Class.Engine.php");
 
 // for signal handler function
 declare (ticks = 1);
