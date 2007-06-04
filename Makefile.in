@@ -1,5 +1,5 @@
 # ============================================
-# $Id: Makefile.in,v 1.2 2007/05/30 15:54:22 eric Exp $
+# $Id: Makefile.in,v 1.3 2007/06/04 08:45:32 eric Exp $
 # ============================================
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
@@ -19,5 +19,18 @@ SUBDIR=  Class Engines
 
 include $(utildir)/PubRule
 
-DISTFILES += $(SUBDIR) \
+DISTFILES += $(SUBDIR) $(pubdir)/$(appname)/te_rendering_server $(pubdir)/$(appname)/te_request_server $(rootprefix)/etc/rc.d/init.d/ted $(rootprefix)/etc/cron.d/$(PACKAGE).cron \
             RELEASE VERSION
+
+$(rootprefix)/etc/cron.d/$(PACKAGE).cron:$(PACKAGE).cron $(rootprefix)/etc/cron.d
+	install -D -p -m 0755 $(PACKAGE).cron $@
+
+$(rootprefix)/etc/rc.d/init.d/ted: ted $(rootprefix)/etc/rc.d/init.d
+	install -D -p -m 0755 ted $@
+
+$(pubdir)/$(appname)/te_request_server: te_request_server.php
+	install -D -p -m 0755 te_request_server.php $@
+$(pubdir)/$(appname)/te_rendering_server: te_rendering_server.php
+	install -D -p -m 0755 te_rendering_server.php $@
+
+publish: $(rootprefix)/etc/cron.d/$(PACKAGE).cron $(rootprefix)/etc/rc.d/init.d/ted $(pubdir)/$(appname)/te_request_server $(pubdir)/$(appname)/te_rendering_server
