@@ -3,7 +3,7 @@
  * Common util functions
  *
  * @author Anakeen 200T
- * @version $Id: Lib.TEUtil.php,v 1.3 2007/06/04 12:13:27 eric Exp $
+ * @version $Id: Lib.TEUtil.php,v 1.4 2007/06/04 16:23:26 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -118,5 +118,31 @@ function getTextMimeFile($f) {
 
   if (! $txt) return " ";
   return $txt;
+}
+
+/**
+ * transform php postgresql connexion syntax for psql syntax connection
+ * @param string postgresql string connection (like : dbname=anakeen user=admin)
+ * @return string like --username admin --dbname anakeen
+ */
+function php2DbCreateSql($dbcoord) {
+    if (eregi('dbname=[ ]*([a-z_0-9\'"][^ ]*)',$dbcoord,$reg)) {  
+      $dbname=$reg[1];
+    }
+    if (eregi('host=[ ]*([a-z_0-9\'"][^ ]*)',$dbcoord,$reg)) {  
+      $dbhost=$reg[1];
+    }
+    if (eregi('port=[ ]*([0-9\'"]*)',$dbcoord,$reg)) {  
+      $dbport=$reg[1];
+    }
+    if (eregi('user=[ ]*([a-z_0-9\'"][^ ]*)',$dbcoord,$reg)) {  
+      $dbuser=$reg[1];
+    }
+    $dbpsql="";
+    if ($dbhost != "")  $dbpsql.= "--host $dbhost ";
+    if ($dbport != "")  $dbpsql.= "--port $dbport ";
+    if ($dbuser != "")  $dbpsql.= "--username $dbuser ";
+    $dbpsql.= " $dbname ";
+    return $dbpsql;  
 }
 ?>

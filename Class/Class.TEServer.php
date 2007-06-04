@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEServer.php,v 1.8 2007/06/04 12:13:27 eric Exp $
+ * @version $Id: Class.TEServer.php,v 1.9 2007/06/04 16:23:26 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -12,6 +12,7 @@
 
 include_once("TE/Lib.TEUtil.php");
 include_once("TE/Class.Task.php");
+include_once("TE/Class.Engine.php");
 
 // for signal handler function
 declare (ticks = 1);
@@ -186,7 +187,7 @@ Class TEServer {
     $this->task->status='T'; // transferring
     $peername=stream_socket_get_name($this->msgsock,true);
     if  ($peername) {
-      $this->task->comment=sprintf(_("transferring from %s"),$peername);
+      $this->task->log(sprintf(_("transferring from %s"),$peername));
     }
 
     error_log("READ $buf");
@@ -214,8 +215,8 @@ Class TEServer {
 	} while ($size>0);
 	fclose($handle);
 	//sleep(3);
-	$this->task->comment.="\n".sprintf("%d bytes transferred in %.03f sec",$trbytes,
-					   microtime_diff(microtime(),$mb));
+	$this->task->log(sprintf("%d bytes read in %.03f sec",$trbytes,
+				 microtime_diff(microtime(),$mb)));
       }
     }
     echo "\nEND FILE $trbytes bytes\n";
@@ -301,7 +302,7 @@ Class TEServer {
 	if ($err=="") {		
 	  $peername=stream_socket_get_name($this->msgsock,true);
 	  if  ($peername) {
-	    $this->task->comment.="\n".sprintf(_("transferring to %s"),$peername);
+	    $this->task->log(sprintf(_("transferring to %s"),$peername));
 	  }
 	  if ($err=="") {
 	    $mb=microtime();
@@ -321,9 +322,11 @@ Class TEServer {
 
 	    fflush($this->msgsock);
 	    //sleep(3);
-	    $this->task->comment.="\n".sprintf("%d bytes transferred in %.03f sec",$size,
-					       microtime_diff(microtime(),$mb));
+	    $this->task->log(sprintf("%d bytes wroted in %.03f sec",$size,
+				     microtime_diff(microtime(),$mb)));
 	  }
+	} else {
+	  $this->task->log($err);
 	}
 	echo "\nEND FILE $trbytes bytes\n";   		       		  
 	$this->task->Modify();	

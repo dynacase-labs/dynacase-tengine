@@ -1,0 +1,3 @@
+#!/bin/bash
+ps2ascii $1 $2
+recode Texte..l9 $2

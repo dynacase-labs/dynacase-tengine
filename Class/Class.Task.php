@@ -3,7 +3,7 @@
  * Task for Engine 
  *
  * @author Anakeen 2007
- * @version $Id: Class.Task.php,v 1.2 2007/05/30 15:54:22 eric Exp $
+ * @version $Id: Class.Task.php,v 1.3 2007/06/04 16:23:26 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -12,6 +12,7 @@
 
 
 include_once("Class.PgObj.php");
+include_once("Class.Histo.php");
 include_once("Lib.TEUtil.php");
 Class Task extends PgObj {
   public $fields = array ( "tid",
@@ -72,6 +73,18 @@ create table task ( tid serial primary key,
 
   function preUpdate() {
     if (($this->infile != '') &&  ($this->inmime == '')) $this->inmime=getSysMimeFile($this->infile);
+  }
+
+  function log($s) {
+    static $oh=false;
+
+    if (!$oh) $oh=new Histo($this->dbaccess);
+    if ($s) {
+      $this->comment=$s;
+      $oh->comment=$s;
+      $oh->tid=$this->tid;
+      $oh->Add();      
+    }
   }
 }
 ?>

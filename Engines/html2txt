@@ -1,0 +1,5 @@
+#!/bin/bash
+#sed -e 's/<[^>]*>//g' $1 > $2
+
+perl -e '$/=undef;$html=<>;$html=~s/<\!--.*?-->//gms;$html=~s/<script.*?<\/script>//igms;$html=~s/<style.*?<\/style>//igms;$html=~s/<[^>]*>//gms;print$html' $1 > $2
+recode HTML..l9 $2

@@ -42,7 +42,7 @@ TE_PATH=/usr/share/pear/TE
 
 # Get config.
 . /etc/te.conf
-echo $PORT
+
 script_result=0
 
 start(){
@@ -151,7 +151,36 @@ status2(){
 
 }
 
-
+init(){
+	PSQL_START=$"Initializing ${NAME} service: "
+	if  [ ! -d "$TE_PATH/" ]
+	    then
+	    echo "Transformation Engine not installed in $TE_PATH"
+	    echo_failure
+	    script_result=1
+	    exit 1;
+	fi
+	echo -n "$PSQL_START"
+	$TE_PATH/te_server_init  --db="$DB" 
+	ret=$?
+	if [ $ret -eq 0 ] 
+	then
+		success "$PSQL_START"
+		echo
+	else
+	    if [ $ret -eq 1 ] 
+		then
+		echo
+		echo -n  "Database already created"
+		warning "$PSQL_START"
+		echo
+	    else
+		failure "$PSQL_START"
+		echo
+		script_result=1
+	    fi
+	fi	
+}
 # This script is slightly unusual in that the name of the daemon (postmaster)
 # is not the same as the name of the subsystem (postgresql)
 
@@ -162,6 +191,9 @@ case "$1" in
 	;;
   stop)
 	stop
+	;;
+  init)
+	init
 	;;
   status)
 	#status php
