@@ -3,7 +3,7 @@
  * Tranformation Engine Definition
  *
  * @author Anakeen 2005
- * @version $Id: Class.Engine.php,v 1.3 2007/06/04 16:23:26 eric Exp $
+ * @version $Id: Class.Engine.php,v 1.4 2007/06/05 16:53:36 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -51,8 +51,8 @@ Class Engine extends PgObj {
 create table engine ( name text not null,   
                    mime text not null, 
                    command text not null,
-                   comment text  );
-constraint engine_pkey primary key(name,mime)";
+                   comment text ,
+                   constraint engine_pkey primary key(name,mime))";
 
   function getNearEngine($engine,$mime) {
 
