@@ -1,0 +1,142 @@
+#! /bin/rpm
+#
+#  File: libwhat.spec
+#  $Id: TE.spec.in,v 1.1 2007/06/05 08:20:00 eric Exp $
+#
+#  This is the SPEC file for the What Users Module
+#  Anakeen What Application
+#
+
+%define cerbere         %(rpm -q --queryformat '%{VENDOR}' rpm |grep -q 'none' && echo 1 || echo 0)
+%define pld		%(rpm -q --queryformat '%{VENDOR}' rpm |grep -q 'PLD' && echo 1 || echo 0)
+%define redhat	        %(rpm -q --queryformat '%{VENDOR}' rpm | grep -q 'Red Hat, Inc.' && echo 1 || echo 0)
+%{?ncerbere:%define cerbere 1}
+%{?ncerbere:%define redhat 0}
+%{?ncerbere:%define pld 0}
+%{?nredhat:%define cerbere 0}
+%{?nredhat:%define redhat 1}
+%{?nredhat:%define pld 0}
+%{?npld:%define cerbere 0}
+%{?npld:%define redhat 0}
+%{?npld:%define pld 1}
+
+
+%if %{cerbere}
+%define destdir /usr/share/pear
+%define releasepostfix %(echo)
+%endif
+%if %{pld}
+%define destdir /usr/share/php
+%define releasepostfix cb
+%endif
+%if %{redhat}
+%define destdir /usr/share/pear
+%define releasepostfix fc%(cat /etc/fedora-release | sed -e 's/.* release \\([[:digit:]]\\+\\) .*/\\1/')
+%endif
+
+%{?ndestdir:%define destdir %{ndestdir}}
+%{?nhttpuser:%define httpuser %{nhttpuser}}
+%{?rpost:%define releasepostfix %{rpost}}
+
+Summary: The Transformation Engine
+Name: @PACKAGE@
+Version: @VERSION@
+License: GPL
+Release: @RELEASE@%{releasepostfix}
+Group: Applications/Doc
+Source: ftp://ftp.souillac.anakeen.com/pub/anakeen/%{name}-%{version}.tar.gz
+# post-2.2.0 fix (can go away with next release):
+Vendor: Anakeen           
+URL: http://www.anakeen.com/
+Packager: Yannick Le Briquer <yannick.lebriquer@anakeen.com>
+BuildArchitectures: noarch
+BuildRoot: %{_tmppath}/%{name}-%{version}-root-%(id -u -n)
+PreReq: vixie-cron
+Requires: php-pgsql
+Requires: postgresql >= 7.2
+Requires: recode
+Requires: iconv
+Requires: ghostscript
+Requires: openoffice.org-core
+%description
+The Transformation engine allow to convert file in different other format in asynchronous mode.
+
+
+%package CLIENT
+Summary: The Transformation libraries functions
+Group: Applications/Web
+%if %{cerbere} || %{pld}
+Requires: php-common >= 5.0
+%else
+Requires: php >= 5.0
+%endif
+
+%description CLIENT
+The TE CLIENT provide php class to communicate with transformation server
+
+
+%prep
+%setup -q -n %{name}-%{version}
+
+%build
+
+%install
+autoconf
+./configure  --with-pubrule=`pwd` \
+	     --with-httpuser=%{httpuser} \
+	     --prefix=%{destdir}
+make  pubdir=$RPM_BUILD_ROOT%{destdir}
+
+%clean
+[ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
+
+%post 
+
+
+%preun
+
+
+%post CLIENT
+
+
+%preun CLIENT
+
+
+%files
+%dir %{destdir}/%{name}
+/etc/rc.d/init.d/ted
+%attr(700,root,root) /etc/cron.d/TE.cron
+%attr(600,%{ldapuser},%{ldapuser}) %config(noreplace) /etc/te.conf
+%{destdir}/%{name}/Class.Engine.php
+%{destdir}/%{name}/Class.Histo.php
+%{destdir}/%{name}/Class.PgObj.php
+%{destdir}/%{name}/Class.QueryPg.php
+%{destdir}/%{name}/Class.TERendering.php
+%{destdir}/%{name}/Class.TEServer.php
+%{destdir}/%{name}/Class.Task.php
+%{destdir}/%{name}/Lib.TEUtil.php
+%{destdir}/%{name}/engine_init.sql
+%{destdir}/%{name}/engines
+%{destdir}/%{name}/te_client.php
+%{destdir}/%{name}/te_init.php
+%{destdir}/%{name}/te_rendering_server
+%{destdir}/%{name}/te_rendering_server.php
+%{destdir}/%{name}/te_request_server
+%{destdir}/%{name}/te_request_server.php
+%{destdir}/%{name}/te_server.php
+%{destdir}/%{name}/te_server_init
+%{destdir}/%{name}/te_server_init.php
+
+
+
+
+%files CLIENT
+%dir %{destdir}/%{name}
+%{destdir}/%{name}/Class.TEClient.php
+
+
+
+%changelog
+* Tue Oct 30 2000 Yannick Le Briquer <yannick.lebriquer@anakeen.com>
+- Build first RPM
+

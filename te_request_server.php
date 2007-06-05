@@ -4,7 +4,7 @@
  * Listen request to do file transformation (conversion)
  *
  * @author Anakeen 2007
- * @version $Id: te_request_server.php,v 1.6 2007/06/04 12:13:27 eric Exp $
+ * @version $Id: te_request_server.php,v 1.7 2007/06/05 08:20:00 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -31,7 +31,6 @@ if ($pidfile && (! file_exists($pidfile))) {
   if ($db) $s->dbaccess=$db;
   if ($maxclient) $s->max_client=$maxclient;
   if ($tmppath) $s->tmppath=$tmppath;
-  print_r($s);
   $s->listenloop();
   @unlink($pidfile);
  } else {
