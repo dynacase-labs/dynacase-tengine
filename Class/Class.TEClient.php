@@ -3,7 +3,7 @@
  * Function to dialog with transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEClient.php,v 1.4 2007/06/01 15:39:27 eric Exp $
+ * @version $Id: Class.TEClient.php,v 1.5 2007/06/05 16:52:32 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -200,15 +200,29 @@ Class TransformationEngine {
   }
 
   /**
-   * send a request for retrieve a transformation
-   * the status must be D (Done).
+   * send a request for retrieve a transformation and to erase task from server
+   * the status must be D (Done) or K (Done but errors).
    * @param string $tid Task identification
    * @param string $filename the path where put the file (must be writeable)
-   * @param array &$info transformation task info return "tid"=> ,"status"=> ,"comment=>
    * 
    * @return string error message, if no error empty string
    */
-  function getTransformation($tid,$filename,&$info) {
+  function getTransformation($tid,$filename) {
+    $err=$this->getAndLeaveTransformation($tid,$filename);
+    $this->eraseTransformation($tid);
+  }
+
+
+  /**
+   * send a request for retrieve a transformation
+   * the status must be D (Done) or K (Done but errors).
+   * all working files are stayed into the server : be carreful to clean it after (use ::eraseTransformation)
+   * @param string $tid Task identification
+   * @param string $filename the path where put the file (must be writeable)
+   * 
+   * @return string error message, if no error empty string
+   */
+  function getAndLeaveTransformation($tid,$filename) {
 
   
     $err="";
@@ -313,6 +327,90 @@ Class TransformationEngine {
     fclose($fp);
     return $err;
   }
+
+  /**
+   * erase transformation
+   * delete associated files in the server engine
+   * @param string $tid Task identification
+   * @param string $filename the path where put the file (must be writeable)
+   * @param array &$info transformation task info return "tid"=> ,"status"=> ,"comment=>
+   * 
+   * @return string error message, if no error empty string
+   */
+  function eraseTransformation($tid) {
+
+
+    error_reporting(E_ALL);
   
+    $err="";
+
+    /* Lit l'adresse IP du serveur de destination */
+    $address = gethostbyname($this->host);
+    $service_port = $this->port;
+
+    /* Cree une socket TCP/IP. */
+    //    echo "Essai de connexion à '$address' sur le port '$service_port'...\n";
+    //    $result = socket_connect($socket, $address, $service_port);
+
+    $fp = stream_socket_client("tcp://$address:$service_port", $errno, $errstr, 30);
+
+    if (!$fp) { 
+      $err=_("socket creation error")." : $errstr ($errno)\n";
+
+    } 
+
+    if ($err=="") {
+
+      $in = "ABORT\n";
+      //echo "Envoi de la commande $in ...";    
+      fputs($fp,$in);
+
+      $out = trim(fgets($fp, 2048));
+      //echo "[$out].\n";
+      if ($out=="Continue") {
+    
+	$in = "<TASK id=\"$tid\" />\n";
+	//echo "Envoi du header $in ...";    
+	fputs($fp,$in);
+     
+	$out = trim(fgets($fp));
+	if (preg_match("/status=[ ]*\"([^\"]*)\"/i",$out,$match)) {
+	  $status=$match[1];
+	}	
+	
+	if ($status == "OK") {
+
+	  //echo "<br>Response <b>$out</b>";
+
+	  if (preg_match("/<task[^>]*>(.*)<\/task>/i",$out,$match)) {
+	    $body=$match[1];
+	    //	echo "Response $body";
+	    if (preg_match_all("|<[^>]+>(.*)</([^>]+)>|U",
+			       $body,
+			       $reg,
+			       PREG_SET_ORDER) ) {
+	      
+	      foreach ($reg as $v) {
+		$info[$v[2]]=$v[1];
+	      }
+	    }
+	  }	      
+	} else {
+	  $msg="";
+	  if (preg_match("/<response[^>]*>(.*)<\/response>/i",$out,$match)) {
+	    $msg=$match[1];
+	  }
+	  $err= $status." [$msg]";
+	}            
+      }
+      
+    
+    
+      //echo "Fermeture de la socket...";
+      fclose($fp);
+    }
+
+    return $err;
+  }
 }
 ?>

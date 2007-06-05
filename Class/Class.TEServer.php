@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEServer.php,v 1.9 2007/06/04 16:23:26 eric Exp $
+ * @version $Id: Class.TEServer.php,v 1.10 2007/06/05 16:52:32 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package FREEDOM-TE
  */
@@ -136,7 +136,7 @@ Class TEServer {
 	       }
 	      break;
 	    case "ABORT":
-	      $this->setAbord();
+	      $this->Abort();
 	      break;
 	    }
 	    echo "COMMAND:$command\n";
@@ -235,8 +235,7 @@ Class TEServer {
 
  /**
    * read file transmition request header + content file
-   * header like : <TE name="latin" fkey="134" size="2022123" />
-   * followed by file content
+   * header like : <TASK id="134"  />
    * 
    * @return string  message to return 
    */
@@ -268,6 +267,48 @@ Class TEServer {
     return $message;
   }
 
+
+  /**
+   * delete files and reference to the task
+   * try kill process if is in processing
+   * header like : <TASK id="134"  />
+   * 
+   * @return string  message to return 
+   */
+  function Abort() {
+    $err="";
+    if (false === ($buf = @fgets($this->msgsock))) {
+      $err= "Abord::fget $errstr ($errno)";     
+    }
+    if ($err=="") {
+      if (preg_match("/ id=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
+	$tid=$match[1];
+      }
+      $this->task=new Task($this->dbaccess,$tid);
+   
+      if ($this->task->isAffected()) {     
+	if ($this->task->status=='P') {
+	}
+	$outfile=$this->task->outfile;
+	if ($outfile) {
+	  @unlink($outfile);
+	  @unlink($outfile.".err");
+	}
+	$infile=$this->task->infile;
+	if ($infile) @unlink($infile);
+	$err=$this->task->delete();
+	if ($err!="") $message="<response status=\"KO\">$err";
+	else $message="<response status=\"OK\">";
+	$message.="</response>\n";
+      } else {
+	$err=sprintf(_("unknow task [%s]"),$tid);
+	$message="<response status=\"KO\">$err</response>\n";
+      }
+    } else {
+      $message="<response status=\"KO\">$err</response>\n";
+    }
+    return $message;
+  }
   /**
    * return  file content in
    * header like : <Task id="134" />
