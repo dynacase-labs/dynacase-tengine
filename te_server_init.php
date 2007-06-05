@@ -23,9 +23,10 @@ if ($dbid) {
     pg_query($dbid,$o->sqlcreate);
     $o=new Engine($dbaccess);
     pg_query($dbid,$o->sqlcreate);
+    $sqlinit=file_get_contents("TE/engine_init.sql",true);
+    pg_query($dbid,$sqlinit);
     
   }
-
   exit(0);
  }
 
