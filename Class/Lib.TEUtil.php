@@ -3,9 +3,9 @@
  * Common util functions
  *
  * @author Anakeen 200T
- * @version $Id: Lib.TEUtil.php,v 1.4 2007/06/04 16:23:26 eric Exp $
+ * @version $Id: Lib.TEUtil.php,v 1.5 2007/06/06 18:12:01 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
- * @package FREEDOM-TE
+ * @package TE
  */
 /**
  */

@@ -3,9 +3,9 @@
  * Task for Engine 
  *
  * @author Anakeen 2007
- * @version $Id: Class.Task.php,v 1.3 2007/06/04 16:23:26 eric Exp $
+ * @version $Id: Class.Task.php,v 1.4 2007/06/06 18:12:01 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
- * @package FREEDOM-TE
+ * @package TE
  */
 /**
  */

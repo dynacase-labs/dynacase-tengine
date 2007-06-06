@@ -3,9 +3,9 @@
  * Tranformation Engine Definition
  *
  * @author Anakeen 2005
- * @version $Id: Class.Engine.php,v 1.4 2007/06/05 16:53:36 eric Exp $
+ * @version $Id: Class.Engine.php,v 1.5 2007/06/06 18:12:01 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
- * @package FREEDOM-TE
+ * @package TE
  */
 /**
  */

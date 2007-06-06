@@ -4,10 +4,9 @@
  * based on the description of a DB Table. 
  *
  * @author Anakeen 2000 
- * @version $Id: Class.PgObj.php,v 1.1 2007/05/30 15:54:22 eric Exp $
+ * @version $Id: Class.PgObj.php,v 1.2 2007/06/06 18:12:01 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
- * @package WHAT
- * @subpackage CORE
+ * @package TE
  */
  /**
  */

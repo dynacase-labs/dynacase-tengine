@@ -1,4 +1,14 @@
 #!/usr/bin/php
+/**
+ * Initialization of databse transformation server engine
+ *
+ * @author Anakeen 2007
+ * @version $Id: te_server_init.php,v 1.3 2007/06/06 18:12:01 eric Exp $
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
+ * @package TE
+ */
+/**
+ */
 <?php
 
 include_once("TE/Class.TEServer.php");

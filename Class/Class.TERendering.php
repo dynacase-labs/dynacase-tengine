@@ -3,9 +3,9 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TERendering.php,v 1.6 2007/06/05 16:52:58 eric Exp $
+ * @version $Id: Class.TERendering.php,v 1.7 2007/06/06 18:12:01 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
- * @package FREEDOM-TE
+ * @package TE
  */
 /**
  */

@@ -1,11 +1,11 @@
 <?php
 /**
- * Tranformation Engine Definition
+ * Tranformation Engine Historic
  *
  * @author Anakeen 2005
- * @version $Id: Class.Histo.php,v 1.1 2007/06/04 16:23:26 eric Exp $
+ * @version $Id: Class.Histo.php,v 1.2 2007/06/06 18:12:01 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
- * @package FREEDOM-TE
+ * @package TE
  */
 /**
  */

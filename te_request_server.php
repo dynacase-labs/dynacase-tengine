@@ -4,9 +4,9 @@
  * Listen request to do file transformation (conversion)
  *
  * @author Anakeen 2007
- * @version $Id: te_request_server.php,v 1.7 2007/06/05 08:20:00 eric Exp $
+ * @version $Id: te_request_server.php,v 1.8 2007/06/06 18:12:01 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
- * @package FREEDOM-TE
+ * @package TE
  */
 /**
  */
