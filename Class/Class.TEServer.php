@@ -3,9 +3,9 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEServer.php,v 1.10 2007/06/05 16:52:32 eric Exp $
+ * @version $Id: Class.TEServer.php,v 1.11 2007/06/06 18:07:27 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
- * @package FREEDOM-TE
+ * @package TE
  */
 /**
  */
@@ -136,7 +136,10 @@ Class TEServer {
 	       }
 	      break;
 	    case "ABORT":
-	      $this->Abort();
+	      $msg=$this->Abort();
+	      if (@fputs($this->msgsock, $msg,strlen($msg))=== false) {
+		 echo "fputs $errstr ($errno)<br />\n";		 
+	       }
 	      break;
 	    }
 	    echo "COMMAND:$command\n";
@@ -200,15 +203,13 @@ Class TEServer {
 	do {
 	  if ($size >= 2048) {
 	    $rsize=2048;
-	    $size-=2048;
 	  } else {
 	    $rsize=$size;
-	    $size=0;
 	  }	   
 	  $out = @fread($this->msgsock, $rsize);
 	  $l=strlen($out);
-	  $trbytes+=$l;
-	     
+	  $trbytes+=$l;	     
+	  $size-=$l;
 	  fwrite($handle,$out);
 	     
 	  //echo "file:$l []";

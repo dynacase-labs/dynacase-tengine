@@ -3,9 +3,9 @@
  * Function to dialog with transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEClient.php,v 1.5 2007/06/05 16:52:32 eric Exp $
+ * @version $Id: Class.TEClient.php,v 1.6 2007/06/06 18:11:31 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
- * @package FREEDOM-TE
+ * @package TE
  */
 /**
  */
@@ -34,7 +34,6 @@ Class TransformationEngine {
     /* Lit l'adresse IP du serveur de destination */
     $address = gethostbyname($this->host);
     $service_port = $this->port;
-
     /* Cree une socket TCP/IP. */
     //  echo "Essai de connexion à '$address' sur le port '$service_port'...\n";
     //    $result = socket_connect($socket, $address, $service_port);
@@ -60,7 +59,7 @@ Class TransformationEngine {
 
 
 	$in = "<TE name=\"$te_name\" fkey=\"$fkey\" size=\"$size\" callback=\"$callback\"/>\n";
-	//echo "Envoi du header $in ...";    
+	#echo "Envoi du header $in ...";    
 	fputs($fp,$in);
 	//echo "Envoi du fichier $filename ...";
 	$size=filesize($filename);
@@ -70,8 +69,7 @@ Class TransformationEngine {
 	  if ($handle) {
 	    while (!feof($handle)) {
 	      $buffer = fread($handle, 2048);
-	      error_log("BUF:$buffer");
-	      fputs($fp,$buffer,strlen($buffer));
+	      $cout=fwrite($fp,$buffer,strlen($buffer));	      
 	    }	
 	    fclose($handle);
 	  }
@@ -282,16 +280,14 @@ Class TransformationEngine {
 	    do {
 	      if ($size >= 2048) {
 		$rsize=2048;
-		$size-=2048;
 	      } else {
 		$rsize=$size;
-		$size=0;
 	      }
 	   
 	      $buf = fread($fp, $rsize);
 	      $l=strlen($buf);
 	      $trbytes+=$l;
-
+	      $size-=$l;
 	      $wb=fwrite($handle,$buf);	     
 	      //echo "file:$l []";
 	    } while ($size>0);
@@ -377,7 +373,6 @@ Class TransformationEngine {
 	if (preg_match("/status=[ ]*\"([^\"]*)\"/i",$out,$match)) {
 	  $status=$match[1];
 	}	
-	
 	if ($status == "OK") {
 
 	  //echo "<br>Response <b>$out</b>";
