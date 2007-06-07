@@ -3,7 +3,7 @@
  * Function to dialog with transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEClient.php,v 1.6 2007/06/06 18:11:31 eric Exp $
+ * @version $Id: Class.TEClient.php,v 1.7 2007/06/07 08:53:34 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -13,8 +13,13 @@
 
 Class TransformationEngine {
 
-  public $host='localhost';
-  public $port='10000';
+  private $host='localhost';
+  private $port='10000';
+
+  function __construct($host="localhost",$port="10000") {
+    if ($host != "") $this->host=$host;
+    if ($port > 0) $this->port=$port;
+  }
 
   /**
    * send a request to do a transformation
