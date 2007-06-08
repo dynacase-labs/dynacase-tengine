@@ -3,7 +3,7 @@
  * Function to dialog with transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEClient.php,v 1.7 2007/06/07 08:53:34 eric Exp $
+ * @version $Id: Class.TEClient.php,v 1.8 2007/06/08 08:38:53 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -12,11 +12,23 @@
 
 
 Class TransformationEngine {
-
+  /**
+   * host name of the transformation engine server
+   * @private string
+   */
   private $host='localhost';
-  private $port='10000';
-
-  function __construct($host="localhost",$port="10000") {
+  /**
+   * port number of the transformation engine server
+   * @private int
+   */
+  private $port=10000;
+  /**
+   * initialize host and port
+   * @param string $host host name
+   * @param int $port port number
+   * 
+   */
+  function __construct($host="localhost",$port=10000) {
     if ($host != "") $this->host=$host;
     if ($port > 0) $this->port=$port;
   }
@@ -119,17 +131,13 @@ Class TransformationEngine {
     return $err;
   }
   /**
-   * send a request for get information about a task
+   * send a request to get information about a task
    * @param int $tid_task identificator
    * @param array &$info transformation task info return "tid"=> ,"status"=> ,"comment=>
    * 
    * @return string error message, if no error empty string
    */
-  function getInfo($tid,&$info) {
-
-
-    error_reporting(E_ALL);
-  
+  function getInfo($tid,&$info) {  
     $err="";
 
     /* Lit l'adresse IP du serveur de destination */
@@ -203,7 +211,7 @@ Class TransformationEngine {
   }
 
   /**
-   * send a request for retrieve a transformation and to erase task from server
+   * send a request to retrieve a transformation and to erase task from server
    * the status must be D (Done) or K (Done but errors).
    * @param string $tid Task identification
    * @param string $filename the path where put the file (must be writeable)
@@ -338,11 +346,7 @@ Class TransformationEngine {
    * 
    * @return string error message, if no error empty string
    */
-  function eraseTransformation($tid) {
-
-
-    error_reporting(E_ALL);
-  
+  function eraseTransformation($tid) {  
     $err="";
 
     /* Lit l'adresse IP du serveur de destination */
