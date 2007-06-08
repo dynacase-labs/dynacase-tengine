@@ -1,0 +1,6 @@
+#:/bin/bash
+. /etc/te.conf
+echo "delete FROM task where cdate < 'today'::timestamp + '-1 day';" | psql te postgres # need read DB
+echo "DELETE FROM histo where tid not in (select tid from task);" | psql te postgres
+find $REQUEST_DIRECTORY -name "tes-*" -mtime 1 -exec /bin/rm -f {} \; 
+find $RENDERING_DIRECTORY -name "ter-*" -mtime 1 -exec /bin/rm -f {} \; 

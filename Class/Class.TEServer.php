@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEServer.php,v 1.11 2007/06/06 18:07:27 eric Exp $
+ * @version $Id: Class.TEServer.php,v 1.12 2007/06/08 15:32:33 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -181,7 +181,7 @@ Class TEServer {
    }
     // normal case : now the file	  
 
-    $filename=$this->tmppath."/eric".posix_getpid();
+    $filename=$this->tmppath."/tes-".posix_getpid();
     $this->task=new Task($this->dbaccess);
     $this->task->engine=$tename;
     $this->task->infile=$filename;

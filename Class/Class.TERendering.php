@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TERendering.php,v 1.7 2007/06/06 18:12:01 eric Exp $
+ * @version $Id: Class.TERendering.php,v 1.8 2007/06/08 15:32:33 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -110,7 +110,7 @@ Class TERendering {
 	    if ($eng && $eng->isAffected()) {
 	      if ($eng->command) {
 		$orifile = $this->task->infile;
-		$outfile= $this->tmppath."/out-".posix_getpid().".".$eng->name;
+		$outfile= $this->tmppath."/ter-".posix_getpid().".".$eng->name;
 		$errfile=$outfile.".err";
 		$tc=sprintf("%s %s %s 2>%s",
 			    $eng->command,

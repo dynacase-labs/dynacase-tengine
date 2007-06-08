@@ -1,8 +1,7 @@
-# $Id: TE.cron,v 1.1 2007/06/04 08:45:32 eric Exp $
+# $Id: TE.cron,v 1.2 2007/06/08 15:32:33 eric Exp $
 SHELL=/bin/bash	
 # Envoyer les résultats à Paul, sans tenir compte du propriétaire
 MAILTO=root
-# every 52 minutes (why not)
-#*/52 * * * *    root . /etc/freedom.conf;$wpub/wsh.php --api=usercard_refreshgroup > /dev/null
+
 # every days at 01:05 
-#5 1 * * * root psql freedom anakeen -f /usr/share/what/API/freedom_realclean.sql > /dev/null
+#5 1 * * * root /usr/share/pear/TE/te_clean > /dev/null
