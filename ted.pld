@@ -6,7 +6,7 @@
 # description: Starts and stops the request and rendering backend daemon 
 # processname: postmaster
 # pidfile: /var/run/ted_request.pid /var/run/ted_rendering.pid
-# version $Id: ted,v 1.6 2007/06/11 12:12:48 eric Exp $
+# version $Id: ted.pld,v 1.1 2007/06/11 14:46:14 eric Exp $
 
 
 
@@ -20,11 +20,8 @@ TYPESET=`typeset -f|grep "declare"`
 
 
 # Find the name of the script
-NAME=`basename $0`
-if [ ${NAME:0:1} = "S" -o ${NAME:0:1} = "K" ]
-then
-	NAME=${NAME:3}
-fi
+NAME=ted
+
 
 # For SELinux we need to use 'runuser' not 'su'
 if [ -x /sbin/runuser ]
@@ -48,33 +45,40 @@ DB="dbname=$DB_NAME user=$DB_USER port='$DB_PORT' host='$DB_HOST'"      #postgre
 script_result=0
 
 start(){
-	PSQL_START=$"Starting ${NAME} service: "
+	nstart=0
 	if  [ ! -d "$TE_PATH/" ]
 	    then
 	    echo "Transformation Engine not installed in $TE_PATH"
-	    echo_failure
+	    fail
 	    script_result=1
 	    exit 1;
-	fi
-	echo -n "$PSQL_START"
+	fi	
 	
 	if [ ! -f "$TE_REQUEST_PID" ]
 	    then
-	    $TE_PATH/te_request_server --fpid=$TE_REQUEST_PID --port=$PORT --laddr=$LISTEN_ADDRESS --db="$DB" --maxclient=$REQUEST_MAX_CLIENT --directory=$REQUEST_DIRECTORY >/dev/null 2>&1 &
+	     $TE_PATH/te_request_server --fpid=$TE_REQUEST_PID --port=$PORT --laddr=$LISTEN_ADDRESS --db="$DB" --maxclient=$REQUEST_MAX_CLIENT --directory=$REQUEST_DIRECTORY >/dev/null 2>&1 &
+             
+	    nstart=1
 	fi
 	if [ ! -f "$TE_RENDERING_PID" ]
 	    then
-	    $TE_PATH/te_rendering_server  --fpid=$TE_RENDERING_PID  --db="$DB" --maxclient=$RENDERING_MAX_CLIENT --directory=$RENDERING_DIRECTORY --clogin="$URL_CALLBACK_LOGIN" --cpassword="$URL_CALLBACK_PASSWORD"> /dev/null 2>&1 &
+	     $TE_PATH/te_rendering_server  --fpid=$TE_RENDERING_PID  --db="$DB" --maxclient=$RENDERING_MAX_CLIENT --directory=$RENDERING_DIRECTORY --clogin="$URL_CALLBACK_LOGIN" --cpassword="$URL_CALLBACK_PASSWORD"> /dev/null 2>&1 &
+            
+	    nstart=1
+        else
+	    msg_already_running  "${NAME}"
 	fi
+       if  [ $nstart = 1 ] 
+	   then	   
+	    msg_starting "${NAME}"
+       fi
 	sleep 1
 	    pid=`pidof -s "php"`
 	    if [ $pid ] && [ -f "$TE_REQUEST_PID" ] && [ -f "$TE_RENDERING_PID" ]
 		then
-		success "$PSQL_START"
-		echo
+		ok
 	    else
-		failure "$PSQL_START"
-		echo
+		fail 
 		script_result=1
 	    fi
 	
@@ -82,16 +86,14 @@ start(){
 
 stop(){
     ret1=0
-    ret2=0
-    echo -n $"Stopping ${NAME} service: "
+    ret2=0   
     if [ -f $TE_REQUEST_PID ]
 	then
 	tepid=`cat $TE_REQUEST_PID`
 	/bin/kill -s SIGINT $tepid
 	ret1=$?
     else
-	echo
-	echo "request server not running"
+	msg_not_running "TE request"
     fi
     if [ -f $TE_RENDERING_PID ]
 	then
@@ -99,14 +101,15 @@ stop(){
 	/bin/kill -s SIGINT $tepid
 	ret2=$?
     else
-	echo
-	echo "rendering server not running"
+	msg_not_running "TE rendering"
     fi
     if [ $ret1 -eq 0 ] && [ $ret2 -eq 0 ]
 	then
-		echo_success
+	        msg_stopping "${NAME}"
+		ok
 	else
-		echo_failure
+	        msg_stopping "${NAME}"
+		fail
 		script_result=1
     fi
     echo
@@ -157,28 +160,26 @@ init(){
 	PSQL_START=$"Initializing ${NAME} service: "
 	if  [ ! -d "$TE_PATH/" ]
 	    then
-	    echo "Transformation Engine not installed in $TE_PATH"
-	    echo_failure
+	    fail
+	    nls "Transformation Engine not installed in $TE_PATH"
 	    script_result=1
 	    exit 1;
 	fi
-	echo -n "$PSQL_START"
+	
+	show "Initializing %s service" "${NAME}"
 	$TE_PATH/te_server_init  --db="$DB" 
 	ret=$?
 	if [ $ret -eq 0 ] 
 	then
-		success "$PSQL_START"
+		ok
 		echo
 	else
 	    if [ $ret -eq 1 ] 
 		then
-		echo
-		echo -n  "Database already created"
-		warning "$PSQL_START"
-		echo
+		fail
+		nls "Database already created"
 	    else
-		failure "$PSQL_START"
-		echo
+		fail
 		script_result=1
 	    fi
 	fi	

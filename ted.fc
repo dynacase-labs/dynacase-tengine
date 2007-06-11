@@ -1,0 +1,213 @@
+#!/bin/sh
+# ted	This is the init script for starting up the Transformation Engine
+#		server
+#
+# chkconfig: - 64 36
+# description: Starts and stops the request and rendering backend daemon 
+# processname: postmaster
+# pidfile: /var/run/ted_request.pid /var/run/ted_rendering.pid
+# version $Id: ted.fc,v 1.1 2007/06/11 14:46:14 eric Exp $
+
+
+
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Get function listing for cross-distribution logic.
+TYPESET=`typeset -f|grep "declare"`
+
+
+
+# Find the name of the script
+NAME=`basename $0`
+if [ ${NAME:0:1} = "S" -o ${NAME:0:1} = "K" ]
+then
+	NAME=${NAME:3}
+fi
+
+# For SELinux we need to use 'runuser' not 'su'
+if [ -x /sbin/runuser ]
+then
+    SU=runuser
+else
+    SU=su
+fi
+
+
+
+# Set defaults for configuration variables
+TE_REQUEST_PID=/var/run/te_request.pid
+TE_RENDERING_PID=/var/run/te_rendering.pid
+TE_PATH=/usr/share/pear/TE
+
+# Get config.
+. /etc/te.conf
+DB="dbname=$DB_NAME user=$DB_USER port='$DB_PORT' host='$DB_HOST'"      #postgresql database php notation
+
+script_result=0
+
+start(){
+	PSQL_START=$"Starting ${NAME} service: "
+	if  [ ! -d "$TE_PATH/" ]
+	    then
+	    echo "Transformation Engine not installed in $TE_PATH"
+	    echo_failure
+	    script_result=1
+	    exit 1;
+	fi
+	echo -n "$PSQL_START"
+	
+	if [ ! -f "$TE_REQUEST_PID" ]
+	    then
+	    $TE_PATH/te_request_server --fpid=$TE_REQUEST_PID --port=$PORT --laddr=$LISTEN_ADDRESS --db="$DB" --maxclient=$REQUEST_MAX_CLIENT --directory=$REQUEST_DIRECTORY >/dev/null 2>&1 &
+	fi
+	if [ ! -f "$TE_RENDERING_PID" ]
+	    then
+	    $TE_PATH/te_rendering_server  --fpid=$TE_RENDERING_PID  --db="$DB" --maxclient=$RENDERING_MAX_CLIENT --directory=$RENDERING_DIRECTORY --clogin="$URL_CALLBACK_LOGIN" --cpassword="$URL_CALLBACK_PASSWORD"> /dev/null 2>&1 &
+	fi
+	sleep 1
+	    pid=`pidof -s "php"`
+	    if [ $pid ] && [ -f "$TE_REQUEST_PID" ] && [ -f "$TE_RENDERING_PID" ]
+		then
+		success "$PSQL_START"
+		echo
+	    else
+		failure "$PSQL_START"
+		echo
+		script_result=1
+	    fi
+	
+}
+
+stop(){
+    ret1=0
+    ret2=0
+    echo -n $"Stopping ${NAME} service: "
+    if [ -f $TE_REQUEST_PID ]
+	then
+	tepid=`cat $TE_REQUEST_PID`
+	/bin/kill -s SIGINT $tepid
+	ret1=$?
+    else
+	echo
+	echo "request server not running"
+    fi
+    if [ -f $TE_RENDERING_PID ]
+	then
+	tepid=`cat $TE_RENDERING_PID`
+	/bin/kill -s SIGINT $tepid
+	ret2=$?
+    else
+	echo
+	echo "rendering server not running"
+    fi
+    if [ $ret1 -eq 0 ] && [ $ret2 -eq 0 ]
+	then
+		echo_success
+	else
+		echo_failure
+		script_result=1
+    fi
+    echo
+    /bin/rm -f $TE_REQUEST_PID
+    /bin/rm -f $TE_RENDERING_PID
+}
+
+restart(){
+    stop
+    start
+}
+
+status2(){
+    ret1=1
+    ret2=1 
+    if [ -f $TE_REQUEST_PID ]
+	then
+	tepid=`cat $TE_REQUEST_PID`
+	c1=`ps hw $tepid`
+	ret1=$?    
+    fi
+    if [ -f $TE_RENDERING_PID ]
+	then
+	tepid=`cat $TE_RENDERING_PID`	
+	c2=`ps hw $tepid`
+	ret2=$?    
+    fi
+    if [ $ret1 -eq 0 ] 
+	then
+		echo "Request server running"
+		echo "   "$c1
+	else
+		echo "Request server is down"
+		script_result=1
+    fi
+    if [ $ret2 -eq 0 ] 
+	then
+		echo "Rendering server running"
+		echo "   "$c2
+	else
+		echo "Rendering server is down"
+		script_result=1
+    fi
+
+}
+
+init(){
+	PSQL_START=$"Initializing ${NAME} service: "
+	if  [ ! -d "$TE_PATH/" ]
+	    then
+	    echo "Transformation Engine not installed in $TE_PATH"
+	    echo_failure
+	    script_result=1
+	    exit 1;
+	fi
+	echo -n "$PSQL_START"
+	$TE_PATH/te_server_init  --db="$DB" 
+	ret=$?
+	if [ $ret -eq 0 ] 
+	then
+		success "$PSQL_START"
+		echo
+	else
+	    if [ $ret -eq 1 ] 
+		then
+		echo
+		echo -n  "Database already created"
+		warning "$PSQL_START"
+		echo
+	    else
+		failure "$PSQL_START"
+		echo
+		script_result=1
+	    fi
+	fi	
+}
+# This script is slightly unusual in that the name of the daemon (postmaster)
+# is not the same as the name of the subsystem (postgresql)
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  init)
+	init
+	;;
+  status)
+	#status php
+	#script_result=$?
+	status2
+	;;
+  restart)
+	restart
+	;;  
+  *)
+	echo $"Usage: $0 {start|stop|status|restart}"
+	exit 1
+esac
+
+exit $script_result
