@@ -1,7 +1,7 @@
 #! /bin/rpm
 #
 #  File: libwhat.spec
-#  $Id: TE.spec.in,v 1.6 2007/06/11 14:46:14 eric Exp $
+#  $Id: TE.spec.in,v 1.7 2007/06/11 14:49:18 eric Exp $
 #
 #  This is the SPEC file for the What Users Module
 #  Anakeen What Application
@@ -87,7 +87,7 @@ The TE CLIENT provide php class to communicate with transformation server
 autoconf
 %if  %{pld}
    ./configure  --with-pubrule=`pwd` \
-               --with-tedinit=ted.pld
+               --with-tedinit=ted.pld \
 	     --prefix=%{destdir}
 %else
    ./configure  --with-pubrule=`pwd` \

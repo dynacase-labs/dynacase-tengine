@@ -1,5 +1,5 @@
 # ============================================
-# $Id: Makefile.in,v 1.8 2007/06/11 12:28:30 eric Exp $
+# $Id: Makefile.in,v 1.9 2007/06/11 14:46:14 eric Exp $
 # ============================================
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
@@ -20,7 +20,7 @@ SUBDIR=  Class Engines
 
 include $(utildir)/PubRule
 
-DISTFILES += $(SUBDIR)  ted $(PACKAGE).cron te.conf te_clean \
+DISTFILES += $(SUBDIR)  ted.fc ted.pld $(PACKAGE).cron te.conf te_clean \
             RELEASE VERSION
 
 $(rootprefix)/etc/cron.d/$(PACKAGE).cron:$(PACKAGE).cron 
