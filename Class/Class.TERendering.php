@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TERendering.php,v 1.8 2007/06/08 15:32:33 eric Exp $
+ * @version $Id: Class.TERendering.php,v 1.9 2007/06/11 12:24:03 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -51,7 +51,6 @@ Class TERendering {
   function listenLoop() {
    
 
-    error_reporting(E_ALL);
 
     /* Autorise l'exécution infinie du script, en attente de connexion. */
     set_time_limit(0);
@@ -143,12 +142,21 @@ Class TERendering {
 		  }
 		  $turl["query"].="&tid=".$this->task->tid;
 		  $url=$this->implode_url($turl);
+		  $this->task->log(_("call : ").$url);
 		  $response = @file_get_contents($url);
-
+		  if ($response === false) {
+		    if (function_exists("error_get_last")) {
+		      $terr=error_get_last();
+		      $this->task->callreturn="ERROR:".$terr["message"];
+		    } else {
+		      $this->task->callreturn="ERROR:$php_errormsg";
+		    }
+		  } else {
 		 
-		  $this->task->callreturn=utf8_encode(str_replace('<','',$response));
+		    $this->task->callreturn=utf8_encode(str_replace('<','',$response));
+		  }
+		  $this->task->log(_("return call : ").$this->task->callreturn);
 		  $err=$this->task->modify();
-		  print "ERROE:$err\n";
 		}	      
 	      } 
 	    } else {
