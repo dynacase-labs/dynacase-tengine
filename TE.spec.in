@@ -1,7 +1,7 @@
 #! /bin/rpm
 #
 #  File: libwhat.spec
-#  $Id: TE.spec.in,v 1.3 2007/06/06 18:12:01 eric Exp $
+#  $Id: TE.spec.in,v 1.4 2007/06/11 12:31:39 eric Exp $
 #
 #  This is the SPEC file for the What Users Module
 #  Anakeen What Application
@@ -124,6 +124,7 @@ make  pubdir=$RPM_BUILD_ROOT%{destdir}
 %{destdir}/%{name}/te_request_server.php
 %{destdir}/%{name}/te_server_init
 %{destdir}/%{name}/te_server_init.php
+%{destdir}/%{name}/te_clean
 
 
 
