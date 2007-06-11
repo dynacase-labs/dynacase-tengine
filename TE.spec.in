@@ -1,7 +1,7 @@
 #! /bin/rpm
 #
 #  File: libwhat.spec
-#  $Id: TE.spec.in,v 1.4 2007/06/11 12:31:39 eric Exp $
+#  $Id: TE.spec.in,v 1.5 2007/06/11 12:57:27 eric Exp $
 #
 #  This is the SPEC file for the What Users Module
 #  Anakeen What Application
@@ -106,7 +106,7 @@ make  pubdir=$RPM_BUILD_ROOT%{destdir}
 %dir %{destdir}/%{name}
 /etc/rc.d/init.d/ted
 %attr(700,root,root) /etc/cron.d/TE.cron
-%attr(600,%{ldapuser},%{ldapuser}) %config(noreplace) /etc/te.conf
+%attr(600,root,root) %config(noreplace) /etc/te.conf
 %{destdir}/%{name}/Class.Engine.php
 %{destdir}/%{name}/Class.Histo.php
 %{destdir}/%{name}/Class.PgObj.php
