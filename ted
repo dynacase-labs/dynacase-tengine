@@ -6,7 +6,7 @@
 # description: Starts and stops the request and rendering backend daemon 
 # processname: postmaster
 # pidfile: /var/run/ted_request.pid /var/run/ted_rendering.pid
-# version $Id: ted,v 1.5 2007/06/05 08:20:00 eric Exp $
+# version $Id: ted,v 1.6 2007/06/11 12:12:48 eric Exp $
 
 
 
@@ -43,6 +43,7 @@ TE_PATH=/usr/share/pear/TE
 
 # Get config.
 . /etc/te.conf
+DB="dbname=$DB_NAME user=$DB_USER port='$DB_PORT' host='$DB_HOST'"      #postgresql database php notation
 
 script_result=0
 

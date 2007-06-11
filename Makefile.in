@@ -1,5 +1,5 @@
 # ============================================
-# $Id: Makefile.in,v 1.6 2007/06/05 08:20:00 eric Exp $
+# $Id: Makefile.in,v 1.7 2007/06/11 12:12:48 eric Exp $
 # ============================================
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
@@ -38,5 +38,7 @@ $(pubdir)/$(appname)/te_rendering_server: te_rendering_server.php
 	install -D -p -m 0755 te_rendering_server.php $@
 $(pubdir)/$(appname)/te_server_init: te_server_init.php
 	install -D -p -m 0755 te_server_init.php $@
+$(pubdir)/$(appname)/te_clean: te_clean
+	install -D -p -m 0755 $< $@
 
-publish: $(rootprefix)/etc/cron.d/$(PACKAGE).cron $(rootprefix)/etc/rc.d/init.d/ted $(pubdir)/$(appname)/te_request_server $(pubdir)/$(appname)/te_rendering_server $(pubdir)/$(appname)/te_server_init $(rootprefix)/etc/te.conf
+publish: $(rootprefix)/etc/cron.d/$(PACKAGE).cron $(rootprefix)/etc/rc.d/init.d/ted $(pubdir)/$(appname)/te_request_server $(pubdir)/$(appname)/te_rendering_server $(pubdir)/$(appname)/te_server_init $(rootprefix)/etc/te.conf $(pubdir)/$(appname)/te_clean
