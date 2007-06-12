@@ -1,6 +1,9 @@
 # ============================================
-# $Id: Makefile,v 1.2 2007/06/04 16:23:26 eric Exp $
+# $Id: Makefile,v 1.3 2007/06/12 12:49:19 eric Exp $
 # $Log: Makefile,v $
+# Revision 1.3  2007/06/12 12:49:19  eric
+# add ooo uno macro
+#
 # Revision 1.2  2007/06/04 16:23:26  eric
 # add and testing engines
 #
@@ -18,7 +21,7 @@ appname = TE/engines
 export appname
 include $(utildir)/PubRule
 
-DISTFILES +=  $(wildcard *2*) 
+DISTFILES +=  $(wildcard *2*) OOo-FreeDom.uno.pkg
 
 $(pubdir)/$(appname) : 
 	mkdir -p $@
@@ -27,6 +30,7 @@ $(pubdir)/$(appname)/txt2txt : txt2txt $(pubdir)/$(appname)
 	cp $< $@
 	chmod +x $@
 $(pubdir)/$(appname)/ooo2txt : ooo2txt $(pubdir)/$(appname)
+	cp OOo-FreeDom.uno.pkg $(pubdir)/$(appname)
 	cp $< $@
 	chmod +x $@
 $(pubdir)/$(appname)/pdf2txt : pdf2txt $(pubdir)/$(appname)
