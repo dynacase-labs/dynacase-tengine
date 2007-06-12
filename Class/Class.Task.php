@@ -3,7 +3,7 @@
  * Task for Engine 
  *
  * @author Anakeen 2007
- * @version $Id: Class.Task.php,v 1.4 2007/06/06 18:12:01 eric Exp $
+ * @version $Id: Class.Task.php,v 1.5 2007/06/12 14:27:33 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -24,6 +24,7 @@ Class Task extends PgObj {
 			   "callback",
 			   "callreturn",
 			   "fkey",
+			   "pid",
 			   "comment"// comment text
 			   );
   public $sup_fields = array ("cdate");
@@ -39,7 +40,12 @@ Class Task extends PgObj {
    */
   public $comment;
   
-
+		  
+  /**
+   * unix process id of processing
+   * @public int
+   */
+  public $pid;
 
   public $id_fields = array ("tid");
 
@@ -57,6 +63,7 @@ create table task ( tid serial primary key,
                    callback text,
                    callreturn text,
                    cdate timestamp default now(),
+                   pid int,
                    comment text  );
 ";
 

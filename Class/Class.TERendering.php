@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TERendering.php,v 1.9 2007/06/11 12:24:03 eric Exp $
+ * @version $Id: Class.TERendering.php,v 1.10 2007/06/12 14:27:33 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -48,36 +48,24 @@ Class TERendering {
   /**
    * main loop to listen socket
    */
-  function listenLoop() {
-   
-
-
-    /* Autorise l'exécution infinie du script, en attente de connexion. */
-    set_time_limit(0);
-
-    /* Active le vidage implicite des buffers de sortie, pour que nous
-     * puissions voir ce que nous lisons au fur et à mesure. */
-    ob_implicit_flush();
-
+  function listenLoop() {   
+    /* unlimit execution time. */
+    set_time_limit(0);   
 
     pcntl_signal(SIGCHLD, array(&$this,"decrease_child"));
     pcntl_signal(SIGPIPE, array(&$this,"decrease_child"));
-
-
     pcntl_signal(SIGINT,  array(&$this,"breakloop"));
 
 
     while ($this->good) {
-      $this->task=$this->getNextTask();
-     
-      echo "Wait [".$this->cur_client."]\n";
-      if ($this->task) {
-
+      
       if ($this->cur_client> $this->max_client) {
-	echo "Too many [".$this->cur_client."]\n";
-	  
-      } else {
-	echo "Accept [".$this->cur_client."]\n";
+	echo "Too many [".$this->cur_client."]\n";	  
+      } else {     
+	echo "Wait [".$this->cur_client."]\n";
+	if ($this->HasWaitingTask()) {
+
+	  echo "Accept [".$this->cur_client."]\n";
 	  $this->cur_client++;
 	  $pid = pcntl_fork();
             
@@ -97,11 +85,10 @@ Class TERendering {
 	    /* Send instructions. */
 	   
 	    pcntl_signal(SIGINT,  array(&$this,"rewaiting"));
-	    $this->task->status='P'; // Processing
-	    $err=$this->task->modify();
-
+	    $this->task=$this->getNextTask();
+	    if ($this->task) {
 	    echo "Processing :".$this->task->tid."\n";
-	    #sleep(3);
+#sleep(3);
 	    $eng=new Engine($this->dbaccess,array($this->task->engine,$this->task->inmime));
 	    if (! $eng->isAffected()) {
 	      $eng=$eng->GetNearEngine($this->task->engine,$this->task->inmime);	
@@ -165,27 +152,51 @@ Class TERendering {
 	      $err=$this->task->modify();	      
 	    
 	    }
+	    }
 	    exit(0);
 	  }
 	}
       }
-      sleep(1);
+      sleep(1); // to not load CPU
     } 
-
   }
   
-  function getNextTask() {
+  /**
+   * verify if has a task winting
+   * @return bool
+   */
+  function HasWaitingTask() {
     $q=new QueryPg($this->dbaccess,"Task");
     $q->AddQuery("status='W'");
+    $l=$q->Query(0,1);
+    if ($q->nb >0) return true;
+    return false;    
+  }
+  /**
+   * return next task to process
+   * the new status ogf task is 'P' and yje pid is set to current process
+   * @return Task
+   */
+  function getNextTask() {
+    $wt=new Task($this->dbaccess);
+    $wt->exec_query(sprintf("update task set pid=%d, status='P' where tid = (select tid from task where status='W' limit 1)",posix_getpid())); // no need lock table
+
+    $q=new QueryPg($this->dbaccess,"Task");
+    $q->AddQuery("status='P'");
+    $q->AddQuery("pid=".posix_getpid());
     $l=$q->Query(0,1);
     if ($q->nb >0) return $l[0];
     return false;    
 
   }
-
-
+  
+ /**
+   * rewrite URL from parse_url array
+   * @param array $turl the url array
+   * @return string
+   */
   function implode_url($turl) {    
-    print_r($turl);
+
     if (isset($turl["scheme"])) $url=$turl["scheme"]."://";
     else $url="http://";
     if (isset($turl["user"]) && isset($turl["pass"]))  $url.=$turl["user"].':'.$turl["pass"].'@';
@@ -199,7 +210,7 @@ Class TERendering {
     if (isset($turl["path"])) $url.=$turl["path"];
     if (isset($turl["query"])) $url.='?'.$turl["query"];
     if (isset($turl["fragment"])) $url.='#'.$turl["fragment"];
-    print $url;
+
     return $url;
   }
 
