@@ -1,7 +1,7 @@
 #! /bin/rpm
 #
 #  File: libwhat.spec
-#  $Id: TE.spec.in,v 1.7 2007/06/11 14:49:18 eric Exp $
+#  $Id: TE.spec.in,v 1.8 2007/06/12 13:35:02 eric Exp $
 #
 #  This is the SPEC file for the What Users Module
 #  Anakeen What Application
@@ -60,7 +60,7 @@ Requires: postgresql >= 7.2
 Requires: recode
 Requires: iconv
 Requires: ghostscript
-Requires: openoffice.org-core
+Requires: openoffice.org-writer
 %description
 The Transformation engine allow to convert file in different other format in asynchronous mode.
 
