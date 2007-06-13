@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TERendering.php,v 1.11 2007/06/13 13:53:06 eric Exp $
+ * @version $Id: Class.TERendering.php,v 1.12 2007/06/13 16:05:19 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -101,11 +101,11 @@ Class TERendering {
 		if ((! is_file($outfile)) && (!  is_file($errfile))) {
 		  $tc=sprintf("%s %s %s 2>%s",
 			      $eng->command,
-			      $orifile,
-			      $outfile,
-			      $errfile);
+			      escapeshellarg($orifile),
+			      escapeshellarg($outfile),
+			      escapeshellarg($errfile));
 		  $this->task->log(sprintf(_("execute [%s] command"),$tc));
-		  system(escapeshellcmd($tc),$retval);
+		  system($tc,$retval);
 		  if (! file_exists($outfile)) $retval=-1;
 		  if ($retval!=0) {
 		    //error mode
