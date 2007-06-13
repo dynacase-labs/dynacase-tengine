@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEServer.php,v 1.12 2007/06/08 15:32:33 eric Exp $
+ * @version $Id: Class.TEServer.php,v 1.13 2007/06/13 13:53:06 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -193,12 +193,12 @@ Class TEServer {
       $this->task->log(sprintf(_("transferring from %s"),$peername));
     }
 
-    error_log("READ $buf");
     $err=$this->task->Add();
     if ($err=="") {
       $mb=microtime();
+      $handle=false;
       $trbytes=0;
-      $handle = @fopen($filename, "w");
+      if (!is_file($filename)) $handle = @fopen($filename, "w"); // only if not
       if ($handle) {
 	do {
 	  if ($size >= 2048) {
@@ -218,15 +218,19 @@ Class TEServer {
 	//sleep(3);
 	$this->task->log(sprintf("%d bytes read in %.03f sec",$trbytes,
 				 microtime_diff(microtime(),$mb)));
+	$this->task->status='W'; // waiting
+      } else {
+	$this->task->comment=sprintf(_("cannot create temporary file [%s]"),$filename);
+	$this->task->status='K'; // KO
       }
+      $this->task->Modify();
     }
     echo "\nEND FILE $trbytes bytes\n";
 
-    $talkback = "<response status=\"OK\">";    		       
+    if ($err=="") $talkback = "<response status=\"OK\">";    		       
+    else $talkback = "<response status=\"KO\">";    
 	
 
-    $this->task->status='W'; // waiting
-    $this->task->Modify();
     $talkback.=sprintf("<task id=\"%s\" status=\"%s\"><comment>%s</comment></task>",
 		       $this->task->tid,$this->task->status,str_replace("\n","; ",$this->task->comment));
 
