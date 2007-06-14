@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEServer.php,v 1.13 2007/06/13 13:53:06 eric Exp $
+ * @version $Id: Class.TEServer.php,v 1.14 2007/06/14 15:50:04 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -165,6 +165,7 @@ Class TEServer {
      echo "fget $errstr ($errno)<br />\n";
      break;
    }
+   print "$buf\n";
    $tename=false;
    if (preg_match("/name=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
      $tename=$match[1];
@@ -177,11 +178,17 @@ Class TEServer {
    }
    if (preg_match("/callback=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
      $callback=$match[1];
-
+   }
+   $ext="";
+   if (preg_match("/fname=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
+     $fname=$match[1];
+     $ext=fileextension($fname);
+     if ($ext) $ext='.'.$ext;
    }
     // normal case : now the file	  
 
-    $filename=$this->tmppath."/tes-".posix_getpid();
+
+    $filename=$this->tmppath."/tes-".posix_getpid().$ext;
     $this->task=new Task($this->dbaccess);
     $this->task->engine=$tename;
     $this->task->infile=$filename;
@@ -189,11 +196,12 @@ Class TEServer {
     $this->task->callback=$callback;
     $this->task->status='T'; // transferring
     $peername=stream_socket_get_name($this->msgsock,true);
+    
+
+    $err=$this->task->Add();
     if  ($peername) {
       $this->task->log(sprintf(_("transferring from %s"),$peername));
     }
-
-    $err=$this->task->Add();
     if ($err=="") {
       $mb=microtime();
       $handle=false;

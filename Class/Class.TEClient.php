@@ -3,7 +3,7 @@
  * Function to dialog with transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEClient.php,v 1.8 2007/06/08 08:38:53 eric Exp $
+ * @version $Id: Class.TEClient.php,v 1.9 2007/06/14 15:50:04 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -73,9 +73,9 @@ Class TransformationEngine {
       if ($out=="Continue") {
 	clearstatcache(); // to reset filesize
 	$size=filesize($filename);
+	$basename=str_replace('"','_',basename($filename));
 
-
-	$in = "<TE name=\"$te_name\" fkey=\"$fkey\" size=\"$size\" callback=\"$callback\"/>\n";
+	$in = "<TE name=\"$te_name\" fkey=\"$fkey\" fname=\"$basename\" size=\"$size\" callback=\"$callback\"/>\n";
 	#echo "Envoi du header $in ...";    
 	fputs($fp,$in);
 	//echo "Envoi du fichier $filename ...";

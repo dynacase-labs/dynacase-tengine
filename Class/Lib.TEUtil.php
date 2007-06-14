@@ -3,7 +3,7 @@
  * Common util functions
  *
  * @author Anakeen 200T
- * @version $Id: Lib.TEUtil.php,v 1.6 2007/06/12 13:35:43 eric Exp $
+ * @version $Id: Lib.TEUtil.php,v 1.7 2007/06/14 15:50:04 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -54,7 +54,7 @@ function getSysMimeFile($f,$fn="") {
   if (! file_exists($f)) return false;
   $sys = trim(`file -bi "$f"`);
   $txt=getTextMimeFile($f);
-
+  if ($fn=="") $fn=basename($f);
   // correct errors of file function
   if (preg_match('/Makefile/',$fn)) return 'text/x-makefile';
   if (preg_match('/ASCII C\+\+/',$txt)) {
@@ -62,7 +62,7 @@ function getSysMimeFile($f,$fn="") {
      return 'text/x-c++';
   } 
   if (preg_match('/PHP script/',$txt))  return 'text/x-php';
-  
+
   // open office archive
   if (preg_match('/zip$/',$sys)) {
   
@@ -145,4 +145,11 @@ function php2DbCreateSql($dbcoord) {
     $dbpsql.= " $dbname ";
     return $dbpsql;  
 }
+
+function fileextension($filename, $ext="") {
+  $te = explode(".", basename($filename));
+  if (count($te)>1) $ext = $te[count($te)-1];
+  return $ext;
+}  
+
 ?>
