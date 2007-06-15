@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEServer.php,v 1.14 2007/06/14 15:50:04 eric Exp $
+ * @version $Id: Class.TEServer.php,v 1.15 2007/06/15 15:13:17 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -78,7 +78,7 @@ Class TEServer {
 	echo "Accept [".$this->cur_client."]\n";
 
 
-	if ($this->cur_client> $this->max_client) {
+	if ($this->cur_client>= $this->max_client) {
 
 	  $talkback = "Too many child [".$this->cur_client."] Reject\n";
 	  //$childpid=pcntl_wait($wstatus); 

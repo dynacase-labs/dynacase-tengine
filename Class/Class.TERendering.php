@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TERendering.php,v 1.12 2007/06/13 16:05:19 eric Exp $
+ * @version $Id: Class.TERendering.php,v 1.13 2007/06/15 15:13:17 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -59,7 +59,7 @@ Class TERendering {
 
     while ($this->good) {
       
-      if ($this->cur_client> $this->max_client) {
+      if ($this->cur_client>= $this->max_client) {
 	echo "Too many [".$this->cur_client."]\n";	  
       } else {     
 	echo "Wait [".$this->cur_client."]\n";
