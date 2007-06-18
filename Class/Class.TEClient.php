@@ -3,13 +3,14 @@
  * Function to dialog with transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEClient.php,v 1.9 2007/06/14 15:50:04 eric Exp $
+ * @version $Id: Class.TEClient.php,v 1.10 2007/06/18 12:27:44 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
 /**
  */
 
+include_once("Lib.TEUtil.php");
 
 Class TransformationEngine {
   /**
@@ -74,55 +75,68 @@ Class TransformationEngine {
 	clearstatcache(); // to reset filesize
 	$size=filesize($filename);
 	$basename=str_replace('"','_',basename($filename));
+	$mime=te_getSysMimeFile($filename);
 
-	$in = "<TE name=\"$te_name\" fkey=\"$fkey\" fname=\"$basename\" size=\"$size\" callback=\"$callback\"/>\n";
-	#echo "Envoi du header $in ...";    
+	$in = "<TE name=\"$te_name\" fkey=\"$fkey\" fname=\"$basename\" size=\"$size\" mime=\"$mime\" callback=\"$callback\"/>\n";
+#echo "Envoi du header $in ...";    
 	fputs($fp,$in);
-	//echo "Envoi du fichier $filename ...";
-	$size=filesize($filename);
+	$out = trim(fgets($fp));
+	$status="KO";
+	if (preg_match("/status=[ ]*\"([^\"]*)\"/i",$out,$match)) {
+	  $status=$match[1];
+	}
+	if ($status=='OK') {
+	  //echo "Envoi du fichier $filename ...";
 
-	if (file_exists($filename)) {
-	  $handle = @fopen($filename, "r");
-	  if ($handle) {
-	    while (!feof($handle)) {
-	      $buffer = fread($handle, 2048);
-	      $cout=fwrite($fp,$buffer,strlen($buffer));	      
-	    }	
-	    fclose($handle);
-	  }
-
-     
-	  fflush($fp);
-	  //echo "OK.\n";
-     
-
-	  // echo "Lire la réponse : \n\n";
-	  $out = trim(fgets($fp));
-	  if (preg_match("/status=[ ]*\"([^\"]*)\"/i",$out,$match)) {
-	    $status=$match[1];
-	  }
-	  if (preg_match("/<response[^>]*>(.*)<\/response>/i",$out,$match)) {
-	    $outmsg=$match[1];
-	  }
-	  //echo "Response [$status]\n";
-	  //echo "Message [$outmsg]\n";
-	  if ($status == "OK") {
-	    if (preg_match("/ id=[ ]*\"([^\"]*)\"/i",$outmsg,$match)) {
-	      $tid=$match[1];
+	  if (file_exists($filename)) {
+	    $handle = @fopen($filename, "r");
+	    if ($handle) {
+	      while (!feof($handle)) {
+		$buffer = fread($handle, 2048);
+		$cout=fwrite($fp,$buffer,strlen($buffer));	      
+	      }	
+	      fclose($handle);
 	    }
-	    if (preg_match("/status=[ ]*\"([^\"]*)\"/i",$outmsg,$match)) {
+
+     
+	    fflush($fp);
+	    //echo "OK.\n";
+     
+
+	    // echo "Lire la réponse : \n\n";
+	    $out = trim(fgets($fp));
+	    if (preg_match("/status=[ ]*\"([^\"]*)\"/i",$out,$match)) {
 	      $status=$match[1];
 	    }
-	    if (preg_match("/<comment>(.*)<\/comment>/i",$outmsg,$match)) {
-	      $comment=$match[1];
+	    if (preg_match("/<response[^>]*>(.*)<\/response>/i",$out,$match)) {
+	      $outmsg=$match[1];
 	    }
-	    $info=array("tid"=>$tid,
-			"status"=>$status,
-			"comment"=>$comment);
+	    //echo "Response [$status]\n";
+	    //echo "Message [$outmsg]\n";
+	    if ($status == "OK") {
+	      if (preg_match("/ id=[ ]*\"([^\"]*)\"/i",$outmsg,$match)) {
+		$tid=$match[1];
+	      }
+	      if (preg_match("/status=[ ]*\"([^\"]*)\"/i",$outmsg,$match)) {
+		$status=$match[1];
+	      }
+	      if (preg_match("/<comment>(.*)<\/comment>/i",$outmsg,$match)) {
+		$comment=$match[1];
+	      }
+	      $info=array("tid"=>$tid,
+			  "status"=>$status,
+			  "comment"=>$comment);
+	    } else {
+	      $err= $outcode." [$outmsg]";
+	    }      
+	  }
+	} else {
+	  $taskerr='-';
+	  if (preg_match("/<comment>(.*)<\/comment>/i",$out,$match)) {
+	    $err=$match[1];
 	  } else {
-	    $err= $outcode." [$outmsg]";
-	  }      
-      
+	    $err=_("Error sending file");
+	  }
 	}
       }
       //echo "Fermeture de la socket...";

@@ -3,14 +3,14 @@
  * Common util functions
  *
  * @author Anakeen 200T
- * @version $Id: Lib.TEUtil.php,v 1.7 2007/06/14 15:50:04 eric Exp $
+ * @version $Id: Lib.TEUtil.php,v 1.8 2007/06/18 12:27:44 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
 /**
  */
 
-function microtime_diff($a,$b) {
+function te_microtime_diff($a,$b) {
     list($a_micro, $a_int)=explode(' ',$a);
      list($b_micro, $b_int)=explode(' ',$b);
      if ($a_int>$b_int) {
@@ -28,7 +28,7 @@ function microtime_diff($a,$b) {
      }
 }
 /**
- * If the argument is of the form %Gâ%@NAME=VALUE it will be represented in the array as an element with the key NAME and the value VALUE. I the argument is a flag of the form -NAME it will be represented as a boolean with the name NAME with a value of true in the associative array.
+ * If the argument is of the form NAME=VALUE it will be represented in the array as an element with the key NAME and the value VALUE. I the argument is a flag of the form -NAME it will be represented as a boolean with the name NAME with a value of true in the associative array.
  * @param string argv global argv 
  * @return array
  */
@@ -50,10 +50,11 @@ function getArgv($argv) {
  * @param string $fn basename of file (can be different of real path)
  * return string mime like text/html
  */
-function getSysMimeFile($f,$fn="") {
+function te_getSysMimeFile($f,$fn="") {
   if (! file_exists($f)) return false;
+	clearstatcache(); // to reset filesize
   $sys = trim(`file -bi "$f"`);
-  $txt=getTextMimeFile($f);
+  $txt=te_getTextMimeFile($f);
   if ($fn=="") $fn=basename($f);
   // correct errors of file function
   if (preg_match('/Makefile/',$fn)) return 'text/x-makefile';
@@ -113,7 +114,7 @@ function getSysMimeFile($f,$fn="") {
   return $sys;
 }
 
-function getTextMimeFile($f) {
+function te_getTextMimeFile($f) {
   $txt = trim(`file -b "$f"`);
 
   if (! $txt) return " ";
@@ -146,7 +147,7 @@ function php2DbCreateSql($dbcoord) {
     return $dbpsql;  
 }
 
-function fileextension($filename, $ext="") {
+function te_fileextension($filename, $ext="") {
   $te = explode(".", basename($filename));
   if (count($te)>1) $ext = $te[count($te)-1];
   return $ext;

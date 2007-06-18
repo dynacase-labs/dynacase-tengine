@@ -3,7 +3,7 @@
  * Tranformation Engine Definition
  *
  * @author Anakeen 2005
- * @version $Id: Class.Engine.php,v 1.5 2007/06/06 18:12:01 eric Exp $
+ * @version $Id: Class.Engine.php,v 1.6 2007/06/18 12:27:44 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -55,7 +55,9 @@ create table engine ( name text not null,
                    constraint engine_pkey primary key(name,mime))";
 
   function getNearEngine($engine,$mime) {
-
+      if (! $this->isAffected()) {
+	$eng=new Engine($this->dbaccess,array($engine,$mime));
+      }
       if (! $this->isAffected()) {
 	$mime=strtok($mime,";");
 	$eng=new Engine($this->dbaccess,array($engine,($mime)));
@@ -72,6 +74,13 @@ create table engine ( name text not null,
       }
       if ( $eng->isAffected()) return $eng;
       return false;
+  }  
+  function existsEngine($engine) {
+    include_once("Class.QueryPg.php");
+    $q=new QueryPg($this->dbaccess,"Engine");
+    $q->AddQuery("name='".pg_escape_string($engine)."'");
+    return ($q->Count() > 0);
   }
+		 
 }
 ?>

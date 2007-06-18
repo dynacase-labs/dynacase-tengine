@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEServer.php,v 1.15 2007/06/15 15:13:17 eric Exp $
+ * @version $Id: Class.TEServer.php,v 1.16 2007/06/18 12:27:44 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -120,26 +120,26 @@ Class TEServer {
 	    case "CONVERT":
 	      $msg=$this->transfertFile();
 	      if (@fputs($this->msgsock, $msg,strlen($msg))=== false) {
-		 echo "fputs $errstr ($errno)<br />\n";		 
-	       }
+		echo "fputs $errstr ($errno)<br />\n";		 
+	      }
 	      break;
 	    case "INFO":
 	      $msg=$this->getInfo();
 	      if (@fputs($this->msgsock, $msg,strlen($msg))=== false) {
-		 echo "fputs $errstr ($errno)<br />\n";		 
-	       }
+		echo "fputs $errstr ($errno)<br />\n";		 
+	      }
 	      break;
 	    case "GET":
 	      $msg=$this->retrieveFile();
 	      if (@fputs($this->msgsock, $msg,strlen($msg))=== false) {
-		 echo "fputs $errstr ($errno)<br />\n";		 
-	       }
+		echo "fputs $errstr ($errno)<br />\n";		 
+	      }
 	      break;
 	    case "ABORT":
 	      $msg=$this->Abort();
 	      if (@fputs($this->msgsock, $msg,strlen($msg))=== false) {
-		 echo "fputs $errstr ($errno)<br />\n";		 
-	       }
+		echo "fputs $errstr ($errno)<br />\n";		 
+	      }
 	      break;
 	    }
 	    echo "COMMAND:$command\n";
@@ -161,30 +161,37 @@ Class TEServer {
    * @return string  message to return 
    */
   function transfertFile() {
-   if (false === ($buf = @fgets($this->msgsock))) {
-     echo "fget $errstr ($errno)<br />\n";
-     break;
-   }
-   print "$buf\n";
-   $tename=false;
-   if (preg_match("/name=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
-     $tename=$match[1];
-   }
-   if (preg_match("/fkey=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
-     $fkey=$match[1];
-   }
-   if (preg_match("/size=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
-     $size=intval($match[1]);
-   }
-   if (preg_match("/callback=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
-     $callback=$match[1];
-   }
-   $ext="";
-   if (preg_match("/fname=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
-     $fname=$match[1];
-     $ext=fileextension($fname);
-     if ($ext) $ext='.'.$ext;
-   }
+    if (false === ($buf = @fgets($this->msgsock))) {
+      echo "fget $errstr ($errno)<br />\n";
+      break;
+    }
+    print "$buf\n";
+    $tename=false;
+    if (preg_match("/name=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
+      $tename=$match[1];
+    }
+    if (preg_match("/fkey=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
+      $fkey=$match[1];
+    }
+    if (preg_match("/size=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
+      $size=intval($match[1]);
+    }
+    if (preg_match("/callback=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
+      $callback=$match[1];
+    }
+    $ext="";
+    if (preg_match("/fname=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
+      $fname=$match[1];
+      $ext=te_fileextension($fname);
+      if ($ext) $ext='.'.$ext;
+    }
+    $cmime="";
+    if (preg_match("/mime=[ ]*\"([^\"]*)\"/i",$buf,$match)) {
+      $cmime=$match[1];
+    }
+ 
+  
+
     // normal case : now the file	  
 
 
@@ -194,20 +201,47 @@ Class TEServer {
     $this->task->infile=$filename;
     $this->task->fkey=$fkey;
     $this->task->callback=$callback;
-    $this->task->status='T'; // transferring
+    $this->task->status='B'; // Initializing
     $peername=stream_socket_get_name($this->msgsock,true);
     
 
     $err=$this->task->Add();
-    if  ($peername) {
-      $this->task->log(sprintf(_("transferring from %s"),$peername));
+
+
+    // find first a compatible engine    
+    $eng=new Engine($this->dbaccess);
+    if ($eng->existsEngine($this->task->engine)) {
+      if ($cmime) {
+	if (! $eng->isAffected()) {
+	  $eng=$eng->GetNearEngine($this->task->engine,$cmime);	
+	}
+	print "Search ".$this->task->engine.$this->task->inmime;
+	if ($eng && $eng->isAffected()) {
+	  $talkback = "<response status=\"OK\">";    	
+	  $talkback.=sprintf("<task id=\"%s\" status=\"%s\"><comment>%s</comment></task>",
+			     $this->task->tid,$this->task->status,str_replace("\n","; ",$this->task->comment));
+     
+	  $talkback.="</response>\n";
+	  fputs($this->msgsock,$talkback,strlen($talkback));
+	} else {     
+	  $err=sprintf(_("No compatible engine %s found for %s"),$tename,$fname);
+	  $this->task->log("Incompatible mime [$cmime]");
+	}
+      }
+    } else {      
+      $err=sprintf(_("Engine %s not found"),$this->task->engine);
     }
     if ($err=="") {
       $mb=microtime();
       $handle=false;
       $trbytes=0;
-      if (!is_file($filename)) $handle = @fopen($filename, "w"); // only if not
+      if  ($peername) {
+	$this->task->log(sprintf(_("transferring from %s"),$peername));
+      }
+      if (!is_file($filename)) $handle = @fopen($filename, "x"); // only if not
       if ($handle) {
+	$this->task->status='T'; // transferring
+	$this->task->modify();
 	do {
 	  if ($size >= 2048) {
 	    $rsize=2048;
@@ -225,24 +259,30 @@ Class TEServer {
 	fclose($handle);
 	//sleep(3);
 	$this->task->log(sprintf("%d bytes read in %.03f sec",$trbytes,
-				 microtime_diff(microtime(),$mb)));
+				 te_microtime_diff(microtime(),$mb)));
 	$this->task->status='W'; // waiting
       } else {
-	$this->task->comment=sprintf(_("cannot create temporary file [%s]"),$filename);
-	$this->task->status='K'; // KO
+	$err=sprintf(_("cannot create temporary file [%s]"),$filename);
       }
+      $this->task->inmime="";  // reset mime type
       $this->task->Modify();
+      echo "\nEND FILE $trbytes bytes\n";
     }
-    echo "\nEND FILE $trbytes bytes\n";
 
-    if ($err=="") $talkback = "<response status=\"OK\">";    		       
-    else $talkback = "<response status=\"KO\">";    
+    if ($err!="") {
+      $talkback = "<response status=\"KO\">";    
+      $this->task->comment=$err;   
+      $this->task->log($err);
+      $this->task->status='K'; // KO		       
+      $this->task->Modify();
+    } else $talkback = "<response status=\"OK\">";    
 	
 
     $talkback.=sprintf("<task id=\"%s\" status=\"%s\"><comment>%s</comment></task>",
 		       $this->task->tid,$this->task->status,str_replace("\n","; ",$this->task->comment));
 
     $talkback.="</response>\n";
+  
     return $talkback;
   }
 
@@ -377,7 +417,7 @@ Class TEServer {
 	    fflush($this->msgsock);
 	    //sleep(3);
 	    $this->task->log(sprintf("%d bytes wroted in %.03f sec",$size,
-				     microtime_diff(microtime(),$mb)));
+				     te_microtime_diff(microtime(),$mb)));
 	  }
 	} else {
 	  $this->task->log($err);

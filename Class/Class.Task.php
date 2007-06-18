@@ -3,7 +3,7 @@
  * Task for Engine 
  *
  * @author Anakeen 2007
- * @version $Id: Class.Task.php,v 1.5 2007/06/12 14:27:33 eric Exp $
+ * @version $Id: Class.Task.php,v 1.6 2007/06/18 12:27:44 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -74,12 +74,12 @@ create table task ( tid serial primary key,
       $this->tid = $arr[0];
     }
     if ($this->infile != '') {
-      $this->inmime=getSysMimeFile($this->infile);
+      $this->inmime=te_getSysMimeFile($this->infile);
     }
   }
 
   function preUpdate() {
-    if (($this->infile != '') &&  ($this->inmime == '')) $this->inmime=getSysMimeFile($this->infile);
+    if (($this->infile != '') &&  ($this->inmime == '')) $this->inmime=te_getSysMimeFile($this->infile);
   }
 
   function log($s) {
