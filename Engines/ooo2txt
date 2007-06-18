@@ -3,7 +3,9 @@
 # Xfvb :0
 UF=$2.t
 #ooffice -display :0  -norestore -invisible -headless -nologo -env:UserInstallation=\$SYSUSERCONFIG/.OOo_$$  "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
-ooffice -display :0  -norestore -invisible -headless -nologo "-accept=socket,host=localhost,port=$$;urp;StarOffice.ServiceManager" "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
+ooffice -display :0  -norestore -invisible -headless -nologo -env:UserInstallation=file:///$HOME/.OOo_$$  "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
+/bin/rm -r $HOME/.OOo_$$
+#ooffice -display :0  -norestore -invisible -headless -nologo "-accept=socket,host=localhost,port=$$;urp;" "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
 
 if [ -f $UF ]; then
     iconv  -f utf-8 -t latin1//TRANSLIT $UF > $2
