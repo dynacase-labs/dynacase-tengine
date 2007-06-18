@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TERendering.php,v 1.14 2007/06/18 12:27:44 eric Exp $
+ * @version $Id: Class.TERendering.php,v 1.15 2007/06/18 15:57:11 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -151,13 +151,22 @@ Class TERendering {
 		    $this->task->status='K'; // KO
 		    $err=$this->task->modify();
 		  }
-		} 
+		} else {
+		  $this->task->log(_("empty command"));
+		  $this->task->status='K'; // KO
+		  $err=$this->task->modify();	
+		}
 	      } else {
 		$this->task->log(_("no compatible engine found"));
 		$this->task->status='K'; // KO
 		$err=$this->task->modify();	      
 	    
 	      }
+	    }
+	    if ($this->status=='P') {
+		$this->task->log(_("hou hou"));
+		$this->task->status='Z'; // KO ??
+		$err=$this->task->modify();	      	      
 	    }
 	    exit(0);
 	  }
