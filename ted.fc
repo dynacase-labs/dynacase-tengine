@@ -6,7 +6,7 @@
 # description: Starts and stops the request and rendering backend daemon 
 # processname: postmaster
 # pidfile: /var/run/ted_request.pid /var/run/ted_rendering.pid
-# version $Id: ted.fc,v 1.1 2007/06/11 14:46:14 eric Exp $
+# version $Id: ted.fc,v 1.2 2007/06/26 07:03:21 eric Exp $
 
 
 
@@ -48,7 +48,7 @@ DB="dbname=$DB_NAME user=$DB_USER port='$DB_PORT' host='$DB_HOST'"      #postgre
 script_result=0
 
 start(){
-	PSQL_START=$"Starting ${NAME} service: "
+	TE_START=$"Starting ${NAME} service: "
 	if  [ ! -d "$TE_PATH/" ]
 	    then
 	    echo "Transformation Engine not installed in $TE_PATH"
@@ -56,7 +56,7 @@ start(){
 	    script_result=1
 	    exit 1;
 	fi
-	echo -n "$PSQL_START"
+	echo -n "$TE_START"
 	
 	if [ ! -f "$TE_REQUEST_PID" ]
 	    then
@@ -70,10 +70,10 @@ start(){
 	    pid=`pidof -s "php"`
 	    if [ $pid ] && [ -f "$TE_REQUEST_PID" ] && [ -f "$TE_RENDERING_PID" ]
 		then
-		success "$PSQL_START"
+		success "$TE_START"
 		echo
 	    else
-		failure "$PSQL_START"
+		failure "$TE_START"
 		echo
 		script_result=1
 	    fi
@@ -154,7 +154,7 @@ status2(){
 }
 
 init(){
-	PSQL_START=$"Initializing ${NAME} service: "
+	TE_START=$"Initializing ${NAME} service: "
 	if  [ ! -d "$TE_PATH/" ]
 	    then
 	    echo "Transformation Engine not installed in $TE_PATH"
@@ -162,22 +162,22 @@ init(){
 	    script_result=1
 	    exit 1;
 	fi
-	echo -n "$PSQL_START"
+	echo -n "$TE_START"
 	$TE_PATH/te_server_init  --db="$DB" 
 	ret=$?
 	if [ $ret -eq 0 ] 
 	then
-		success "$PSQL_START"
+		success "$TE_START"
 		echo
 	else
 	    if [ $ret -eq 1 ] 
 		then
 		echo
 		echo -n  "Database already created"
-		warning "$PSQL_START"
+		warning "$TE_START"
 		echo
 	    else
-		failure "$PSQL_START"
+		failure "$TE_START"
 		echo
 		script_result=1
 	    fi
