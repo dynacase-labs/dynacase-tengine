@@ -1,0 +1,18 @@
+Source: freedom-te
+Section: web
+Priority: extra
+Maintainer: yannick <yannick.lebriquer@anakeen.com>
+Build-Depends: debhelper (>= 5), autoconf
+Standards-Version: 3.7.2
+
+Package: freedom-te
+Architecture: all
+Depends: php5-cli, php5-pgsql, gs, gsfonts, openoffice.org2-writer
+Description: The FreeDom Transformation Engine
+ The Transformation engine allow to convert file in different other format in asynchronous mode.
+
+Package: freedom-te-client
+Architecture: all
+Depends: php5-cli
+Description: The FreeDom TE Client
+ The TE CLIENT provide php class to use transformation server

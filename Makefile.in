@@ -1,5 +1,5 @@
 # ============================================
-# $Id: Makefile.in,v 1.9 2007/06/11 14:46:14 eric Exp $
+# $Id: Makefile.in,v 1.10 2007/07/10 12:25:50 yannick Exp $
 # ============================================
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
@@ -16,7 +16,7 @@ GZIP_ENV = --best
 
 export targetdir PACKAGE
 
-SUBDIR=  Class Engines
+SUBDIR=  Class Engines debian
 
 include $(utildir)/PubRule
 
