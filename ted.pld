@@ -6,7 +6,7 @@
 # description: Starts and stops the request and rendering backend daemon 
 # processname: postmaster
 # pidfile: /var/run/ted_request.pid /var/run/ted_rendering.pid
-# version $Id: ted.pld,v 1.1 2007/06/11 14:46:14 eric Exp $
+# version $Id: ted.pld,v 1.2 2007/08/06 10:45:40 eric Exp $
 
 
 
@@ -62,7 +62,7 @@ start(){
 	fi
 	if [ ! -f "$TE_RENDERING_PID" ]
 	    then
-	     $TE_PATH/te_rendering_server  --fpid=$TE_RENDERING_PID  --db="$DB" --maxclient=$RENDERING_MAX_CLIENT --directory=$RENDERING_DIRECTORY --clogin="$URL_CALLBACK_LOGIN" --cpassword="$URL_CALLBACK_PASSWORD"> /dev/null 2>&1 &
+	     $TE_PATH/te_rendering_server  --fpid=$TE_RENDERING_PID  --db="$DB" --maxclient=$RENDERING_MAX_CLIENT --directory=$RENDERING_DIRECTORY --loginfile="/etc/te.conf" > /dev/null 2>&1 &
             
 	    nstart=1
         else

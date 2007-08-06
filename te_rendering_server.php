@@ -4,7 +4,7 @@
  * Read te database to do file transformation (conversion) in waiting
  *
  * @author Anakeen 2007
- * @version $Id: te_rendering_server.php,v 1.5 2007/06/11 12:20:22 eric Exp $
+ * @version $Id: te_rendering_server.php,v 1.6 2007/08/06 10:45:40 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -23,8 +23,19 @@ if ($pidfile && (! file_exists($pidfile))) {
   $db=$targ["db"];
   $maxclient=$targ["maxclient"];
   $tmppath=$targ["directory"];
-  $login=$targ["clogin"];
-  $pwd=$targ["cpassword"];
+  $filelogin=$targ["loginfile"];
+  if ($filelogin) {
+    $logincontent=file_get_contents($filelogin);
+    if (preg_match('/URL_CALLBACK_LOGIN=([^ \n\r\t]+)/', $logincontent , $matches)) {
+      $login=$matches[1];
+    }
+    if (preg_match('/URL_CALLBACK_PASSWORD=([^ \n\r\t]+)/', $logincontent , $matches)) {
+      $pwd=$matches[1];
+    }
+  } else {
+    $login=$targ["clogin"];
+    $pwd=$targ["cpassword"];
+  }
 
   $s=new TERendering();
   if ($db) $s->dbaccess=$db;
