@@ -3,7 +3,7 @@
  * Function to dialog with transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEClient.php,v 1.11 2007/06/18 15:57:34 eric Exp $
+ * @version $Id: Class.TEClient.php,v 1.12 2007/08/14 09:39:33 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -58,7 +58,7 @@ Class TransformationEngine {
       //  echo "Essai de connexion à '$address' sur le port '$service_port'...\n";
       //    $result = socket_connect($socket, $address, $service_port);
 
-      $fp = stream_socket_client("tcp://$address:$service_port", $errno, $errstr, 30);
+      $fp = @stream_socket_client("tcp://$address:$service_port", $errno, $errstr, 30);
 
       if (!$fp) {
 	$err=_("socket creation error")." : $errstr ($errno)\n";
