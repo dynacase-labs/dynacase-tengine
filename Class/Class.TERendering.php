@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TERendering.php,v 1.15 2007/06/18 15:57:11 eric Exp $
+ * @version $Id: Class.TERendering.php,v 1.16 2007/08/17 08:56:48 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -60,7 +60,8 @@ Class TERendering {
     while ($this->good) {
       
       if ($this->cur_client>= $this->max_client) {
-	echo "Too many [".$this->cur_client."]\n";	  
+	echo "Too many [".$this->cur_client."]\n";
+	sleep(10);
       } else {     
 	echo "Wait [".$this->cur_client."]\n";
 	if ($this->HasWaitingTask()) {
@@ -170,9 +171,10 @@ Class TERendering {
 	    }
 	    exit(0);
 	  }
+	} else {
+	  sleep(10); // to not load CPU
 	}
       }
-      sleep(1); // to not load CPU
     } 
   }
   
