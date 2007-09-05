@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TERendering.php,v 1.16 2007/08/17 08:56:48 eric Exp $
+ * @version $Id: Class.TERendering.php,v 1.17 2007/09/05 10:14:42 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -74,11 +74,9 @@ Class TERendering {
 	    // Fork failed           
 	    exit(1);
 	  } else if ( $pid ) {
-	    // We are the parent
-    
+	    // We are the parent    
 	    echo "Parent Waiting Accept:".$this->cur_client."\n";
-    
-
+	    sleep(1); // need to wait rewaiting signal
 	  } else {
 	    // We are the child
 	    // Do something with the inherited connection here
