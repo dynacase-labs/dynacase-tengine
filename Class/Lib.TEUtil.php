@@ -3,7 +3,7 @@
  * Common util functions
  *
  * @author Anakeen 200T
- * @version $Id: Lib.TEUtil.php,v 1.8 2007/06/18 12:27:44 eric Exp $
+ * @version $Id: Lib.TEUtil.php,v 1.9 2007/09/07 14:28:28 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -111,7 +111,7 @@ function te_getSysMimeFile($f,$fn="") {
     if (preg_match('/\.ppt$/',$fn))    return 'application/vnd.ms-powerpoint';
   }
 
-  return $sys;
+  return strtok($sys," \n\t");
 }
 
 function te_getTextMimeFile($f) {
