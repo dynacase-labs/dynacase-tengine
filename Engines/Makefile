@@ -1,6 +1,9 @@
 # ============================================
-# $Id: Makefile,v 1.3 2007/06/12 12:49:19 eric Exp $
+# $Id: Makefile,v 1.4 2007/09/21 08:13:30 eric Exp $
 # $Log: Makefile,v $
+# Revision 1.4  2007/09/21 08:13:30  eric
+# ooo2pdf
+#
 # Revision 1.3  2007/06/12 12:49:19  eric
 # add ooo uno macro
 #
@@ -39,8 +42,11 @@ $(pubdir)/$(appname)/pdf2txt : pdf2txt $(pubdir)/$(appname)
 $(pubdir)/$(appname)/html2txt : html2txt $(pubdir)/$(appname)
 	cp $< $@
 	chmod +x $@
+$(pubdir)/$(appname)/ooo2pdf : ooo2pdf $(pubdir)/$(appname)	
+	cp $< $@
+	chmod +x $@
 
-publish:$(pubdir)/$(appname)/ooo2txt $(pubdir)/$(appname)/txt2txt $(pubdir)/$(appname)/pdf2txt $(pubdir)/$(appname)/html2txt
+publish:$(pubdir)/$(appname)/ooo2txt $(pubdir)/$(appname)/ooo2pdf $(pubdir)/$(appname)/txt2txt $(pubdir)/$(appname)/pdf2txt $(pubdir)/$(appname)/html2txt
 
 
 

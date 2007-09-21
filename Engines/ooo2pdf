@@ -1,0 +1,8 @@
+#!/bin/bash
+#/usr/lib/openoffice.org2.0/program/unopkg add --shared OOo-FreeDom.uno.pkg
+# Xfvb :0
+UF=$2
+
+ooffice -display :0  -norestore -invisible -headless -nologo -env:UserInstallation=file:///$HOME/.OOo_$$  "macro:///FreeDom.FreeDom.exportPdf($1,$UF)"
+/bin/rm -r $HOME/.OOo_$$
+
