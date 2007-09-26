@@ -1,8 +1,9 @@
 #!/bin/bash
 #/usr/lib/openoffice.org2.0/program/unopkg add --shared OOo-FreeDom.uno.pkg
 # Xfvb :0
-UF=$2
+# for apache : echo 0 > /proc/sys/kernel/exec-shield  
+# Alternatively, you can add the following option to the /etc/sysctl.conf
 
-ooffice -display :0  -norestore -invisible -headless -nologo -env:UserInstallation=file:///$HOME/.OOo_$$  "macro:///FreeDom.FreeDom.exportPdf($1,$UF)"
-/bin/rm -r $HOME/.OOo_$$
-
+TMPPATH=/var/tmp
+ooffice -display :0  -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.exportPdf($1,$2)"
+/bin/rm -r $TMPPATH/.OOo_$$
