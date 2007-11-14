@@ -1,0 +1,2 @@
+#!/bin/bash
+convert -thumbnail 200 "$1[0]" png:$2

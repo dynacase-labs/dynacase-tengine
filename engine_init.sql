@@ -26,3 +26,5 @@ INSERT INTO engine (name, mime, command, "comment") VALUES ('thumbnail', 'applic
 INSERT INTO engine (name, mime, command, "comment") VALUES ('thumbnail', 'application/vnd.oasis.opendocument.presentation', '/usr/share/pear/TE/engines/ooo2thumb', NULL);
 INSERT INTO engine (name, mime, command, "comment") VALUES ('thumbnail', 'application/vnd.oasis.opendocument.spreadsheet', '/usr/share/pear/TE/engines/ooo2thumb', NULL);
 INSERT INTO engine (name, mime, command, "comment") VALUES ('thumbnail', 'application/vnd.oasis.opendocument.graphics', '/usr/share/pear/TE/engines/ooo2thumb', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('thumbnail', 'image', '/usr/share/pear/TE/engines/img2thumb', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('thumbnail', 'application/pdf', '/usr/share/pear/TE/engines/img2thumb', NULL);
