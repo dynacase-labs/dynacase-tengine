@@ -14,10 +14,15 @@ INSERT INTO engine (name, mime, command, "comment") VALUES ('latin', 'text/html'
 INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'application/vnd.oasis.opendocument.text', '/usr/share/pear/TE/engines/ooo2pdf', NULL);
 INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'application/vnd.oasis.opendocument.presentation', '/usr/share/pear/TE/engines/ooo2pdf', NULL);
 INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'application/vnd.oasis.opendocument.spreadsheet', '/usr/share/pear/TE/engines/ooo2pdf', NULL);
-INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'application/vnd.oasis.opendocument.graphics', '/usr/share/pear/TE/engines/ooo2pdf', NULL);
 INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'application/msword', '/usr/share/pear/TE/engines/ooo2pdf', NULL);
 INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'application/vnd.sun.xml.writer', '/usr/share/pear/TE/engines/ooo2pdf', NULL);
 INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'application/vnd.sun.xml.calc', '/usr/share/pear/TE/engines/ooo2pdf', NULL);
 INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'application/vnd.sun.xml.impress', '/usr/share/pear/TE/engines/ooo2pdf', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'application/pdf', '/bin/cp', NULL);
 INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'text/html', '/usr/bin/html2pdf', NULL);
 INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'text', '/usr/share/pear/TE/engines/txt2pdf', NULL);
+
+INSERT INTO engine (name, mime, command, "comment") VALUES ('thumbnail', 'application/vnd.oasis.opendocument.text', '/usr/share/pear/TE/engines/ooo2thumb', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('thumbnail', 'application/vnd.oasis.opendocument.presentation', '/usr/share/pear/TE/engines/ooo2thumb', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('thumbnail', 'application/vnd.oasis.opendocument.spreadsheet', '/usr/share/pear/TE/engines/ooo2thumb', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('thumbnail', 'application/vnd.oasis.opendocument.graphics', '/usr/share/pear/TE/engines/ooo2thumb', NULL);

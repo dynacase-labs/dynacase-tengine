@@ -1,6 +1,9 @@
 # ============================================
-# $Id: Makefile,v 1.5 2007/11/13 16:34:41 eric Exp $
+# $Id: Makefile,v 1.6 2007/11/14 12:31:29 eric Exp $
 # $Log: Makefile,v $
+# Revision 1.6  2007/11/14 12:31:29  eric
+# thumbnail
+#
 # Revision 1.5  2007/11/13 16:34:41  eric
 # Add script for txt2pdf
 #
@@ -40,7 +43,11 @@ $(pubdir)/$(appname)/%2pdf : %2pdf $(pubdir)/$(appname)
 	cp $< $@
 	chmod +x $@
 
-publish:$(pubdir)/$(appname)/ooo2txt $(pubdir)/$(appname)/ooo2pdf $(pubdir)/$(appname)/txt2txt $(pubdir)/$(appname)/pdf2txt $(pubdir)/$(appname)/html2txt $(pubdir)/$(appname)/txt2pdf $(pubdir)/$(appname)/ooo2pdf
+$(pubdir)/$(appname)/%2thumb : %2thumb $(pubdir)/$(appname)	
+	cp $< $@
+	chmod +x $@
+
+publish:$(pubdir)/$(appname)/ooo2txt $(pubdir)/$(appname)/ooo2pdf $(pubdir)/$(appname)/txt2txt $(pubdir)/$(appname)/pdf2txt $(pubdir)/$(appname)/html2txt $(pubdir)/$(appname)/txt2pdf $(pubdir)/$(appname)/ooo2pdf $(pubdir)/$(appname)/ooo2thumb
 
 
 
