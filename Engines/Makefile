@@ -1,5 +1,5 @@
 # ============================================
-# $Id: Makefile,v 1.7 2007/11/14 16:49:14 eric Exp $
+# $Id: Makefile,v 1.8 2007/11/29 09:42:33 eric Exp $
 #
 # ============================================
 
@@ -10,8 +10,9 @@ include $(utildir)/PubRule
 
 DISTFILES +=  $(wildcard *2*) OOo-FreeDom.uno.pkg
 
-$(pubdir)/$(appname) : 
-	mkdir -p $@
+
+$(pubdir)/$(appname)/%pkg : %pkg
+	cp $< $@
 
 $(pubdir)/$(appname)/%2txt : %2txt $(pubdir)/$(appname)
 	cp $< $@
@@ -25,7 +26,7 @@ $(pubdir)/$(appname)/%2thumb : %2thumb $(pubdir)/$(appname)
 	cp $< $@
 	chmod +x $@
 
-publish:$(pubdir)/$(appname)/ooo2txt $(pubdir)/$(appname)/ooo2pdf $(pubdir)/$(appname)/txt2txt $(pubdir)/$(appname)/pdf2txt $(pubdir)/$(appname)/html2txt $(pubdir)/$(appname)/txt2pdf $(pubdir)/$(appname)/ooo2pdf $(pubdir)/$(appname)/ooo2thumb $(pubdir)/$(appname)/img2thumb
+publish:$(pubdir)/$(appname)/ooo2txt $(pubdir)/$(appname)/ooo2pdf $(pubdir)/$(appname)/txt2txt $(pubdir)/$(appname)/pdf2txt $(pubdir)/$(appname)/html2txt $(pubdir)/$(appname)/txt2pdf $(pubdir)/$(appname)/ooo2pdf $(pubdir)/$(appname)/ooo2thumb $(pubdir)/$(appname)/img2thumb $(pubdir)/$(appname)/OOo-FreeDom.uno.pkg
 
 
 
