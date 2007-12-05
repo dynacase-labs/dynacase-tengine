@@ -1,5 +1,5 @@
 #!/bin/bash
-#/usr/lib/openoffice.org2.0/program/unopkg add --shared OOo-FreeDom.uno.pkg
+#/usr/lib/openoffice.org/program/unopkg add --shared /usr/share/pear/TE/engines/OOo-FreeDom.uno.pkg
 # Xfvb :0
 UF=$2.t
 #ooffice -display :0  -norestore -invisible -headless -nologo -env:UserInstallation=\$SYSUSERCONFIG/.OOo_$$  "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"

@@ -1,5 +1,5 @@
 #!/bin/bash
-#/usr/lib/openoffice.org2.0/program/unopkg add --shared OOo-FreeDom.uno.pkg
+#/usr/lib/openoffice.org/program/unopkg add --shared /usr/share/pear/TE/engines/OOo-FreeDom.uno.pkg
 # Xfvb :0
 # for apache : echo 0 > /proc/sys/kernel/exec-shield  
 # Alternatively, you can add the following option to the /etc/sysctl.conf
