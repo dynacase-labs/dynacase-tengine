@@ -19,7 +19,7 @@ sed -i -e's!html2ps-toc">!html2ps-toc"><text:table-of-content text:style-name="S
 
 
 sed -i -e's!InBrowseMode" config:type="boolean">true!InBrowseMode" config:type="boolean">false!' settings.xml
-sed -i -e's!style:name="Heading_20_1"!style:name="Heading_20_1" style:default-outline-level="1"!' styles.xml
+#sed -i -e's!style:name="Heading_20_1"!style:name="Heading_20_1" style:default-outline-level="1"!' styles.xml
 
 
 zip -r ../test2.odt *
