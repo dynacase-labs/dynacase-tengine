@@ -1,4 +1,5 @@
 #!/bin/bash
+#/usr/lib/openoffice.org/program/unopkg remove --shared OOo-FreeDom.uno.pkg
 #/usr/lib/openoffice.org/program/unopkg add --shared /usr/share/pear/TE/engines/OOo-FreeDom.uno.pkg
 # Xfvb :0
 # for apache : echo 0 > /proc/sys/kernel/exec-shield  
@@ -6,13 +7,13 @@
 
 TMPPATH=/var/tmp
 ODTW=$TMPPATH/.OOo_$$/test.odt
-ooffice -display :0  -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.SaveAsOdt($1,$ODTW)"
+ooffice -display :0  -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.HTML2ODT($1,$ODTW)"
 
-echo $TMPPATH/.OOo_$$
+#echo $TMPPATH/.OOo_$$
 cd $TMPPATH/.OOo_$$
 mkdir zip
 cd zip
-unzip ../test.odt
+unzip ../test.odt >/dev/null
 sed -i -e"s/text-web/text/" mimetype
 sed -i -e"s/text-web/text/" META-INF/manifest.xml
 sed -i -e's!html2ps-toc">!html2ps-toc"><text:table-of-content text:style-name="Sect1" text:protected="true" text:name="Table des matières1"><text:table-of-content-source text:outline-level="3"><text:index-title-template text:style-name="Contents_20_Heading">Table des matières</text:index-title-template></text:table-of-content-source><text:index-body></text:index-body></text:table-of-content>!' content.xml
@@ -22,7 +23,7 @@ sed -i -e's!InBrowseMode" config:type="boolean">true!InBrowseMode" config:type="
 #sed -i -e's!style:name="Heading_20_1"!style:name="Heading_20_1" style:default-outline-level="1"!' styles.xml
 
 
-zip -r ../test2.odt *
+zip -r ../test2.odt * >/dev/null
 
 newodt=$TMPPATH/.OOo_$$/test2.odt
 
