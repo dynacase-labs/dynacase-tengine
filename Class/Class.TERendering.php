@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TERendering.php,v 1.17 2007/09/05 10:14:42 eric Exp $
+ * @version $Id: Class.TERendering.php,v 1.18 2008/03/17 16:44:08 eric Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -128,8 +128,8 @@ Class TERendering {
 			$turl["user"]=$this->login;
 		      }
 		      $turl["query"].="&tid=".$this->task->tid;
+		      $this->task->log(_("call : ").$callback.$turl["query"]);
 		      $url=$this->implode_url($turl);
-		      $this->task->log(_("call : ").$url);
 		      $response = @file_get_contents($url);
 		      if ($response === false) {
 			if (function_exists("error_get_last")) {
