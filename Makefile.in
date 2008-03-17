@@ -1,5 +1,5 @@
 # ============================================
-# $Id: Makefile.in,v 1.10 2007/07/10 12:25:50 yannick Exp $
+# $Id: Makefile.in,v 1.11 2008/03/17 10:03:13 eric Exp $
 # ============================================
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
@@ -7,6 +7,8 @@ utildir=@PUBRULE@
 appname = @PACKAGE@
 pubdir = @prefix@
 srcdir = @srcdir@
+rcdir = @rcinit@
+
 rootprefix=$(RPM_BUILD_ROOT)
 
 export pubdir utildir appname
@@ -29,7 +31,7 @@ $(rootprefix)/etc/cron.d/$(PACKAGE).cron:$(PACKAGE).cron
 $(rootprefix)/etc/te.conf:te.conf 
 	install -D -p -m 0644 te.conf $@
 
-$(rootprefix)/etc/rc.d/init.d/ted: ted 
+$(rootprefix)$(rcdir)/ted: ted 
 	install -D -p -m 0755 ted $@
 
 $(pubdir)/$(appname)/te_request_server: te_request_server.php
@@ -41,4 +43,4 @@ $(pubdir)/$(appname)/te_server_init: te_server_init.php
 $(pubdir)/$(appname)/te_clean: te_clean
 	install -D -p -m 0755 $< $@
 
-publish: $(rootprefix)/etc/cron.d/$(PACKAGE).cron $(rootprefix)/etc/rc.d/init.d/ted $(pubdir)/$(appname)/te_request_server $(pubdir)/$(appname)/te_rendering_server $(pubdir)/$(appname)/te_server_init $(rootprefix)/etc/te.conf $(pubdir)/$(appname)/te_clean
+publish: $(rootprefix)/etc/cron.d/$(PACKAGE).cron $(rootprefix)$(rcdir)/ted $(pubdir)/$(appname)/te_request_server $(pubdir)/$(appname)/te_rendering_server $(pubdir)/$(appname)/te_server_init $(rootprefix)/etc/te.conf $(pubdir)/$(appname)/te_clean

@@ -7,7 +7,7 @@
 #   as published by the Free Software Foundation; either version
 #   2 of the License, or (at your option) any later version.
 #
-AC_REVISION($Id: configure.in,v 1.4 2007/07/10 12:25:50 yannick Exp $)
+AC_REVISION($Id: configure.in,v 1.5 2008/03/17 10:03:13 eric Exp $)
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
@@ -38,6 +38,11 @@ AC_ARG_WITH(tedinit,
 [  --with-tedinit=init script file  ], tedinit=$withval)
 
 
+AC_SUBST(rcinit)
+rcinit=/etc/rc.d/init.d
+AC_ARG_WITH(rcinit,
+[  --with-rcinit=init script directory  ], rcinit=$withval)
 
 
-AC_OUTPUT(Makefile TE.spec ted:$tedinit debian/changelog )
+
+AC_OUTPUT(Makefile TE.spec ted:$tedinit debian/changelog engine_init.sql)

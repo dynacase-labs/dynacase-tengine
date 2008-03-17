@@ -4,20 +4,15 @@
 #
 # chkconfig: - 64 36
 # description: Starts and stops the request and rendering backend daemon 
-# processname: postmaster
+# processname: te_request_server te_rendering_server
 # pidfile: /var/run/ted_request.pid /var/run/ted_rendering.pid
-# version $Id: ted.fc,v 1.4 2008/03/17 10:03:13 eric Exp $
-
-
-
+# version $Id: ted.debian,v 1.1 2008/03/17 10:03:13 eric Exp $
 
 # Source function library.
-. /etc/rc.d/init.d/functions
+. /lib/lsb/init-functions
 
 # Get function listing for cross-distribution logic.
 TYPESET=`typeset -f|grep "declare"`
-
-
 
 # Find the name of the script
 NAME=`basename $0`
@@ -34,12 +29,12 @@ else
     SU=su
 fi
 
-
-
 # Set defaults for configuration variables
 TE_REQUEST_PID=/var/run/te_request.pid
 TE_RENDERING_PID=/var/run/te_rendering.pid
-TE_PATH=/usr/share/pear/TE
+#TE_PATH=/usr/share/pear/TE
+TE_PATH=/usr/share/php/TE
+
 
 # Get config.
 if [ -f /etc/te.conf ]; then
@@ -57,11 +52,10 @@ start(){
 	if  [ ! -d "$TE_PATH/" ]
 	    then
 	    echo "Transformation Engine not installed in $TE_PATH"
-	    echo_failure
+	    log_failure_msg "$TE_START" "FAILED"
 	    script_result=1
 	    exit 1;
 	fi
-	echo -n "$TE_START"
 	
 	if [ ! -f "$TE_REQUEST_PID" ]
 	    then
@@ -75,10 +69,10 @@ start(){
 	    pid=`pidof -s "php"`
 	    if [ $pid ] && [ -f "$TE_REQUEST_PID" ] && [ -f "$TE_RENDERING_PID" ]
 		then
-		success "$TE_START"
+		log_success_msg "$TE_START" "OK"
 		echo
 	    else
-		failure "$TE_START"
+		log_failure_msg "$TE_START" "FAILED"
 		echo
 		script_result=1
 	    fi
@@ -88,7 +82,7 @@ start(){
 stop(){
     ret1=0
     ret2=0
-    echo -n $"Stopping ${NAME} service: "
+    TE_STOP=$"Stopping ${NAME} service: "
     if [ -f $TE_REQUEST_PID ]
 	then
 	tepid=`cat $TE_REQUEST_PID`
@@ -109,9 +103,9 @@ stop(){
     fi
     if [ $ret1 -eq 0 ] && [ $ret2 -eq 0 ]
 	then
-		echo_success
+		log_success_msg "$TE_STOP" "OK"
 	else
-		echo_failure
+		log_failure_msg "$TE_STOP" "FAILED"
 		script_result=1
     fi
     echo
@@ -159,30 +153,29 @@ status2(){
 }
 
 init(){
-	TE_START=$"Initializing ${NAME} service: "
+	TE_INIT=$"Initializing ${NAME} service: "
 	if  [ ! -d "$TE_PATH/" ]
 	    then
 	    echo "Transformation Engine not installed in $TE_PATH"
-	    echo_failure
+	    log_failure_msg "$TE_INIT" "FAILED"
 	    script_result=1
 	    exit 1;
 	fi
-	echo -n "$TE_START"
 	$TE_PATH/te_server_init  --db="$DB" 
 	ret=$?
 	if [ $ret -eq 0 ] 
 	then
-		success "$TE_START"
+		log_success_msg "$TE_INIT""OK"
 		echo
 	else
 	    if [ $ret -eq 1 ] 
 		then
 		echo
 		echo -n  "Database already created"
-		warning "$TE_START"
+		log_warning_msg "$TE_INIT" "WARNING"
 		echo
 	    else
-		failure "$TE_START"
+		log_failure_msg "$TE_INIT" "FAILED"
 		echo
 		script_result=1
 	    fi

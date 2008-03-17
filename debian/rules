@@ -26,6 +26,8 @@ configure-stamp:
 	# Add here commands to configure the package.
 	autoconf
 	./configure --with-pubrule=`pwd` \
+			--with-tedinit=ted.debian \
+			--with-rcinit=/etc/init.d \
 		    --prefix=/usr/share/php
 
 	touch configure-stamp

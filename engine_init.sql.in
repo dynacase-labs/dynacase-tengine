@@ -1,0 +1,33 @@
+INSERT INTO engine (name, mime, command, "comment") VALUES ('latin', 'text', '@prefix@/TE/engines/txt2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('latin', 'application/vnd.oasis.opendocument.text', '@prefix@/TE/engines/ooo2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('latin', 'application/vnd.oasis.opendocument.presentation', '@prefix@/TE/engines/ooo2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('latin', 'application/vnd.oasis.opendocument.spreadsheet', '@prefix@/TE/engines/ooo2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('latin', 'application/vnd.sun.xml.writer', '@prefix@/TE/engines/ooo2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('latin', 'application/vnd.sun.xml.calc', '@prefix@/TE/engines/ooo2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('latin', 'application/vnd.sun.xml.impress', '@prefix@/TE/engines/ooo2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('latin', 'application/vnd.ms-powerpoint', '@prefix@/TE/engines/ooo2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('latin', 'application/vnd.ms-excel', '@prefix@/TE/engines/ooo2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('latin', 'application/msword', '@prefix@/TE/engines/ooo2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('latin', 'application/pdf', '@prefix@/TE/engines/pdf2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('latin', 'text/html', '@prefix@/TE/engines/html2txt', NULL);
+
+INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'application/vnd.oasis.opendocument.text', '@prefix@/TE/engines/ooo2pdf', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'application/vnd.oasis.opendocument.presentation', '@prefix@/TE/engines/ooo2pdf', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'application/vnd.oasis.opendocument.spreadsheet', '@prefix@/TE/engines/ooo2pdf', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'application/msword', '@prefix@/TE/engines/ooo2pdf', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'application/vnd.sun.xml.writer', '@prefix@/TE/engines/ooo2pdf', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'application/vnd.sun.xml.calc', '@prefix@/TE/engines/ooo2pdf', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'application/vnd.sun.xml.impress', '@prefix@/TE/engines/ooo2pdf', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'application/pdf', '/bin/cp', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'text/html', '@prefix@/TE/engines/html2pdf', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'text', '@prefix@/TE/engines/txt2pdf', NULL);
+
+INSERT INTO engine (name, mime, command, "comment") VALUES ('thumbnail', 'application/vnd.oasis.opendocument.text', '@prefix@/TE/engines/ooo2thumb', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('thumbnail', 'application/vnd.oasis.opendocument.presentation', '@prefix@/TE/engines/ooo2thumb', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('thumbnail', 'application/vnd.oasis.opendocument.spreadsheet', '@prefix@/TE/engines/ooo2thumb', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('thumbnail', 'application/vnd.oasis.opendocument.graphics', '@prefix@/TE/engines/ooo2thumb', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('thumbnail', 'image', '@prefix@/TE/engines/img2thumb', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('thumbnail', 'application/pdf', '@prefix@/TE/engines/img2thumb', NULL);
+
+
+INSERT INTO engine (name, mime, command, "comment") VALUES ('odt', 'text/html', '@prefix@/TE/engines/html2odt', NULL);

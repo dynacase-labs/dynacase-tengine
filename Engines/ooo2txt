@@ -3,7 +3,7 @@
 # Xfvb :0
 UF=$2.t
 #ooffice -display :0  -norestore -invisible -headless -nologo -env:UserInstallation=\$SYSUSERCONFIG/.OOo_$$  "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
-ooffice -display :0  -norestore -invisible -headless -nologo -env:UserInstallation=file:///$HOME/.OOo_$$  "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
+ooffice -display :0 -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$HOME/.OOo_$$  "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
 /bin/rm -r $HOME/.OOo_$$
 #ooffice -display :0  -norestore -invisible -headless -nologo "-accept=socket,host=localhost,port=$$;urp;" "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
 

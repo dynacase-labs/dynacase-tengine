@@ -6,7 +6,7 @@
 
 TMPPATH=/var/tmp
 ODTW=$TMPPATH/.OOo_$$/test.odt
-ooffice -display :0  -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.HTML2ODT($1,$ODTW)"
+ooffice -display :0  -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.HTML2ODT($1,$ODTW)"
 
 echo $TMPPATH/.OOo_$$
 cd $TMPPATH/.OOo_$$
