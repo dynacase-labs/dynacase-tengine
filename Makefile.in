@@ -1,5 +1,5 @@
 # ============================================
-# $Id: Makefile.in,v 1.13 2008/03/17 14:52:00 eric Exp $
+# $Id: Makefile.in,v 1.14 2008/03/17 15:06:56 eric Exp $
 # ============================================
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
@@ -34,10 +34,9 @@ $(rootprefix)/etc/te.conf:te.conf
 $(rootprefix)$(rcdir)/ted: ted 
 	install -D -p -m 0755 ted $@
 
-$(rootprefix)/etc/te.d: 
-	mkdir -p $@
 
-$(rootprefix)/etc/te.d/env: env  /etc/te.d
+
+$(rootprefix)/etc/te.d/env: env  
 	install -D -p -m 0644 env $@
 
 $(pubdir)/$(appname)/te_request_server: te_request_server.php
