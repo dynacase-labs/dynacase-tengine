@@ -6,8 +6,13 @@
 # Alternatively, you can add the following option to the /etc/sysctl.conf
 
 TMPPATH=/var/tmp
+[ -f /etc/te.d/env ] && . /etc/te.d/env
+if [ ! -x "$SOFFICE" ]; then 
+  echo program soffice $SOFFICE not executable
+  exit 1
+fi
 ODTW=$TMPPATH/.OOo_$$/test.odt
-ooffice -display :0  -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.HTML2ODT($1,$ODTW)"
+$SOFFICE -display :0  -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.HTML2ODT($1,$ODTW)"
 
 #echo $TMPPATH/.OOo_$$
 cd $TMPPATH/.OOo_$$
@@ -27,6 +32,6 @@ zip -r ../test2.odt * >/dev/null
 
 newodt=$TMPPATH/.OOo_$$/test2.odt
 
-ooffice -display :0  -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.exportPdf($newodt,$2)"
+$SOFFICE -display :0 -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.exportPdf($newodt,$2)"
 
 /bin/rm -r $TMPPATH/.OOo_$$

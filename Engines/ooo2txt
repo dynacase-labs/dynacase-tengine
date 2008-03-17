@@ -1,11 +1,18 @@
 #!/bin/bash
 #/usr/lib/openoffice.org/program/unopkg add --shared /usr/share/pear/TE/engines/OOo-FreeDom.uno.pkg
 # Xfvb :0
+
+[ -f /etc/te.d/env ] && . /etc/te.d/env
+if [ ! -x "$SOFFICE" ]; then 
+  echo program soffice $SOFFICE not executable
+  exit 1
+fi
+
 UF=$2.t
-#ooffice -display :0  -norestore -invisible -headless -nologo -env:UserInstallation=\$SYSUSERCONFIG/.OOo_$$  "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
-ooffice -display :0 -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$HOME/.OOo_$$  "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
+#-display :0  -norestore -invisible -headless -nologo -env:UserInstallation=\$SYSUSERCONFIG/.OOo_$$  "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
+$SOFFICE -display :0 -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$HOME/.OOo_$$  "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
 /bin/rm -r $HOME/.OOo_$$
-#ooffice -display :0  -norestore -invisible -headless -nologo "-accept=socket,host=localhost,port=$$;urp;" "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
+# -display :0  -norestore -invisible -headless -nologo "-accept=socket,host=localhost,port=$$;urp;" "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
 
 if [ -f $UF ]; then
     iconv  -f utf-8 -t latin1//TRANSLIT $UF > $2
