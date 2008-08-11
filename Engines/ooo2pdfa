@@ -1,0 +1,14 @@
+#!/bin/bash
+#/usr/lib/openoffice.org2.0/program/unopkg add --shared OOo-FreeDom.uno.pkg
+# Xfvb :0
+# for apache : echo 0 > /proc/sys/kernel/exec-shield  
+# Alternatively, you can add the following option to the /etc/sysctl.conf
+
+TMPPATH=/var/tmp
+[ -f /etc/te.d/env ] && . /etc/te.d/env
+if [ ! -x "$SOFFICE" ]; then 
+  echo program soffice $SOFFICE not executable
+  exit 1
+fi
+$SOFFICE -display :0  -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.exportPdfA($1,$2)"
+/bin/rm -r $TMPPATH/.OOo_$$

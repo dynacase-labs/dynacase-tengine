@@ -31,3 +31,12 @@ INSERT INTO engine (name, mime, command, "comment") VALUES ('thumbnail', 'applic
 
 
 INSERT INTO engine (name, mime, command, "comment") VALUES ('odt', 'text/html', '@prefix@/TE/engines/html2odt', NULL);
+
+INSERT INTO engine (name, mime, command, "comment") VALUES ('pdfa', 'application/vnd.oasis.opendocument.text', '@prefix@/TE/engines/ooo2pdfa', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('pdfa', 'application/vnd.oasis.opendocument.presentation', '@prefix@/TE/engines/ooo2pdfa', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('pdfa', 'application/vnd.oasis.opendocument.spreadsheet', '@prefix@/TE/engines/ooo2pdfa', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('pdfa', 'application/msword', '@prefix@/TE/engines/ooo2pdfa', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('pdfa', 'application/vnd.sun.xml.writer', '@prefix@/TE/engines/ooo2pdfa', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('pdfa', 'application/vnd.sun.xml.calc', '@prefix@/TE/engines/ooo2pdfa', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('pdfa', 'application/vnd.sun.xml.impress', '@prefix@/TE/engines/ooo2pdfa', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('pdfa', 'text/html', '@prefix@/TE/engines/html2pdfa', NULL);
