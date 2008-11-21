@@ -12,7 +12,11 @@ if [ ! -x "$SOFFICE" ]; then
   exit 1
 fi
 ODTW=$TMPPATH/.OOo_$$/test.odt
-$SOFFICE -display :0  -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.HTML2ODT($1,$ODTW)"
+if [ -x "$TE_XVFB_RUN" ]; then
+    $TE_XVFB_RUN -a $SOFFICE -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.HTML2ODT($1,$ODTW)"
+else
+    $SOFFICE -display :0  -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.HTML2ODT($1,$ODTW)"
+fi
 
 echo $TMPPATH/.OOo_$$
 cd $TMPPATH/.OOo_$$

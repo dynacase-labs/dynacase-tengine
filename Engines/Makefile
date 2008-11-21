@@ -1,5 +1,5 @@
 # ============================================
-# $Id: Makefile,v 1.11 2008/08/25 13:09:20 jerome Exp $
+# $Id: Makefile,v 1.12 2008/11/21 16:57:59 jerome Exp $
 #
 # ============================================
 
@@ -34,7 +34,11 @@ $(pubdir)/$(appname)/%2thumb : %2thumb $(pubdir)/$(appname)
 	cp $< $@
 	chmod +x $@
 
-publish:$(pubdir)/$(appname)/ooo2txt $(pubdir)/$(appname)/ooo2pdf $(pubdir)/$(appname)/ooo2pdfa $(pubdir)/$(appname)/txt2txt $(pubdir)/$(appname)/pdf2txt $(pubdir)/$(appname)/html2txt $(pubdir)/$(appname)/txt2pdf $(pubdir)/$(appname)/ooo2pdf $(pubdir)/$(appname)/html2pdf $(pubdir)/$(appname)/html2pdfa $(pubdir)/$(appname)/ooo2thumb $(pubdir)/$(appname)/img2thumb $(pubdir)/$(appname)/OOo-FreeDom.uno.pkg $(pubdir)/$(appname)/html2odt
+$(pubdir)/$(appname)/te-xvfb-run : te-xvfb-run $(pubdir)/$(appname)
+	cp $< $@
+	chmod +x $@
+
+publish: $(pubdir)/$(appname)/te-xvfb-run $(pubdir)/$(appname)/ooo2txt $(pubdir)/$(appname)/ooo2pdf $(pubdir)/$(appname)/ooo2pdfa $(pubdir)/$(appname)/txt2txt $(pubdir)/$(appname)/pdf2txt $(pubdir)/$(appname)/html2txt $(pubdir)/$(appname)/txt2pdf $(pubdir)/$(appname)/ooo2pdf $(pubdir)/$(appname)/html2pdf $(pubdir)/$(appname)/html2pdfa $(pubdir)/$(appname)/ooo2thumb $(pubdir)/$(appname)/img2thumb $(pubdir)/$(appname)/OOo-FreeDom.uno.pkg $(pubdir)/$(appname)/html2odt
 
 
 

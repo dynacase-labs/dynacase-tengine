@@ -12,7 +12,11 @@ if [ ! -x "$SOFFICE" ]; then
   exit 1
 fi
 ODTW=$TMPPATH/.OOo_$$/test.odt
-$SOFFICE -display :0  -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.HTML2ODT($1,$ODTW)"
+if [ -x "$TE_XVFB_RUN" ]; then
+    $TE_XVFB_RUN -a $SOFFICE -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.HTML2ODT($1,$ODTW)"
+else
+    $SOFFICE -display :0  -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.HTML2ODT($1,$ODTW)"
+fi
 
 #echo $TMPPATH/.OOo_$$
 cd $TMPPATH/.OOo_$$
@@ -32,6 +36,10 @@ zip -r ../test2.odt * >/dev/null
 
 newodt=$TMPPATH/.OOo_$$/test2.odt
 
-$SOFFICE -display :0 -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.exportPdfA($newodt,$2)"
+if [ -x "$TE_XVFB_RUN" ]; then
+    $TE_XVFB_RUN -a $SOFFICE -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.exportPdfA($newodt,$2)"
+else
+    $SOFFICE -display :0 -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.exportPdfA($newodt,$2)"
+fi
 
 /bin/rm -r $TMPPATH/.OOo_$$

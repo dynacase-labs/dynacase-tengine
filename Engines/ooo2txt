@@ -10,7 +10,11 @@ fi
 
 UF=$2.t
 #-display :0  -norestore -invisible -headless -nologo -env:UserInstallation=\$SYSUSERCONFIG/.OOo_$$  "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
-$SOFFICE -display :0 -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$HOME/.OOo_$$  "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
+if [ -x "$TE_XVFB_RUN" ]; then
+    $TE_XVFB_RUN -a $SOFFICE -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$HOME/.OOo_$$  "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
+else
+    $SOFFICE -display :0 -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$HOME/.OOo_$$  "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
+fi
 /bin/rm -r $HOME/.OOo_$$
 # -display :0  -norestore -invisible -headless -nologo "-accept=socket,host=localhost,port=$$;urp;" "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
 

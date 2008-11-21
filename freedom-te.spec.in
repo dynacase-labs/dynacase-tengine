@@ -1,7 +1,7 @@
 #! /bin/rpm
 #
 #  File: libwhat.spec
-#  $Id: freedom-te.spec.in,v 1.1 2008/11/14 14:28:57 jerome Exp $
+#  $Id: freedom-te.spec.in,v 1.2 2008/11/21 16:57:59 jerome Exp $
 #
 #  This is the SPEC file for the What Users Module
 #  Anakeen What Application
@@ -79,6 +79,8 @@ Requires: iconv
 %if %{redhat} 
 Requires: glibc-common
 Requires: poppler-utils
+Requires: xorg-x11-server-Xvfb
+Requires: xorg-x11-xauth
 %endif
 Requires: ghostscript
 Requires: openoffice.org-writer

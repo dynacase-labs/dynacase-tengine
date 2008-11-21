@@ -7,7 +7,7 @@ Standards-Version: 3.7.2
 
 Package: freedom-te
 Architecture: all
-Depends: php5-cli, php5-pgsql, gs, gsfonts, recode
+Depends: php5-cli, php5-pgsql, gs, gsfonts, recode, xvfb, xbase-clients, xfonts-base, xfonts-100dpi, xfonts-75dpi
 Description: The FreeDom Transformation Engine
  The Transformation engine allow to convert file in different other format in asynchronous mode.
 

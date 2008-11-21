@@ -10,5 +10,9 @@ if [ ! -x "$SOFFICE" ]; then
   echo program soffice $SOFFICE not executable
   exit 1
 fi
-$SOFFICE -display :0  -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.exportPdfA($1,$2)"
+if [ -x "$TE_XVFB_RUN" ]; then
+    $TE_XVFB_RUN -a $SOFFICE -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.exportPdfA($1,$2)"
+else
+    $SOFFICE -display :0  -nofirststartwizard -norestore -invisible -headless -nologo -env:UserInstallation=file:///$TMPPATH/.OOo_$$  "macro:///FreeDom.FreeDom.exportPdfA($1,$2)"
+fi
 /bin/rm -r $TMPPATH/.OOo_$$
