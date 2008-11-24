@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TERendering.php,v 1.18 2008/03/17 16:44:08 eric Exp $
+ * @version $Id: Class.TERendering.php,v 1.19 2008/11/24 11:04:36 jerome Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -28,10 +28,11 @@ Class TERendering {
 
   private $good=true; // main loop condition
   function decrease_child($sig) {
-    $this->cur_client--;
-        echo "One Less [$sig]  ".$this->cur_client."\n";
-    pcntl_wait($status); // to suppress zombies
-  
+    while($child=pcntl_waitpid(-1, $status, WNOHANG)) {
+      $this->cur_client--;
+      echo "One Less (pid = $child / sig = $sig)  ".$this->cur_client."\n";
+      // pcntl_wait($status); // to suppress zombies
+    }
   }
    function rewaiting($sig) {
     if ($this->task) {

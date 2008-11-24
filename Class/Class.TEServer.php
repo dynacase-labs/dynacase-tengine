@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEServer.php,v 1.16 2007/06/18 12:27:44 eric Exp $
+ * @version $Id: Class.TEServer.php,v 1.17 2008/11/24 11:04:36 jerome Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -27,10 +27,10 @@ Class TEServer {
 
   private $good=true; // main loop condition
   function decrease_child($sig) {
-    $this->cur_client--;
-    //    echo "One Less [$sig]  ".$this->cur_client."\n";
-    pcntl_wait($status); // to suppress zombies
-  
+    while($child=pcntl_waitpid(-1, $status, WNOHANG)) {
+      $this->cur_client--;
+      // pcntl_wait($status); // to suppress zombies
+    }
   }
   function closesockets($sig) {
     print "\nCLOSE SOCKET ".$this->msgsock."\n";
