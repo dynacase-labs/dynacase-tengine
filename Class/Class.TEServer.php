@@ -3,7 +3,7 @@
  * Transformation server engine
  *
  * @author Anakeen 2007
- * @version $Id: Class.TEServer.php,v 1.17 2008/11/24 11:04:36 jerome Exp $
+ * @version $Id: Class.TEServer.php,v 1.18 2008/11/24 12:44:34 jerome Exp $
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */
@@ -27,7 +27,7 @@ Class TEServer {
 
   private $good=true; // main loop condition
   function decrease_child($sig) {
-    while($child=pcntl_waitpid(-1, $status, WNOHANG)) {
+    while(($child=pcntl_waitpid(-1, $status, WNOHANG)) > 0) {
       $this->cur_client--;
       // pcntl_wait($status); // to suppress zombies
     }
