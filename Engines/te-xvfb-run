@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: te-xvfb-run,v 1.1 2008/11/21 16:57:59 jerome Exp $
+# $Id: te-xvfb-run,v 1.2 2008/11/24 13:59:07 jerome Exp $
 
 # This script starts an instance of Xvfb, the "fake" X server, runs a command
 # with that server available, and kills the X server when done.  The return
@@ -136,7 +136,7 @@ if [ -z "$AUTHFILE" ]; then
         error "temporary directory $XVFB_RUN_TMPDIR already exists"
         exit 4
     fi
-    AUTHFILE=$(mktemp -p "$XVFB_RUN_TMPDIR" Xauthority)
+    AUTHFILE=$(mktemp -p "$XVFB_RUN_TMPDIR" Xauthority.XXXXXX)
 fi
 
 # Start Xvfb.
