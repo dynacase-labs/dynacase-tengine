@@ -1,5 +1,5 @@
 # ============================================
-# $Id: Makefile.in,v 1.14 2008/03/17 15:06:56 eric Exp $
+# $Id: Makefile.in,v 1.15 2008/11/25 12:08:10 eric Exp $
 # ============================================
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
@@ -25,8 +25,8 @@ include $(utildir)/PubRule
 DISTFILES += $(SUBDIR)  ted.fc ted.pld ted.debian env $(PACKAGE).cron te.conf te_clean \
             RELEASE VERSION
 
-$(rootprefix)/etc/cron.d/$(PACKAGE).cron:$(PACKAGE).cron 
-	install -D -p -m 0755 $(PACKAGE).cron $@
+$(rootprefix)/etc/cron.d/$(PACKAGE):$(PACKAGE).cron 
+	install -D -p -m 0644 $(PACKAGE).cron $@
 
 $(rootprefix)/etc/te.conf:te.conf 
 	install -D -p -m 0600 te.conf $@
@@ -48,4 +48,4 @@ $(pubdir)/$(appname)/te_server_init: te_server_init.php
 $(pubdir)/$(appname)/te_clean: te_clean
 	install -D -p -m 0755 $< $@
 
-publish: $(rootprefix)/etc/cron.d/$(PACKAGE).cron $(rootprefix)/etc/te.d/env $(rootprefix)$(rcdir)/ted $(pubdir)/$(appname)/te_request_server $(pubdir)/$(appname)/te_rendering_server $(pubdir)/$(appname)/te_server_init $(rootprefix)/etc/te.conf $(pubdir)/$(appname)/te_clean
+publish: $(rootprefix)/etc/cron.d/$(PACKAGE) $(rootprefix)/etc/te.d/env $(rootprefix)$(rcdir)/ted $(pubdir)/$(appname)/te_request_server $(pubdir)/$(appname)/te_rendering_server $(pubdir)/$(appname)/te_server_init $(rootprefix)/etc/te.conf $(pubdir)/$(appname)/te_clean
