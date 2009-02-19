@@ -19,7 +19,7 @@ fi
 # -display :0  -norestore -invisible -headless -nologo "-accept=socket,host=localhost,port=$$;urp;" "macro:///FreeDom.FreeDom.exportUTF8($1,$UF)"
 
 if [ -f $UF ]; then
-    iconv  -f utf-8 -t latin1//TRANSLIT $UF > $2
+    cp $UF $2
     /bin/rm $UF
 else
     exit 1;
