@@ -1,0 +1,53 @@
+#!/bin/bash
+#
+# chkconfig: 345 20 100
+# description: OpenOffice server listener
+#
+
+USER="root"
+PORT="8123"
+PIDFILE="/var/lock/subsys/ooservice"
+
+start() {
+
+        if [[ -f $PIDFILE ]]; then
+                echo "A server is already active"
+                exit 1
+        fi
+        echo -n "Starting Xvfb (Virtual X server):"
+        #Xvfb :1 &
+
+        #sleep 2
+        echo -n "Starting OpenOffice Server:"
+        su - $USER -c "export DISPLAY=:0; /usr/lib/openoffice/program/soffice -headless -invisible '-accept=socket,host=localhost,port=$PORT;urp;' -nofirststartwizard"  > /dev/null 2>&1 &
+
+        [[ $? -eq 0 ]] && touch $PIDFILE
+        return 0
+}
+
+stop() {
+        echo -n "Stopping OpenOffice"   
+        killall soffice.bin
+        sleep 1
+        echo
+        #echo -n "Stopping Xvfb (Virtual X server)"     
+        #killall Xvfb
+        rm -f $PIDFILE
+        echo
+        return 0
+}
+case "$1" in
+        start)
+                start
+                ;;
+        stop)
+                stop
+                ;;
+        restart)
+                stop
+                start
+                ;;
+        *)
+                echo "Usage: $PROG {start|stop|restart}"
+                exit 1
+esac
