@@ -148,7 +148,7 @@ XAUTHORITY=$AUTHFILE Xvfb ":$SERVERNUM" $XVFBARGS $LISTENTCP >"$ERRORFILE" \
 XVFBPID=$!
 sleep "$STARTWAIT"
 
-function clean_xvfb {
+clean_xvfb () {
     # Kill Xvfb now that the command has exited.
     kill $XVFBPID
     
@@ -162,7 +162,7 @@ function clean_xvfb {
     fi
 }
 
-function sig_term {
+sig_term () {
     message "Received SIGTERM."
     message "Killing COMMANDPID=$COMMANDPID"
     kill -TERM $COMMANDPID
@@ -171,7 +171,7 @@ function sig_term {
     exit $RETVAL
 }
 
-function sig_int {
+sig_int () {
     message "Received SIGINT."
     message "Killing COMMANDPID=$COMMANDPID"
     kill -INT $COMMANDPID
