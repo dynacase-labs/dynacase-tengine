@@ -61,10 +61,10 @@ start(){
 	if [ "$TE_OOO_SERVER_ENABLED" = "yes" ] && [ ! -f "$TE_OOO_PID" ]
 	    then
 	    if [ -n "$TE_OOO_SERVER_USER" -a "$TE_OOO_SERVER_USER" != "root" ]; then
-		su -c "\"$TE_PATH/Engines/te-xvfb-run\" -a \"$TE_OOO_SERVER_SOFFICE\" -headless -invisible -nofirststartwizard '-accept=socket,host=$TE_OOO_SERVER_HOST,port=$TE_OOO_SERVER_PORT;urp;'" "$TE_OOO_SERVE_USER" > /dev/null 2>&1 &
+		su -c "\"$TE_PATH/engines/te-xvfb-run\" -a \"$TE_OOO_SERVER_SOFFICE\" -headless -invisible -nofirststartwizard '-accept=socket,host=$TE_OOO_SERVER_HOST,port=$TE_OOO_SERVER_PORT;urp;'" "$TE_OOO_SERVE_USER" > /dev/null 2>&1 &
 		echo $! > "$TE_OOO_PID"
 	    else
-		"$TE_PATH/Engines/te-xvfb-run" -a "$TE_OOO_SERVER_SOFFICE" -headless -invisible -nofirststartwizard "-accept=socket,host=$TE_OOO_SERVER_HOST,port=$TE_OOO_SERVER_PORT;urp;" > /dev/null 2>&1 &
+		"$TE_PATH/engines/te-xvfb-run" -a "$TE_OOO_SERVER_SOFFICE" -headless -invisible -nofirststartwizard "-accept=socket,host=$TE_OOO_SERVER_HOST,port=$TE_OOO_SERVER_PORT;urp;" > /dev/null 2>&1 &
 		echo $! > "$TE_OOO_PID"
 	    fi
 	fi
