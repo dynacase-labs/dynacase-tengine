@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # ted	This is the init script for starting up the Transformation Engine
 #		server
 #
@@ -10,9 +10,6 @@
 
 # Source function library.
 . /lib/lsb/init-functions
-
-# Get function listing for cross-distribution logic.
-TYPESET=`typeset -f|grep "declare"`
 
 # Find the name of the script
 NAME=`basename $0`
@@ -44,7 +41,7 @@ else
 	echo "Missing configuration file (/etc/te.conf) !"
 	exit 1
 fi
-DB="dbname=$DB_NAME user=$DB_USER port='$DB_PORT' host='$DB_HOST'"      #postgresql database php notation
+DB="service='$TE_PG_SERVICE'" # Postgresql database service
 
 script_result=0
 
