@@ -148,23 +148,50 @@ XAUTHORITY=$AUTHFILE Xvfb ":$SERVERNUM" $XVFBARGS $LISTENTCP >"$ERRORFILE" \
 XVFBPID=$!
 sleep "$STARTWAIT"
 
+clean_xvfb () {
+    # Kill Xvfb now that the command has exited.
+    kill $XVFBPID
+    
+    # Clean up.
+    XAUTHORITY=$AUTHFILE xauth remove ":$SERVERNUM" >"$ERRORFILE" 2>&1
+    if [ -n "$XVFB_RUN_TMPDIR" ]; then
+	if ! rm -r "$XVFB_RUN_TMPDIR"; then
+            error "problem while cleaning up temporary directory"
+            exit 5
+	fi
+    fi
+}
+
+sig_term () {
+    message "Received SIGTERM."
+    message "Killing COMMANDPID=$COMMANDPID"
+    kill -TERM $COMMANDPID
+    message "Killing XVFBPID=$XVFBPID"
+    clean_xvfb
+    exit $RETVAL
+}
+
+sig_int () {
+    message "Received SIGINT."
+    message "Killing COMMANDPID=$COMMANDPID"
+    kill -TERM $COMMANDPID
+    message "Killing XVFBPID=$XVFBPID"
+    clean_xvfb
+    exit $RETVAL
+}
+
+trap sig_term TERM
+trap sig_int  INT
+
 # Start the command and save its exit status.
 set +e
-DISPLAY=:$SERVERNUM XAUTHORITY=$AUTHFILE "$@" 2>&1
+DISPLAY=:$SERVERNUM XAUTHORITY=$AUTHFILE "$@" 2>&1 &
+COMMANDPID=$!
+wait $COMMANDPID
 RETVAL=$?
 set -e
 
-# Kill Xvfb now that the command has exited.
-kill $XVFBPID
-
-# Clean up.
-XAUTHORITY=$AUTHFILE xauth remove ":$SERVERNUM" >"$ERRORFILE" 2>&1
-if [ -n "$XVFB_RUN_TMPDIR" ]; then
-    if ! rm -r "$XVFB_RUN_TMPDIR"; then
-        error "problem while cleaning up temporary directory"
-        exit 5
-    fi
-fi
+clean_xvfb
 
 # Return the executed command's exit status.
 exit $RETVAL

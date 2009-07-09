@@ -38,7 +38,11 @@ $(pubdir)/$(appname)/te-xvfb-run : te-xvfb-run $(pubdir)/$(appname)
 	cp $< $@
 	chmod +x $@
 
-publish: $(pubdir)/$(appname)/te-xvfb-run $(pubdir)/$(appname)/ooo2txt $(pubdir)/$(appname)/ooo2pdf $(pubdir)/$(appname)/ooo2pdfa $(pubdir)/$(appname)/txt2txt $(pubdir)/$(appname)/pdf2txt $(pubdir)/$(appname)/html2txt $(pubdir)/$(appname)/txt2pdf $(pubdir)/$(appname)/ooo2pdf $(pubdir)/$(appname)/html2pdf $(pubdir)/$(appname)/html2pdfa $(pubdir)/$(appname)/ooo2thumb $(pubdir)/$(appname)/img2thumb $(pubdir)/$(appname)/OOo-FreeDom.uno.pkg $(pubdir)/$(appname)/html2odt
+$(pubdir)/$(appname)/ooo-server-convert.py : ooo-server-convert.py $(pubdir)/$(appname)
+	cp $< $@
+	chmod +x $@
+
+publish: $(pubdir)/$(appname)/te-xvfb-run $(pubdir)/$(appname)/ooo2txt $(pubdir)/$(appname)/ooo2pdf $(pubdir)/$(appname)/ooo2pdfa $(pubdir)/$(appname)/txt2txt $(pubdir)/$(appname)/pdf2txt $(pubdir)/$(appname)/html2txt $(pubdir)/$(appname)/txt2pdf $(pubdir)/$(appname)/ooo2pdf $(pubdir)/$(appname)/html2pdf $(pubdir)/$(appname)/html2pdfa $(pubdir)/$(appname)/ooo2thumb $(pubdir)/$(appname)/img2thumb $(pubdir)/$(appname)/OOo-FreeDom.uno.pkg $(pubdir)/$(appname)/html2odt $(pubdir)/$(appname)/ooo-server-convert.py $(pubdir)/$(appname)/oooserver2pdf $(pubdir)/$(appname)/oooserver2pdfa $(pubdir)/$(appname)/oooserver2txt
 
 
 
