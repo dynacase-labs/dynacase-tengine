@@ -89,6 +89,7 @@ start(){
 stop(){
     ret1=0
     ret2=0
+    ret3=0
     echo -n $"Stopping ${NAME} service: "
     if [ -f $TE_REQUEST_PID ]
 	then
@@ -141,7 +142,8 @@ restart(){
 
 status2(){
     ret1=1
-    ret2=1 
+    ret2=1
+    ret3=1
     if [ -f $TE_REQUEST_PID ]
 	then
 	tepid=`cat $TE_REQUEST_PID`
