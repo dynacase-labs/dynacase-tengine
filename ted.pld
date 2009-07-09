@@ -8,20 +8,8 @@
 # pidfile: /var/run/ted_request.pid /var/run/ted_rendering.pid
 # version $Id: ted.pld,v 1.3 2008/03/17 10:03:13 eric Exp $
 
-
-
-
 # Source function library.
 . /etc/rc.d/init.d/functions
-
-# Get function listing for cross-distribution logic.
-TYPESET=`typeset -f|grep "declare"`
-
-
-
-# Find the name of the script
-NAME=ted
-
 
 # For SELinux we need to use 'runuser' not 'su'
 if [ -x /sbin/runuser ]
@@ -31,16 +19,15 @@ else
     SU=su
 fi
 
-
-
 # Set defaults for configuration variables
 TE_REQUEST_PID=/var/run/te_request.pid
 TE_RENDERING_PID=/var/run/te_rendering.pid
+TE_OOO_PID=/var/run/te_ooo.pid
 TE_PATH=/usr/share/pear/TE
 
 # Get config.
 . /etc/te.conf
-DB="dbname=$DB_NAME user=$DB_USER port='$DB_PORT' host='$DB_HOST'"      #postgresql database php notation
+DB="service='$TE_PG_SERVICE'" # Postgresql database service
 
 script_result=0
 
@@ -54,6 +41,16 @@ start(){
 	    exit 1;
 	fi	
 	
+	if [ "$TE_OOO_SERVER_ENABLED" = "yes" ] && [ ! -f "$TE_OOO_PID" ]
+	    then
+	    if [ -n "$TE_OOO_SERVER_USER" -a "$TE_OOO_SERVER_USER" != "root" ]; then
+		su -c "\"$TE_PATH/engines/te-xvfb-run\" -a \"$TE_OOO_SERVER_SOFFICE\" -headless -invisible -nofirststartwizard '-accept=socket,host=$TE_OOO_SERVER_HOST,port=$TE_OOO_SERVER_PORT;urp;'" "$TE_OOO_SERVER_USER" > /dev/null 2>&1 &
+		echo $! > "$TE_OOO_PID"
+	    else
+		"$TE_PATH/engines/te-xvfb-run" -a "$TE_OOO_SERVER_SOFFICE" -headless -invisible -nofirststartwizard "-accept=socket,host=$TE_OOO_SERVER_HOST,port=$TE_OOO_SERVER_PORT;urp;" > /dev/null 2>&1 &
+		echo $! > "$TE_OOO_PID"
+	    fi
+	fi
 	if [ ! -f "$TE_REQUEST_PID" ]
 	    then
 	     $TE_PATH/te_request_server --fpid=$TE_REQUEST_PID --port=$PORT --laddr=$LISTEN_ADDRESS --db="$DB" --maxclient=$REQUEST_MAX_CLIENT --directory=$REQUEST_DIRECTORY >/dev/null 2>&1 &
@@ -87,6 +84,7 @@ start(){
 stop(){
     ret1=0
     ret2=0   
+    ret3=0
     if [ -f $TE_REQUEST_PID ]
 	then
 	tepid=`cat $TE_REQUEST_PID`
@@ -103,7 +101,18 @@ stop(){
     else
 	msg_not_running "TE rendering"
     fi
-    if [ $ret1 -eq 0 ] && [ $ret2 -eq 0 ]
+    if [ "$TE_OOO_SERVER_ENABLED" = "yes" ]; then
+	if [ -f $TE_OOO_PID ]
+	then
+	    tepid=`cat "$TE_OOO_PID"`
+	    kill -TERM $tepid
+	    ret3=$?
+	else
+	    echo
+	    echo "ooo server not running"
+	fi
+    fi
+    if [ $ret1 -eq 0 ] && [ $ret2 -eq 0 ] && [ $ret3 -eq 0 ]
 	then
 	        msg_stopping "${NAME}"
 		ok
@@ -115,6 +124,9 @@ stop(){
     echo
     /bin/rm -f $TE_REQUEST_PID
     /bin/rm -f $TE_RENDERING_PID
+    if [ "$TE_OOO_SERVER_ENABLED" = "yes" ]; then
+	/bin/rm -f $TE_OOO_PID
+    fi
 }
 
 restart(){
@@ -125,6 +137,7 @@ restart(){
 status2(){
     ret1=1
     ret2=1 
+    ret3=1
     if [ -f $TE_REQUEST_PID ]
 	then
 	tepid=`cat $TE_REQUEST_PID`
@@ -136,6 +149,12 @@ status2(){
 	tepid=`cat $TE_RENDERING_PID`	
 	c2=`ps hw $tepid`
 	ret2=$?    
+    fi
+    if [ "$TE_OOO_SERVER_ENABLED" = "yes" ] && [ -f $TE_OOO_PID ]
+	then
+	tepid=`cat "$TE_OOO_PID"`
+	c3=`ps hw $tepid`
+	ret3=$?
     fi
     if [ $ret1 -eq 0 ] 
 	then
@@ -152,6 +171,16 @@ status2(){
 	else
 		echo "Rendering server is down"
 		script_result=1
+    fi
+    if [ "$TE_OOO_SERVER_ENABLED" = "yes" ]; then
+	if [ $ret3 -eq 0 ]
+	then
+	    echo "OOO server running"
+	    echo "    "$c3
+	else
+	    echo "OOO server is down"
+	    script_result=1
+	fi
     fi
 
 }
