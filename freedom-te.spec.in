@@ -89,22 +89,6 @@ Provides: TE
 %description
 The Transformation engine allow to convert file in different other format in asynchronous mode.
 
-
-%package client
-Summary: The Transformation libraries functions
-Group: Applications/Publishing
-Obsoletes: TE-CLIENT
-Provides: TE-CLIENT
-%if %{cerbere} || %{pld}
-Requires: php-common >= 5.0
-%else
-Requires: php >= 5.0
-%endif
-
-%description client
-The freedom-te client provide php class to communicate with transformation server
-
-
 %prep
 %setup -q -n %{name}-%{version}
 
@@ -129,12 +113,6 @@ make  pubdir=$RPM_BUILD_ROOT%{destdir}
 
 
 %preun
-
-
-%post client
-
-
-%preun client
 
 
 %files
@@ -165,15 +143,6 @@ make  pubdir=$RPM_BUILD_ROOT%{destdir}
 %{destdir}/TE/te_server_init.php
 %{destdir}/TE/te_clean
 %{destdir}/TE/info.xml
-
-
-
-
-%files client
-%dir %{destdir}/TE
-%{destdir}/TE/Class.TEClient.php
-%{destdir}/TE/Lib.TEUtil.php
-
 
 
 %changelog

@@ -62,9 +62,9 @@ install: build
 
 	# Add here commands to install the package into debian/freedom-what.
 	make pubdir=$(CURDIR)/debian/freedom-te/usr/share/php publish rootprefix=$(CURDIR)/debian/freedom-te
-	mkdir -p $(CURDIR)/debian/freedom-te-client/usr/share/php
-	mv $(CURDIR)/debian/freedom-te/usr/share/php/TE/Class.TEClient.php $(CURDIR)/debian/freedom-te-client/usr/share/php/TE/
-	mv $(CURDIR)/debian/freedom-te/usr/share/php/TE/Lib.TEUtil.php $(CURDIR)/debian/freedom-te-client/usr/share/php/TE/
+	# mkdir -p $(CURDIR)/debian/freedom-te-client/usr/share/php
+	# mv $(CURDIR)/debian/freedom-te/usr/share/php/TE/Class.TEClient.php $(CURDIR)/debian/freedom-te-client/usr/share/php/TE/
+	# mv $(CURDIR)/debian/freedom-te/usr/share/php/TE/Lib.TEUtil.php $(CURDIR)/debian/freedom-te-client/usr/share/php/TE/
 
 # Build architecture-independent files here.
 binary-indep: build install
