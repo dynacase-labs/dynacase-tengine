@@ -1,0 +1,25 @@
+# Transformation Engine Configuration
+# - - - - - - - - - - - - - - - - - -
+TE_PG_SERVICE="te"                # Postgresql database service name
+
+#---- REQUEST PART ----
+#PORT=10000                       # port number where listen client
+#LISTEN_ADDRESS=0.0.0.0           # address mask to listen : listen everybody by default
+REQUEST_MAX_CLIENT=15             # max request in parallel 
+REQUEST_DIRECTORY=/var/tmp        # directory where source files to transform are saved
+
+#---- RENDERING PART ----
+
+RENDERING_MAX_CLIENT=10           # max conversion in parallel 
+RENDERING_DIRECTORY=/var/tmp      # directory where converted files are saved
+URL_CALLBACK_LOGIN=te             # login and password to use for http  callback in case of web http server need authentification
+URL_CALLBACK_PASSWORD=secret
+
+# -- Server-mode OpenOffice.org parameters
+TE_OOO_SERVER_ENABLED=yes
+TE_OOO_SERVER_PYTHON=/opt/openoffice.org3/program/python
+TE_OOO_SERVER_SOFFICE=/opt/openoffice.org3/program/soffice
+TE_OOO_SERVER_UNOPKG=/opt/openoffice.org3/program/unopkg
+TE_OOO_SERVER_HOST=127.0.0.1
+TE_OOO_SERVER_PORT=8123
+TE_OOO_SERVER_USER=root

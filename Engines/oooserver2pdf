@@ -1,8 +1,0 @@
-#!/bin/bash
-
-TMPPATH=/var/tmp
-
-[ -f /etc/te.conf ] && . /etc/te.conf
-[ -f /etc/te.d/env ] && . /etc/te.d/env
-
-"$TE_OOO_SERVER_PYTHON" "$TE_PATH/TE/engines/ooo-server-convert.py" -i "$1" -o "$2" -h "$TE_OOO_SERVER_HOST" -p "$TE_OOO_SERVER_PORT" -t pdf
