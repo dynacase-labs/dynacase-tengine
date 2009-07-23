@@ -294,23 +294,6 @@ init(){
 		return 1
 	    fi
 	fi
-
-	if [ "$TE_OOO_SERVER_ENABLED" = "yes" ]; then
-	    "$TE_OOO_SERVER_UNOPKG" list --shared org.openoffice.legacy.OOo-FreeDom.uno.pkg 1> /dev/null
-	    RET=$?
-	    if [ $RET -ne 0 ]; then
-		"$TE_OOO_SERVER_UNOPKG" add --shared "$TE_HOME"/lib/engines/OOo-FreeDom.uno.pkg 1> /dev/null
-		RET=$?
-		if [ $RET -ne 0 ]; then
-		    log_failure_msg "Could not load '$TE_HOME/lib/engines/OOo-FreeDom.uno.pkg' in OOo shared macro list!" "FAILED"
-		    echo
-		    script_result=1
-		    return 1
-		fi
-	    fi
-	    log_success_msg "Initializing 'OOo-FreeDom.uno.pkg' macro: " "OK"
-	    echo
-	fi
 }
 
 check() {

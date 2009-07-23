@@ -21,19 +21,6 @@ function mktemp_out {
     echo "$OUT_EXT"
 }
 
-function check_macro {
-    echo
-    echo "* Checking for 'org.openoffice.legacy.OOo-FreeDom.uno.pkg' in OOo shared macro list..."
-    "$TE_OOO_SERVER_UNOPKG" list --shared org.openoffice.legacy.OOo-FreeDom.uno.pkg 1> /dev/null
-    RET=$?
-    if [ $RET -ne 0 ]; then
-	echo "  Error: could not find 'org.openoffice.legacy.OOo-FreeDom.uno.pkg' in OOo shared macro list!"
-	return 1
-    fi
-    echo "  Ok: 'org.openoffice.legacy.OOo-FreeDom.uno.pkg'"
-    return 0
-}
-
 function check_odt2pdf {
     TESTIN="$TE_HOME"/test-data/test.odt
     TESTOUT=`mktemp_out test.odt .pdf`
@@ -204,7 +191,6 @@ function check_txt2pdf {
 
 EXITCODE=0
 for CHECK in \
-    check_macro \
     \
     check_odt2pdf \
     check_odt2pdfa \
