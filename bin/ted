@@ -29,7 +29,7 @@ fi
 if [ -z "$TE_HOME" ]; then
     MY_PATH=$0
     if [ -L "$MY_PATH" ]; then
-	MY_PATH=`readlink "$MY_PATH"`
+	MY_PATH=`readlink -f "$MY_PATH"`
     fi
     DIRNAME=`dirname "$MY_PATH"`
     DIRNAME="$DIRNAME/../"
