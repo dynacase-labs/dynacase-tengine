@@ -1,5 +1,0 @@
-TE_PATH=`pear config-get php_dir`
-TE_XVFB_RUN=$TE_PATH/TE/engines/te-xvfb-run
-
-# -- Stand-alone OpenOffice.org parameters
-SOFFICE=/opt/openoffice.org3/program/soffice

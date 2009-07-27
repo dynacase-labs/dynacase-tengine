@@ -1,4 +1,0 @@
-<?xml version="1.0"?>
-<module name="freedom-te" disabled="no" version="@VERSION@" release="@RELEASE@">
-  <description>The Transformation Engine for freedom files.</description>
-</module>

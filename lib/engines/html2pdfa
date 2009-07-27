@@ -1,0 +1,85 @@
+#!/bin/bash
+
+if [ -z "$TE_HOME" ]; then
+    MY_PATH=$0
+    if [ -L "$MY_PATH" ]; then
+	MY_PATH=`readlink "$MY_PATH"`
+    fi
+    DIRNAME=`dirname "$MY_PATH"`
+    DIRNAME="$DIRNAME/../../"
+    REAL_DIRNAME=`cd "$DIRNAME" 1 > /dev/null 2>&1 && pwd`
+    export TE_HOME=$REAL_DIRNAME
+fi
+
+TMPPATH=/var/tmp
+
+[ -f "$TE_HOME"/etc/te.conf ] && . "$TE_HOME"/etc/te.conf
+[ -f "$TE_HOME"/etc/te.d/env ] && . "$TE_HOME"/etc/te.d/env
+
+
+ODTW=`mktemp -t html2pdfa.XXXXXX`
+RET=$?
+if [ $RET -ne 0 ]; then
+    echo "Error creating temp file!"
+    exit $RET
+fi
+
+mv "$ODTW" "$ODTW".odt
+RET=$?
+if [ $RET -ne 0 ]; then
+    echo "Error renaming '$ODTW' to '$ODTW.odt'!"
+    exit $RET
+fi
+ODTW="$ODTW.odt"
+
+"$TE_OOO_SERVER_PYTHON" "$TE_HOME/lib/engines/ooo-server-convert.py" -i "$1" -o "$ODTW" -t odt
+RET=$?
+if [ $RET -ne 0 ]; then
+    echo "Conversion to odt failed with exitcode $RET!"
+    exit $RET
+fi
+
+UNPACKDIR=`mktemp -d -t html2pdfa.XXXXXX`
+RET=$?
+if [ $RET -ne 0 ]; then
+    echo "Error creating temp directory!"
+    exit $RET
+fi
+
+cd "$UNPACKDIR"
+RET=$?
+if [ $RET -ne 0 ]; then
+    echo "Error changing dir to '$UNPACKDIR'!"
+    exit $RET
+fi
+
+unzip -q "$ODTW"
+RET=$?
+if [ $RET -ne 0 ]; then
+    echo "Error unpacking '$ODTW' in '$UNPACKDIR'!"
+    exit $RET
+fi
+
+sed -i -e"s/text-web/text/" mimetype
+sed -i -e"s/text-web/text/" META-INF/manifest.xml
+sed -i -e's!html2ps-toc">!html2ps-toc"><text:table-of-content text:style-name="Sect1" text:protected="true" text:name="Table des matières1"><text:table-of-content-source text:outline-level="3"><text:index-title-template text:style-name="Contents_20_Heading">Table des matières</text:index-title-template></text:table-of-content-source><text:index-body></text:index-body></text:table-of-content>!' content.xml
+sed -i -e's!InBrowseMode" config:type="boolean">true!InBrowseMode" config:type="boolean">false!' settings.xml
+
+zip -qr "$ODTW" *
+RET=$?
+if [ $RET -ne 0 ]; then
+    echo "Error packing '$ODTW' with '$UNPACKDIR'!"
+    exit $RET
+fi
+
+"$TE_OOO_SERVER_PYTHON" "$TE_HOME/lib/engines/ooo-server-convert.py" -i "$ODTW" -o "$2" -t pdfa
+RET=$?
+if [ $RET -ne 0 ]; then
+    echo "Conversion to pdf failed with exitcode $RET!"
+    exit $RET
+fi
+
+rm -rf "$UNPACKDIR"
+rm -f "$ODTW"
+
+exit 0
