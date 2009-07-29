@@ -1,6 +1,0 @@
-#!/bin/bash 
-# /etc/init.d/oofice start
-# Xfvb :0
-# for apache : echo 0 > /proc/sys/kernel/exec-shield  
-# Alternatively, you can add the following option to the /etc/sysctl.conf
-python OOoConvert.py $1 $2
