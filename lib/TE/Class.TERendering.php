@@ -56,6 +56,7 @@ Class TERendering {
     pcntl_signal(SIGCHLD, array(&$this,"decrease_child"));
     pcntl_signal(SIGPIPE, array(&$this,"decrease_child"));
     pcntl_signal(SIGINT,  array(&$this,"breakloop"));
+    pcntl_signal(SIGTERM,  array(&$this,"breakloop"));
 
 
     while ($this->good) {

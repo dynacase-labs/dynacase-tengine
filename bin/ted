@@ -96,42 +96,33 @@ start() {
     # Start OOO
     if [ "$TE_OOO_SERVER_ENABLED" = "yes" ] && [ ! -f "$TE_OOO_PID" ]; then
 	echo -n "Starting OOO server... "
-	if [ -n "$TE_OOO_SERVER_USER" -a "$TE_OOO_SERVER_USER" != "root" ]; then
-	    $SU -s /bin/bash -c "\"$TE_HOME/lib/engines/te-xvfb-run\" -a \"$TE_OOO_SERVER_SOFFICE\" -headless -invisible -nofirststartwizard '-accept=socket,host=$TE_OOO_SERVER_HOST,port=$TE_OOO_SERVER_PORT;urp;'" "$TE_OOO_SERVER_USER" 1> /dev/null 2>&1 &
-	    sleep 1
-	    kill -0 $!
-	    ret1=$?
-	    echo $! > "$TE_OOO_PID"
-	    echo $!
-	else
-	    "$TE_HOME/lib/engines/te-xvfb-run" -a "$TE_OOO_SERVER_SOFFICE" -headless -invisible -nofirststartwizard "-accept=socket,host=$TE_OOO_SERVER_HOST,port=$TE_OOO_SERVER_PORT;urp;" 1> /dev/null 2>&1 &
-	    sleep 1
-	    kill -0 $!
-	    ret1=$?
-	    echo $! > "$TE_OOO_PID"
-	    echo $!
-	fi
+	$SU -s /bin/bash -c "\"$TE_HOME/lib/engines/te-xvfb-run\" -a \"$TE_OOO_SERVER_SOFFICE\" -headless -invisible -nofirststartwizard '-accept=socket,host=$TE_OOO_SERVER_HOST,port=$TE_OOO_SERVER_PORT;urp;'" "$TE_SERVER_USER" 1> /dev/null 2>&1 &
+	sleep 1
+	kill -0 $!
+	ret1=$?
+	echo $! > "$TE_OOO_PID"
+	echo $!
     fi
 
     # Start REQUEST
     if [ ! -f "$TE_REQUEST_PID" ]; then
 	echo -n "Starting te_request_server... "
-	"$TE_HOME/bin/te_request_server" --fpid=$TE_REQUEST_PID --port=$PORT --laddr=$LISTEN_ADDRESS --db="$DB" --maxclient=$REQUEST_MAX_CLIENT --directory=$REQUEST_DIRECTORY 1> /dev/null 2>&1 &
+	$SU -s /bin/bash -c "\"$TE_HOME/bin/te_request_server\" --port=$PORT --laddr=$LISTEN_ADDRESS --db=\"$DB\" --maxclient=$REQUEST_MAX_CLIENT --directory=$REQUEST_DIRECTORY" "$TE_SERVER_USER" 1> /dev/null 2>&1 &
 	sleep 1
 	kill -0 $!
 	ret2=$?
-        # echo $! > "$TE_REQUEST_PID"
+        echo $! > "$TE_REQUEST_PID"
 	echo $!
     fi
 
     # Start RENDERING
     if [ ! -f "$TE_RENDERING_PID" ]; then
 	echo -n "Starting te_rendering_server... "
-	"$TE_HOME/bin/te_rendering_server" --fpid=$TE_RENDERING_PID  --db="$DB" --maxclient=$RENDERING_MAX_CLIENT --directory=$RENDERING_DIRECTORY --loginfile="$TE_HOME/etc/te.conf" 1> /dev/null 2>&1 &
+	$SU -s /bin/bash -c "\"$TE_HOME/bin/te_rendering_server\" --db=\"$DB\" --maxclient=$RENDERING_MAX_CLIENT --directory=$RENDERING_DIRECTORY --loginfile=\"$TE_HOME/etc/te.conf\"" "$TE_SERVER_USER" 1> /dev/null 2>&1 &
 	sleep 1
 	kill -0 $!
 	ret3=$?
-	# echo $! > "$TE_RENDERING_PID"
+	echo $! > "$TE_RENDERING_PID"
 	echo $!
     fi
 
@@ -158,7 +149,7 @@ stop(){
     then
 	echo -n "Stopping te_request_server... "
     	tepid=`cat $TE_REQUEST_PID`
-    	/bin/kill -s SIGINT $tepid 1> /dev/null 2>&1
+    	kill -TERM $tepid 1> /dev/null 2>&1
     	ret1=$?
 	echo $tepid
     else
@@ -170,7 +161,7 @@ stop(){
     then
 	echo -n "Stopping te_rendrering_server... "
 	tepid=`cat $TE_RENDERING_PID`
-	/bin/kill -s SIGINT $tepid 1> /dev/null 2>&1
+	kill -TERM $tepid 1> /dev/null 2>&1
 	ret2=$?
 	echo $tepid
     else
@@ -297,7 +288,7 @@ init(){
 }
 
 check() {
-    "$TE_HOME/lib/engines/engines-check.sh"
+    $SU -s /bin/bash -c "\"$TE_HOME/lib/engines/engines-check.sh\"" "$TE_SERVER_USER"
     script_result=$?
 }
 
