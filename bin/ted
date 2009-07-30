@@ -43,6 +43,19 @@ TE_REQUEST_PID=$PID_DIR/te_request_server.pid
 TE_RENDERING_PID=$PID_DIR/te_rendering_server.pid
 TE_OOO_PID=$PID_DIR/te_ooo.pid
 
+TE_PG_SERVICE=te
+PORT=10000
+LISTEN_ADDRESS=0.0.0.0
+REQUEST_MAX_CLIENT=15
+REQUEST_DIRECTORY=/var/tmp
+RENDERING_MAX_CLIENT=10
+RENDERING_DIRECTORY=/var/tmp
+TE_SERVER_USER=root
+TE_OOO_SERVER_ENABLED=yes
+TE_OOO_SERVER_SOFFICE=/opt/openoffice.org3/program/soffice
+TE_OOO_SERVER_HOST=127.0.0.1
+TE_OOO_SERVER_PORT=8123
+
 check_environment() {
     if [ ! -d "$TE_HOME" ]; then
 	echo "Error: TE_HOME directory '$TE_HOME' not found."
@@ -77,10 +90,10 @@ check_environment() {
     fi
 }
 
-check_environment
-
 # Get config.
 . "$TE_HOME/etc/te.conf"
+
+check_environment
 
 # Postgresql database service
 DB="service='$TE_PG_SERVICE'"

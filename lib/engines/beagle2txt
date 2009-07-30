@@ -1,0 +1,60 @@
+#!/bin/bash
+
+if [ -z "$TE_HOME" ]; then
+    MY_PATH=$0
+    if [ -L "$MY_PATH" ]; then
+        MY_PATH=`readlink "$MY_PATH"`
+    fi
+    DIRNAME=`dirname "$MY_PATH"`
+    DIRNAME="$DIRNAME/../../"
+    REAL_DIRNAME=`cd "$DIRNAME" 1 > /dev/null 2>&1 && pwd`
+    export TE_HOME=$REAL_DIRNAME
+fi
+
+BEAGLE_EXTRACT_CONTENT=beagle-extract-content
+BEAGLE_LC_ALL=$LANG
+
+[ -f "$TE_HOME"/etc/te.conf ] && . "$TE_HOME"/etc/te.conf
+[ -f "$TE_HOME"/etc/te.d/env ] && . "$TE_HOME"/etc/te.d/env
+
+function usage {
+    echo "Usage: $0 <input_file.doc> <output_file.txt>"
+    exit 1
+}
+
+if [ -z "$1" ] || [ -z "$2" ]; then
+    usage
+fi
+
+OUT=`mktemp -t beagle2txt.XXXXXX`
+RET=$?
+if [ $RET -ne 0 ]; then
+    echo "Error creating temp file!"
+    exit $RET
+fi
+
+LC_ALL="$BEAGLE_LC_ALL" "$BEAGLE_EXTRACT_CONTENT" "$1" > "$OUT"
+RET=$?
+if [ $RET -ne 0 ]; then
+    echo "Error running '$BEAGLE_EXTRACT_CONTENT $1'!"
+    exit $RET
+fi
+
+perl -ne '
+$in_c=0;
+while(<>){
+  if(!$in_c&&m/^(Warn: .*)$/){print STDERR "$1\n";next}
+  if(!$in_c&&m/^\(no content\)$/){print STDERR "(no content)\n";exit(1)}
+  if(m/^Content:$/){$in_c=1;next}
+  if(m/^Text extracted in .+$/){last}
+  if($in_c){print}
+}' < "$OUT" > "$2"
+RET=$?
+if [ $RET -ne 0 ]; then
+    echo "Error extracting content from '$OUT'!"
+    exit $RET
+fi
+
+rm -f "$OUT"
+
+exit 0

@@ -1,15 +1,28 @@
 INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'text', '@TE_HOME@/lib/engines/txt2txt', NULL);
-INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.oasis.opendocument.text', '@TE_HOME@/lib/engines/ooo2txt', NULL);
-INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.oasis.opendocument.presentation', '@TE_HOME@/lib/engines/ooo2txt', NULL);
-INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.oasis.opendocument.spreadsheet', '@TE_HOME@/lib/engines/ooo2txt', NULL);
-INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.sun.xml.writer', '@TE_HOME@/lib/engines/ooo2txt', NULL);
-INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.sun.xml.calc', '@TE_HOME@/lib/engines/ooo2txt', NULL);
-INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.sun.xml.impress', '@TE_HOME@/lib/engines/ooo2txt', NULL);
-INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.ms-powerpoint', '@TE_HOME@/lib/engines/ooo2txt', NULL);
-INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.ms-excel', '@TE_HOME@/lib/engines/ooo2txt', NULL);
-INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/msword', '@TE_HOME@/lib/engines/ooo2txt', NULL);
-INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/pdf', '@TE_HOME@/lib/engines/pdf2txt', NULL);
-INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'text/html', '@TE_HOME@/lib/engines/html2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.oasis.opendocument.text', '@TE_HOME@/lib/engines/beagle2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.oasis.opendocument.presentation', '@TE_HOME@/lib/engines/beagle2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.oasis.opendocument.spreadsheet', '@TE_HOME@/lib/engines/beagle2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.sun.xml.writer', '@TE_HOME@/lib/engines/beagle2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.sun.xml.calc', '@TE_HOME@/lib/engines/beagle2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.sun.xml.impress', '@TE_HOME@/lib/engines/beagle2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.ms-powerpoint', '@TE_HOME@/lib/engines/beagle2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.ms-excel', '@TE_HOME@/lib/engines/beagle2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/msword', '@TE_HOME@/lib/engines/beagle2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/pdf', '@TE_HOME@/lib/engines/beagle2txt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'text/html', '@TE_HOME@/lib/engines/beagle2txt', NULL);
+
+-- INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.oasis.opendocument.text', '@TE_HOME@/lib/engines/ooo2txt', NULL);
+-- INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.oasis.opendocument.presentation', '@TE_HOME@/lib/engines/ooo2txt', NULL);
+-- INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.oasis.opendocument.spreadsheet', '@TE_HOME@/lib/engines/ooo2txt', NULL);
+-- INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.sun.xml.writer', '@TE_HOME@/lib/engines/ooo2txt', NULL);
+-- INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.sun.xml.calc', '@TE_HOME@/lib/engines/ooo2txt', NULL);
+-- INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.sun.xml.impress', '@TE_HOME@/lib/engines/ooo2txt', NULL);
+-- INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.ms-powerpoint', '@TE_HOME@/lib/engines/ooo2txt', NULL);
+-- INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/vnd.ms-excel', '@TE_HOME@/lib/engines/ooo2txt', NULL);
+-- INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/msword', '@TE_HOME@/lib/engines/ooo2txt', NULL);
+-- INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'application/pdf', '@TE_HOME@/lib/engines/pdf2txt', NULL);
+-- INSERT INTO engine (name, mime, command, "comment") VALUES ('utf8', 'text/html', '@TE_HOME@/lib/engines/html2txt', NULL);
+
 
 INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'application/vnd.oasis.opendocument.text', '@TE_HOME@/lib/engines/ooo2pdf', NULL);
 INSERT INTO engine (name, mime, command, "comment") VALUES ('pdf', 'application/vnd.oasis.opendocument.presentation', '@TE_HOME@/lib/engines/ooo2pdf', NULL);
