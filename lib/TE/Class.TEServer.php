@@ -10,7 +10,7 @@
 /**
  */
 
-include_once("TE/Lib.TEUtil.php");
+include_once("TE/Lib.TE.php");
 include_once("TE/Class.Task.php");
 include_once("TE/Class.Engine.php");
 

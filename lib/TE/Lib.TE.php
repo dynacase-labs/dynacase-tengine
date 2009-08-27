@@ -2,8 +2,7 @@
 /**
  * Common util functions
  *
- * @author Anakeen 200T
- * @version $Id: Lib.TEUtil.php,v 1.10 2008/02/11 12:19:46 eric Exp $
+ * @author Anakeen 2009
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @package TE
  */

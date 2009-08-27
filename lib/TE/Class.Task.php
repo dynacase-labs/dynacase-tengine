@@ -13,7 +13,7 @@
 
 include_once("Class.PgObj.php");
 include_once("Class.Histo.php");
-include_once("Lib.TEUtil.php");
+include_once("Lib.TE.php");
 Class Task extends PgObj {
   public $fields = array ( "tid",
                            "infile",
