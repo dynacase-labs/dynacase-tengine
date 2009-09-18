@@ -12,11 +12,11 @@ all:
 	@echo ""
 	@echo "  Available targets:"
 	@echo ""
-	@echo "    dist"
+	@echo "    tarball"
 	@echo "    clean"
 	@echo ""
 
-dist:	
+tarball:	
 	mkdir -p tmp/$(TAR_DIST_DIR)
 	tar -cf - \
 		--exclude Makefile \
