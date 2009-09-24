@@ -6,19 +6,38 @@ import getopt
 import uno
 
 from com.sun.star.beans import PropertyValue
+#Lets import page break as we will be doing a loop
+from com.sun.star.style.BreakType import PAGE_BEFORE, PAGE_AFTER
 
 def usage():
     print ""
-    print "Usage: "+sys.argv[0]+" -i <input_file> -o <output_file> [-h <ooo_host>] [-p <ooo_port>] [-t <pdf|pdfa|html|doc>]"
+    print "Usage: "+sys.argv[0]+"  -o <output_file> [-h <ooo_host>] [-p <ooo_port>] [-t <pdf|pdfa|html|doc>] -i <main input file> [<input files> ...]"
     print ""
 
+ix=1
+tin=[]
+# for i in sys.argv:
+#     print i
+#     if i != "-o":
+#         ix=ix+1
+#         if (ix>2):
+#             tin.append(i);
+#         else:
+#             input_file = i
+#     else:
+#        # ix=ix-1
+#         break
+    
+
+
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "i:o:h:p:t:")
+    opts, args = getopt.getopt(sys.argv[ix:], "i:o:h:p:t:")
 except getopt.GetoptError, err:
     print str(err)
     usage()
     sys.exit(2)
     
+
 input_file = ''
 output_file = ''
 ooo_host = '127.0.0.1'
@@ -27,6 +46,8 @@ output_type = 'pdf'
 for arg, val in opts:
     if arg == "-i":
         input_file = val
+        print "====>"+input_file
+        print "<===="
     elif arg == "-o":
         output_file = val
     elif arg == "-h":
@@ -36,9 +57,12 @@ for arg, val in opts:
     elif arg == "-t":
         output_type = val
     else:
-        usage()
-        sys.exit(2)
-
+        print arg
+        print val
+#        usage()
+#        sys.exit(2)
+print "==ARgs"
+tin=args
 if input_file == '' or output_file == '':
     usage()
     sys.exit(2)
@@ -63,6 +87,8 @@ properties = tuple(properties)
 # Load the input document
 desktop = smgr.createInstanceWithContext("com.sun.star.frame.Desktop", ctx)
 doc = desktop.loadComponentFromURL(input_file_url, "_blank", 0, properties)
+
+
 
 # Detect input document type
 input_type = ''
@@ -155,6 +181,23 @@ if output_type == 'pdfa':
         )
     properties.append(prop)
 
+# Set properties and do the conversion
+properties = tuple(properties)
+
+
+cursor=doc.Text.createTextCursor()
+cursor.gotoEnd(False)
+cursor.BreakType = PAGE_BEFORE
+tin.sort()
+for i in tin:
+    if len(i) > 1 :
+#        print "merge "+i
+        cursor.insertDocumentFromURL("file://"+i,())
+        cursor.gotoEnd(False)
+        cursor.BreakType = PAGE_BEFORE
+
+
+
 # Update all indexes
 doc.refresh()
 indexes = doc.getDocumentIndexes()
@@ -163,9 +206,12 @@ if indexesCount != 0:
   for i in range(indexesCount):
     indexes.getByIndex(i).update()
     doc.refresh()
+    # double pass for correct pages indexes
+  for i in range(indexesCount):
+    indexes.getByIndex(i).update()
+    doc.refresh()
 
-# Set properties and do the conversion
-properties = tuple(properties)
+
 doc.storeToURL(output_file_url, properties)
 doc.dispose()
 

@@ -53,3 +53,7 @@ INSERT INTO engine (name, mime, command, "comment") VALUES ('pdfa', 'application
 INSERT INTO engine (name, mime, command, "comment") VALUES ('pdfa', 'application/vnd.sun.xml.calc', '@TE_HOME@/lib/engines/ooo2pdfa', NULL);
 INSERT INTO engine (name, mime, command, "comment") VALUES ('pdfa', 'application/vnd.sun.xml.impress', '@TE_HOME@/lib/engines/ooo2pdfa', NULL);
 INSERT INTO engine (name, mime, command, "comment") VALUES ('pdfa', 'text/html', '@TE_HOME@/lib/engines/html2pdfa', NULL);
+
+INSERT INTO engine (name, mime, command, "comment") VALUES ('mergeodt', 'application/zip', '@TE_HOME@/lib/engines/zip2star odt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('mergepdf', 'application/zip', '@TE_HOME@/lib/engines/zip2star pdf', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('mergepdfa', 'application/zip', '@TE_HOME@/lib/engines/zip2star pdfa', NULL);
