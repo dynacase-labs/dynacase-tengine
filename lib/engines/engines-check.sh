@@ -332,6 +332,47 @@ function check_txtutf82pdf {
     return 0
 }
 
+function check_mergeodt {
+    TESTIN="$TE_HOME"/test-data/test.zip
+    TESTOUT=`mktemp_out test.mergeodt.zip .odt`
+
+    echo 
+    echo "* Checking conversion from ZIP to ODT..."
+    "$TE_HOME"/lib/engines/zip2star odt "$TESTIN" "$TESTOUT"
+    SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
+
+    if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
+	echo "Error: conversion of '$TESTIN' to '$TESTOUT' failed!"
+	return 1
+    fi
+    echo "  Ok: '$TESTOUT' ($SIZE bytes)"
+    return 0
+}
+
+function check_mergepdfa {
+    TESTIN="$TE_HOME"/test-data/test.zip
+    TESTOUT=`mktemp_out test.mergepdfa.zip .pdfa`
+
+    echo 
+    echo "* Checking conversion from ZIP to PDF/A..."
+    "$TE_HOME"/lib/engines/zip2star pdfa "$TESTIN" "$TESTOUT"
+    SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
+
+    if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
+	echo "Error: conversion of '$TESTIN' to '$TESTOUT' failed!"
+	return 1
+    fi
+
+    grep "\/GTS_PDFA1\>" "$TESTOUT" 1> /dev/null 2>&1
+    RET=$?
+    if [ $RET -ne 0 ]; then
+	echo "  Warning: '$TESTOUT' ($SIZE bytes) does not seems to be a PDF/A-1 file!"
+	return 1
+    fi
+    echo "  Ok: '$TESTOUT' ($SIZE bytes)"
+    return 0
+}
+
 EXITCODE=0
 for CHECK in \
     \
@@ -357,6 +398,9 @@ for CHECK in \
     check_pdf2txt \
     check_txtlat12pdf \
     check_txtutf82pdf \
+    \
+    check_mergeodt \
+    check_mergepdfa \
     \
     ; do
 

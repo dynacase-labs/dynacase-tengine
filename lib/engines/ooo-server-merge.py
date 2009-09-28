@@ -46,8 +46,7 @@ output_type = 'pdf'
 for arg, val in opts:
     if arg == "-i":
         input_file = val
-        print "====>"+input_file
-        print "<===="
+        print "Main input file is '%s'." % (input_file)
     elif arg == "-o":
         output_file = val
     elif arg == "-h":
@@ -57,11 +56,9 @@ for arg, val in opts:
     elif arg == "-t":
         output_type = val
     else:
-        print arg
-        print val
-#        usage()
-#        sys.exit(2)
-print "==ARgs"
+        usage()
+        sys.exit(2)
+
 tin=args
 if input_file == '' or output_file == '':
     usage()
