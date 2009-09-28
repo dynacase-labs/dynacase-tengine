@@ -199,17 +199,18 @@ for i in tin:
 
 
 # Update all indexes
-doc.refresh()
-indexes = doc.getDocumentIndexes()
-indexesCount = indexes.getCount()
-if indexesCount != 0:
-  for i in range(indexesCount):
-    indexes.getByIndex(i).update()
+if input_type == 'writer':
     doc.refresh()
-    # double pass for correct pages indexes
-  for i in range(indexesCount):
-    indexes.getByIndex(i).update()
-    doc.refresh()
+    indexes = doc.getDocumentIndexes()
+    indexesCount = indexes.getCount()
+    if indexesCount != 0:
+        for i in range(indexesCount):
+            indexes.getByIndex(i).update()
+            doc.refresh()
+        # double pass for correct pages indexes
+        for i in range(indexesCount):
+            indexes.getByIndex(i).update()
+            doc.refresh()
 
 
 doc.storeToURL(output_file_url, properties)

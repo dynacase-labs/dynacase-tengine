@@ -156,13 +156,18 @@ if output_type == 'pdfa':
     properties.append(prop)
 
 # Update all indexes
-doc.refresh()
-indexes = doc.getDocumentIndexes()
-indexesCount = indexes.getCount()
-if indexesCount != 0:
-  for i in range(indexesCount):
-    indexes.getByIndex(i).update()
+if input_type == 'writer':
     doc.refresh()
+    indexes = doc.getDocumentIndexes()
+    indexesCount = indexes.getCount()
+    if indexesCount != 0:
+        for i in range(indexesCount):
+            indexes.getByIndex(i).update()
+            doc.refresh()
+        # double pass for correct pages indexes
+        for i in range(indexesCount):
+            indexes.getByIndex(i).update()
+            doc.refresh()
 
 # Set properties and do the conversion
 properties = tuple(properties)
