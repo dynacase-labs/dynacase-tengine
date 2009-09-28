@@ -183,15 +183,12 @@ properties = tuple(properties)
 
 
 cursor=doc.Text.createTextCursor()
-cursor.gotoEnd(False)
-cursor.BreakType = PAGE_BEFORE
 tin.sort()
 for i in tin:
     if len(i) > 1 :
-#        print "merge "+i
-        cursor.insertDocumentFromURL("file://"+i,())
         cursor.gotoEnd(False)
         cursor.BreakType = PAGE_BEFORE
+        cursor.insertDocumentFromURL("file://"+i,())
 
 
 
