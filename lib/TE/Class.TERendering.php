@@ -134,7 +134,7 @@ Class TERendering {
 			$turl["user"]=$this->login;
 		      }
 		      $turl["query"].="&tid=".$this->task->tid;
-		      $this->task->log(_("call : ").$callback.$turl["query"]);
+		      $this->task->log(_("call : ").$turl["host"].'://'.$turl["query"]);
 		      $url=$this->implode_url($turl);
 		      $response = @file_get_contents($url);
 		      if ($response === false) {
