@@ -57,3 +57,6 @@ INSERT INTO engine (name, mime, command, "comment") VALUES ('pdfa', 'text/html',
 INSERT INTO engine (name, mime, command, "comment") VALUES ('mergeodt', 'application/zip', '@TE_HOME@/lib/engines/zip2star odt', NULL);
 INSERT INTO engine (name, mime, command, "comment") VALUES ('mergepdf', 'application/zip', '@TE_HOME@/lib/engines/zip2star pdf', NULL);
 INSERT INTO engine (name, mime, command, "comment") VALUES ('mergepdfa', 'application/zip', '@TE_HOME@/lib/engines/zip2star pdfa', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('mergeodt', 'application/x-zip', '@TE_HOME@/lib/engines/zip2star odt', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('mergepdf', 'application/x-zip', '@TE_HOME@/lib/engines/zip2star pdf', NULL);
+INSERT INTO engine (name, mime, command, "comment") VALUES ('mergepdfa', 'application/x-zip', '@TE_HOME@/lib/engines/zip2star pdfa', NULL);
