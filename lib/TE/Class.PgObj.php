@@ -512,21 +512,22 @@ Class PgObj {
     $pgmess = pg_last_error($this->dbid);
     //    if ($pgmess != "") print "[$sql]";
     
-    $this->msg_err = chop(ereg_replace("ERROR:  ","",$pgmess));
+    $this->msg_err = chop(preg_replace("/ERROR:  /","",$pgmess));
     
-    
+    // HERER HERER HERE
+    // Use Postgresql error codes instead of localized text messages
     $action_needed= "";
     if ($lvl==0) { // to avoid recursivity
       if ($this->msg_err != "") {
-	if ((eregi("Relation ['\"]([a-zA-Z_]*)['\"] does not exist",$this->msg_err) ||
-	     eregi("Relation (.*) n'existe pas",$this->msg_err) ||
-	     eregi("class \"([a-zA-Z_]*)\" not found",$this->msg_err)) ) {
+	if ((preg_match("/Relation ['\"]([a-zA-Z_]*)['\"] does not exist/i",$this->msg_err) ||
+	     preg_match("/Relation (.*) n'existe pas/i",$this->msg_err) ||
+	     preg_match("/class \"([a-zA-Z_]*)\" not found/i",$this->msg_err)) ) {
 	  $action_needed = "create";
-	} else if ((eregi("No such attribute or function '([a-zA-Z_0-9]*)'",$this->msg_err)) ||
-		   (eregi("Attribute ['\"]([a-zA-Z_0-9]*)['\"] not found",$this->msg_err))) {
+	} else if ((preg_match("/No such attribute or function '([a-zA-Z_0-9]*)'/i",$this->msg_err)) ||
+		   (preg_match("/Attribute ['\"]([a-zA-Z_0-9]*)['\"] not found/i",$this->msg_err))) {
 	  $action_needed = "update";
-	} else if (eregi("relation ['\"](.*)['\"] already exists",$this->msg_err) ||
-		   eregi("relation (.*) existe d",$this->msg_err)){
+	} else if (preg_match("/relation ['\"](.*)['\"] already exists/i",$this->msg_err) ||
+		   preg_match("/relation (.*) existe d/i",$this->msg_err)){
 	  $action_needed = "none";		       
 	}
 	//		     print "\n\t\t".$this->dbaccess."[".$this->msg_err."]:$action_needed\n";
