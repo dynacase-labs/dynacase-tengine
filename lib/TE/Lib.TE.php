@@ -3,7 +3,7 @@
  * Common util functions
  *
  * @author Anakeen 2009
- * @license http://opensource.org/licenses/gpl-license.php GNU Public License
+ * @license http://www.fsf.org/licensing/licenses/agpl-3.0.html GNU Affero General Public License
  * @package TE
  */
 /**

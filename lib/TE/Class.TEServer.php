@@ -4,7 +4,7 @@
  *
  * @author Anakeen 2007
  * @version $Id: Class.TEServer.php,v 1.18 2008/11/24 12:44:34 jerome Exp $
- * @license http://opensource.org/licenses/gpl-license.php GNU Public License
+ * @license http://www.fsf.org/licensing/licenses/agpl-3.0.html GNU Affero General Public License
  * @package TE
  */
 /**

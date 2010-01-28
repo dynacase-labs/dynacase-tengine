@@ -4,7 +4,7 @@
  *
  * @author Anakeen 2005
  * @version $Id: Class.Histo.php,v 1.2 2007/06/06 18:12:01 eric Exp $
- * @license http://opensource.org/licenses/gpl-license.php GNU Public License
+ * @license http://www.fsf.org/licensing/licenses/agpl-3.0.html GNU Affero General Public License
  * @package TE
  */
 /**
