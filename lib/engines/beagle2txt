@@ -40,7 +40,7 @@ if [ $RET -ne 0 ]; then
     exit $RET
 fi
 
-perl -ne '
+perl -e '
 $in_c=0;
 while(<>){
   if(!$in_c&&m/^(Warn: .*)$/){print STDERR "$1\n";next}

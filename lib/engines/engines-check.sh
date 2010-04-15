@@ -126,7 +126,7 @@ function check_doc2txt {
 
     echo
     echo "* Checking conversion from MS-Word to TXT..."
-    "$TE_HOME"/lib/engines/beagle2txt "$TESTIN" "$TESTOUT"
+    "$TE_HOME"/lib/engines/beagledoc2txt "$TESTIN" "$TESTOUT"
     SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
 
     if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then

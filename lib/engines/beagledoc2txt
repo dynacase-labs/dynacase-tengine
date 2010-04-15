@@ -40,7 +40,7 @@ if [ $RET -ne 0 ]; then
     exit $RET
 fi
 
-perl -ne 'while(<>){s/\*\*(HOT|BREAK)\*\*//g;print;}' < "$OUT" > "$2"
+perl -ne 's/\*\*(HOT|BREAK)\*\*//g;print' < "$OUT" > "$2"
 RET=$?
 if [ $RET -ne 0 ]; then
     echo "Error extracting content from '$OUT'!"
