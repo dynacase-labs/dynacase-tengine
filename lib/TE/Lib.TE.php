@@ -52,6 +52,12 @@ function getArgv($argv) {
 function te_getSysMimeFile($f,$fn="") {
   if (! file_exists($f)) return false;
 	clearstatcache(); // to reset filesize
+
+  $ret = te_getMimeFile($f, 'sys');
+  if( $ret !== false ) {
+    return $ret;
+  }
+
   $sys = trim(`file -bi "$f"`);
   $txt=te_getTextMimeFile($f);
   if ($fn=="") $fn=basename($f);
@@ -116,6 +122,11 @@ function te_getSysMimeFile($f,$fn="") {
 }
 
 function te_getTextMimeFile($f) {
+  $ret = te_getMimeFile($f, 'text');
+  if( $ret !== false ) {
+    return $ret;
+  }
+
   $txt = trim(`file -b "$f"`);
 
   if (! $txt) return " ";
@@ -153,5 +164,88 @@ function te_fileextension($filename, $ext="") {
   if (count($te)>1) $ext = $te[count($te)-1];
   return $ext;
 }  
+
+/**
+ * get MIME type/text from mime.conf and mime-user.conf files
+ */
+function te_getMimeFile($filename, $type='sys') {
+  $conf_user = te_loadUserMimeConf();
+  $conf_global = te_loadMimeConf();
+
+  $conf = array_merge($conf_user, $conf_global);
+
+  foreach( $conf as $rule ) {
+    $ext = $rule['ext'];
+    if( preg_match("/\.\Q$ext\E$/i", $filename) ) {
+      return $rule[$type];
+    }
+  }
+
+  return false;
+}
+
+/**
+ * load mime-user.conf XML file into PHP array
+ */
+function te_loadUserMimeConf() {
+  $rules = array();
+
+  $te_home = getenv('TE_HOME');
+  if( $te_home === false ) {
+    error_log(__FUNCTION__." ".sprintf("Could not get TE_HOME env var."));
+    return $rules;
+  }
+
+  $conf_file = sprintf("%s%etc%ssmime-user.conf", $te_home, DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR);
+  if( ! file_exists($conf_file) || ! is_readable($conf_file) ) {
+    return $rules;
+  }
+
+  $xml = simplexml_load_file($conf_file);
+  if( $xml === false ) {
+    error_log(__FUNCTION__." ".sprintf("Could not load user MIME config '%s'.", $conf_file));
+    return $rules;
+  }
+
+  foreach( $xml->mime as $mimeNode ) {
+    $rule = array();
+    foreach( array('ext', 'sys', 'text') as $attrName ) {
+      $rule[$attrName] = (string)$mimeNode[$attrName];
+    }
+    array_push($rules, $rule);
+  }
+
+  return $rules;
+}
+
+/**
+ * load mime.conf XML file into PHP array
+ */
+function te_loadMimeConf() {
+  $rules = array();
+
+  $te_home = getenv('TE_HOME');
+  if( $te_home === false ) {
+    error_log(__FUNCTION__." ".sprintf("Could not get TE_HOME env var."));
+    return $rules;
+  }
+
+  $conf_file = sprintf("%s%setc%smime.conf", $te_home, DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR);
+  $xml = simplexml_load_file($conf_file);
+  if( $xml === false ) {
+    error_log(__FUNCTION__." ".sprintf("Could not load MIME config '%s'.", $conf_file));
+    return $rules;
+  }
+
+  foreach( $xml->mime as $mimeNode ) {
+    $rule = array();
+    foreach( array('ext', 'sys', 'text') as $attrName ) {
+      $rule[$attrName] = (string)$mimeNode[$attrName];
+    }
+    array_push($rules, $rule);
+  }
+
+  return $rules;
+}
 
 ?>
