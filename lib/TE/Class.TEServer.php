@@ -243,6 +243,7 @@ Class TEServer {
       if ($handle) {
 	$this->task->status='T'; // transferring
 	$this->task->modify();
+	$orig_size = $size;
 	do {
 	  if ($size >= 2048) {
 	    $rsize=2048;
@@ -250,23 +251,28 @@ Class TEServer {
 	    $rsize=$size;
 	  }	   
 	  $out = @fread($this->msgsock, $rsize);
+	  if( $out === false || $out === "" ) {
+	    $err = sprintf("error reading from msgsock (%s/%s bytes transferred))", $trbytes, $orig_size);
+	    break;
+	  }
 	  $l=strlen($out);
 	  $trbytes+=$l;	     
 	  $size-=$l;
 	  fwrite($handle,$out);
-	     
 	  //echo "file:$l []";
 	} while ($size>0);
 	fclose($handle);
-	//sleep(3);
-	$this->task->log(sprintf("%d bytes read in %.03f sec",$trbytes,
-				 te_microtime_diff(microtime(),$mb)));
-	$this->task->status='W'; // waiting
+	if( $err == "" ) {
+	  //sleep(3);
+	  $this->task->log(sprintf("%d bytes read in %.03f sec",$trbytes,
+				   te_microtime_diff(microtime(),$mb)));
+	  $this->task->status='W'; // waiting
+	  $this->task->inmime="";  // reset mime type
+	  $this->task->Modify();
+	}
       } else {
 	$err=sprintf(_("cannot create temporary file [%s]"),$filename);
       }
-      $this->task->inmime="";  // reset mime type
-      $this->task->Modify();
       echo "\nEND FILE $trbytes bytes\n";
     }
 
