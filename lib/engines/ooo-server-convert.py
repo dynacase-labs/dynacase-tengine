@@ -11,6 +11,49 @@ def usage():
     print ""
     print "Usage: "+sys.argv[0]+" -i <input_file> -o <output_file> [-h <ooo_host>] [-p <ooo_port>] [-t <pdf|pdfa|html|doc>]"
     print ""
+    
+    return
+
+def updateIndexes(doc):
+    doc.refresh()
+    indexes = doc.getDocumentIndexes()
+    indexesCount = indexes.getCount()
+    if indexesCount <= 0:
+        return
+
+    for i in range(indexesCount):
+        indexes.getByIndex(i).update()
+        doc.refresh()
+        # double pass for correct pages indexes
+        for i in range(indexesCount):
+            indexes.getByIndex(i).update()
+            doc.refresh()
+
+    return
+
+def embedWriterImages(smgr, ctx, doc):
+    graphicProvider = smgr.createInstanceWithContext("com.sun.star.graphic.GraphicProvider", ctx)
+
+    allImages = doc.GraphicObjects
+    imagesCount = allImages.getCount();
+
+    if imagesCount <= 0:
+        return
+
+    for i in range(imagesCount):
+        imageObj = allImages.getByIndex(i)
+        imageUrl = imageObj.GraphicURL
+
+        if imageUrl.find("vnd.sun.star.GraphicObject:") == 0:
+            continue
+
+        p = PropertyValue()
+        p.Name = "URL"
+        p.Value = imageUrl
+
+        imageObj.Graphic = graphicProvider.queryGraphic( (p,) )
+
+    return
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], "i:o:h:p:t:")
@@ -42,9 +85,18 @@ for arg, val in opts:
 if input_file == '' or output_file == '':
     usage()
     sys.exit(2)
-    
-input_file_url = uno.systemPathToFileUrl(input_file)
-output_file_url = uno.systemPathToFileUrl(output_file)
+
+try:    
+    input_file_url = uno.systemPathToFileUrl(input_file)
+except Exception as err:
+    print "Error input_file_url: %s" % (str(err))
+    sys.exit(1)
+
+try:
+    output_file_url = uno.systemPathToFileUrl(output_file)
+except Exception as err:
+    print "Error output_file_url: %s" % (str(err))
+    sys.exit(1)
 
 # Récupération d'un manager de service
 context = uno.getComponentContext()
@@ -61,9 +113,13 @@ properties.append(p)
 properties = tuple(properties)
 
 # Load the input document
-desktop = smgr.createInstanceWithContext("com.sun.star.frame.Desktop", ctx)
-doc = desktop.loadComponentFromURL(input_file_url, "_blank", 0, properties)
-
+try:
+    desktop = smgr.createInstanceWithContext("com.sun.star.frame.Desktop", ctx)
+    doc = desktop.loadComponentFromURL(input_file_url, "_blank", 0, properties)
+except Exception as err:
+    print "Error loading input file '%s': %s" % (input_file_url, str(err))
+    sys.exit(1)
+    
 # Detect input document type
 input_type = ''
 if doc.supportsService("com.sun.star.text.GenericTextDocument"):
@@ -157,21 +213,28 @@ if output_type == 'pdfa':
 
 # Update all indexes
 if input_type == 'writer':
-    doc.refresh()
-    indexes = doc.getDocumentIndexes()
-    indexesCount = indexes.getCount()
-    if indexesCount != 0:
-        for i in range(indexesCount):
-            indexes.getByIndex(i).update()
-            doc.refresh()
-        # double pass for correct pages indexes
-        for i in range(indexesCount):
-            indexes.getByIndex(i).update()
-            doc.refresh()
+    try:
+        updateIndexes(doc)
+    except Exception as err:
+        print "Error updating indexes: %s" % (str(err))
+        raise
+
+# Embed images in ODT documents
+if output_type == 'odt':
+    try:
+        embedWriterImages(smgr, ctx, doc)
+    except Exception as err:
+        print "Error embedding images from '%s' in '%s': %s" % (input_file_url, output_file_url, str(err))
+        raise
 
 # Set properties and do the conversion
 properties = tuple(properties)
-doc.storeToURL(output_file_url, properties)
+try:
+    doc.storeToURL(output_file_url, properties)
+except Exception as err:
+    print "Error storing '%s' to '%s': %s" % (input_file_url, output_file_url, str(err))
+    sys.exit(1)
+
 doc.dispose()
 
 sys.exit(0)
