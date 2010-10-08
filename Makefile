@@ -1,5 +1,5 @@
-TAR_DIST_NAME=freedom-te
-TAR_DIST_DIR=freedom-te-$(VERSION)-$(RELEASE)
+TAR_DIST_NAME=dynacase-te
+TAR_DIST_DIR=dynacase-te-$(VERSION)-$(RELEASE)
 
 TAR_DIST_OPTS=--owner 0 --group 0
 
