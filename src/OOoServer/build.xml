@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- WARNING: Eclipse auto-generated file.
+              Any modifications will be overwritten.
+              To include a user specific buildfile here, simply create one in the same
+              directory with the processing instruction <?eclipse.ant.import?>
+              as the first entry and export the buildfile again. -->
+<project basedir="." default="help" name="OOoServer">
+
+	<property environment="env" />
+	<property name="OOO_BASE_DIR" value="${env.OOO_BASE_DIR}" />
+	<property name="debuglevel" value="source,lines,vars" />
+	<property name="target" value="1.4" />
+	<property name="source" value="1.4" />
+
+	<path id="OOoServer.classpath">
+		<pathelement location="." />
+		<pathelement location="${OOO_BASE_DIR}/basis-link/program/classes/unoil.jar" />
+		<pathelement location="${OOO_BASE_DIR}/basis-link/ure-link/share/java/juh.jar" />
+		<pathelement location="${OOO_BASE_DIR}/basis-link/ure-link/share/java/jurt.jar" />
+		<pathelement location="${OOO_BASE_DIR}/basis-link/ure-link/share/java/ridl.jar" />
+	</path>
+
+	<target name="help">
+		<echo>
+Set OOO_BASE_DIR environment variable to the path of your OOo 3.2.1 installation
+then run `ant all' to build the jar archive:
+	
+	$ export OOO_BASE_DIR=/opt/openoffice.org3
+	$ ant all
+
+The OOO_BASE_DIR should point to the path containing the `basis-link/program/classes/unoil.jar'
+and `basis-link/ure-link/share/java/{juh,jurt,ridl}.jar' subdir/files.
+		</echo>
+	</target>
+
+	<target name="init">
+		<copy includeemptydirs="false" todir=".">
+			<fileset dir=".">
+				<exclude name="**/*.launch" />
+				<exclude name="**/*.java" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="clean">
+		<delete>
+			<fileset dir="." includes="**/*.class" />
+			<fileset dir="." includes="OOoServer.jar" />
+		</delete>
+	</target>
+
+	<target depends="clean" name="cleanall" />
+
+	<target depends="build-subprojects,build-project" name="build" />
+
+	<target name="build-subprojects" />
+
+	<target depends="init" name="build-project">
+		<echo message="${ant.project.name}: ${ant.file}" />
+		<javac debug="true" debuglevel="${debuglevel}" destdir="." source="${source}" target="${target}">
+			<src path="." />
+			<classpath refid="OOoServer.classpath" />
+		</javac>
+	</target>
+
+	<target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects" />
+
+	<target description="copy Eclipse compiler jars to ant lib directory" name="init-eclipse-compiler">
+		<copy todir="${ant.library.dir}">
+			<fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar" />
+		</copy>
+		<unzip dest="${ant.library.dir}">
+			<patternset includes="jdtCompilerAdapter.jar" />
+			<fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar" />
+		</unzip>
+	</target>
+
+	<target description="compile project with Eclipse compiler" name="build-eclipse-compiler">
+		<property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter" />
+		<antcall target="build" />
+	</target>
+
+	<target depends="build" name="jar">
+		<jar destfile="OOoServer.jar" basedir="." includes="com/anakeen/oooserver/**">
+			<manifest>
+				<attribute name="Main-Class" value="com.anakeen.oooserver.OOoServerCli" />
+				<attribute name="X-COMMENT" value="Class-Path: lib/juh.jar lib/jurt.jar lib/ridl.jar" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target depends="jar" name="all" />
+
+	<target name="test">
+		<exec executable="java">
+			<arg value="-classpath" />
+			<arg value="${OOO_BASE_DIR}/basis-link/program/classes/unoil.jar:${OOO_BASE_DIR}/basis-link/ure-link/share/java/juh.jar:${OOO_BASE_DIR}/basis-link/ure-link/share/java/jurt.jar:${OOO_BASE_DIR}/basis-link/ure-link/share/java/ridl.jar:OOoServer.jar" />
+			<arg value="com.anakeen.oooserver.OOoServerCli" />
+			<arg value="merge" />
+			<arg value="-h" /> <arg value="127.0.0.1" />
+			<arg value="-p" /> <arg value="8123" />
+			<arg value="-i" /> <arg value="/tmp/test.odt" />
+			<arg value="-o" /> <arg value="/tmp/out.pdf" />
+			<arg value="-t" /> <arg value="pdfa" />
+			<arg value="-d" />
+			<arg value="-b" />
+			<arg value="/tmp/test.odt" />
+			<arg value="/tmp/test.odt" />
+		</exec>
+	</target>
+
+</project>

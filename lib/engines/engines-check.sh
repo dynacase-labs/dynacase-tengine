@@ -72,7 +72,24 @@ function check_odt2txt {
     SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
 
     if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
-	echo "Error: conversion of '$TESTING to '$TESTOUT' failed!"
+	echo "Error: conversion of '$TESTIN' to '$TESTOUT' failed!"
+	return 1
+    fi
+    echo "  Ok: '$TESTOUT' ($SIZE bytes)"
+    return 0
+}
+
+function check_odt2doc {
+    TESTIN="$TE_HOME"/test-data/test.odt
+    TESTOUT=`mktemp_out test.odt .doc`
+
+    echo
+    echo "* Checking conversion from ODT to MS-Word..."
+    "$TE_HOME"/lib/engines/ooo2doc "$TESTIN" "$TESTOUT"
+    SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
+
+    if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
+	echo "  Error: Conversion of '$TESTIN' to '$TESTOUT' failed!"
 	return 1
     fi
     echo "  Ok: '$TESTOUT' ($SIZE bytes)"
@@ -130,7 +147,7 @@ function check_doc2txt {
     SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
 
     if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
-	echo "Error: conversion of '$TESTING to '$TESTOUT' failed!"
+	echo "Error: conversion of '$TESTIN' to '$TESTOUT' failed!"
 	return 1
     fi
     echo "  Ok: '$TESTOUT' ($SIZE bytes)"
@@ -164,7 +181,7 @@ function check_ppt2txt {
     SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
 
     if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
-	echo "Error: conversion of '$TESTING to '$TESTOUT' failed!"
+	echo "Error: conversion of '$TESTIN' to '$TESTOUT' failed!"
 	return 1
     fi
     echo "  Ok: '$TESTOUT' ($SIZE bytes)"
@@ -379,6 +396,7 @@ for CHECK in \
     check_odt2pdf \
     check_odt2pdfa \
     check_odt2txt \
+    check_odt2doc \
     \
     check_doc2pdf \
     check_doc2pdfa \

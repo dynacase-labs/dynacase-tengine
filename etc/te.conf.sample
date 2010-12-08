@@ -20,9 +20,10 @@ TE_SERVER_USER=root
 
 # -- Server-mode OpenOffice.org parameters
 TE_OOO_SERVER_ENABLED=yes
-TE_OOO_SERVER_PYTHON=/opt/openoffice.org3/program/python
-TE_OOO_SERVER_SOFFICE=/opt/openoffice.org3/program/soffice
-TE_OOO_SERVER_UNOPKG=/opt/openoffice.org3/program/unopkg
+TE_OOO_BASE_DIR=/opt/openoffice.org3
+TE_OOO_SERVER_PYTHON=${TE_OOO_BASE_DIR}/program/python
+TE_OOO_SERVER_SOFFICE=${TE_OOO_BASE_DIR}/program/soffice
+TE_OOO_SERVER_UNOPKG=${TE_OOO_BASE_DIR}/program/unopkg
 TE_OOO_SERVER_HOST=127.0.0.1
 TE_OOO_SERVER_PORT=8123
 
