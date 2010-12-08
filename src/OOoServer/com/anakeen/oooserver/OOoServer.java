@@ -11,6 +11,8 @@ import java.util.HashMap;
 
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.beans.XPropertySet;
+import com.sun.star.bridge.XBridge;
+import com.sun.star.bridge.XBridgeFactory;
 import com.sun.star.bridge.XUnoUrlResolver;
 import com.sun.star.frame.XComponentLoader;
 import com.sun.star.frame.XController;
@@ -29,31 +31,39 @@ import com.sun.star.text.XTextGraphicObjectsSupplier;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 import com.sun.star.comp.helper.Bootstrap;
+import com.sun.star.connection.XConnection;
+import com.sun.star.connection.XConnector;
 import com.sun.star.container.XNameAccess;
 import com.sun.star.document.XDocumentInsertable;
+import com.sun.star.document.XEventListener;
+import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XComponent;
 import com.sun.star.lang.XServiceInfo;
 import com.sun.star.ucb.XFileIdentifierConverter;
 import com.sun.star.util.XCloseable;
 import com.sun.star.util.XRefreshable;
 
-public class OOoServer {
+public class OOoServer implements XEventListener {
 	public boolean debug = false;
 
 	public String host = "";
 	public String port = "";
+	public boolean connected = false;
+	public boolean inDisconnect = false;
 
 	public XComponentContext localContext;
 	public XComponentContext remoteContext;
 	public XMultiComponentFactory localServiceManager;
 	public XMultiComponentFactory remoteServiceManager;
+	private XComponent bridgeComponent;
+	public XBridge bridge;
 
 	OOoServer(String ooo_host, String ooo_port) {
 		this.host = ooo_host;
 		this.port = ooo_port;
 	}
 
-	public void connect() throws Exception {
+	public synchronized void connect() throws Exception {
 		if (this.debug) {
 			System.err.print("Connecting to " + this.host + ":" + this.port
 					+ "\n");
@@ -68,21 +78,62 @@ public class OOoServer {
 		XUnoUrlResolver urlResolver = (XUnoUrlResolver) UnoRuntime
 				.queryInterface(XUnoUrlResolver.class, unoUrlResolver);
 
-		/* Connect to OOo */
-		Object initialObject = urlResolver.resolve("uno:socket,host="
-				+ this.host + ",port=" + this.port
-				+ ";urp;StarOffice.ServiceManager");
+		/* Get a connector */
+		XConnector connector = (XConnector) UnoRuntime.queryInterface(
+				XConnector.class, localServiceManager
+						.createInstanceWithContext(
+								"com.sun.star.connection.Connector",
+								localContext));
 
-		/* Retrieve remote context/service manager */
-		XPropertySet propertySet = (XPropertySet) UnoRuntime.queryInterface(
-				XPropertySet.class, initialObject);
+		/* Connect to OOo over TCP/IP */
+		XConnection connection = connector.connect("socket,host=" + this.host
+				+ ",port=" + this.port + ",tcpNoDelay=1");
+
+		/* Get a bridge */
+		XBridgeFactory bridgeFactory = (XBridgeFactory) UnoRuntime
+				.queryInterface(XBridgeFactory.class, localServiceManager
+						.createInstanceWithContext(
+								"com.sun.star.bridge.BridgeFactory",
+								localContext));
+		this.bridge = bridgeFactory.createBridge("", "urp", connection, null);
+		this.bridgeComponent = (XComponent) UnoRuntime.queryInterface(
+				XComponent.class, this.bridge);
+		this.bridgeComponent.addEventListener(this);
+
+		/* Get the remote service manager and context */
+		this.remoteServiceManager = (XMultiComponentFactory) UnoRuntime
+				.queryInterface(XMultiComponentFactory.class,
+						this.bridge.getInstance("StarOffice.ServiceManager"));
+
+		XPropertySet properties = (XPropertySet) UnoRuntime.queryInterface(
+				XPropertySet.class, this.remoteServiceManager);
 		this.remoteContext = (XComponentContext) UnoRuntime.queryInterface(
 				XComponentContext.class,
-				propertySet.getPropertyValue("DefaultContext"));
-		this.remoteServiceManager = this.remoteContext.getServiceManager();
+				properties.getPropertyValue("DefaultContext"));
+
+		this.connected = true;
+		this.inDisconnect = false;
 	}
 
-	public void convert(HashMap opts) throws Exception {
+	public synchronized void disconnect() throws Exception {
+		if (this.debug) {
+			System.err.print("Disconnecting... ");
+		}
+
+		this.inDisconnect = true;
+
+		if (this.connected) {
+			this.bridgeComponent.dispose();
+		}
+
+		this.connected = false;
+
+		if (this.debug) {
+			System.err.print("Done.\n");
+		}
+	}
+
+	public synchronized void convert(HashMap opts) throws Exception {
 		boolean local = true;
 
 		String input_file = (String) opts.get("input_file");
@@ -110,10 +161,8 @@ public class OOoServer {
 			File fileIn = new File(input_file);
 			File fileOut = new File(output_file);
 
-			Object unoFileIdentifierConverter = this.remoteServiceManager
-					.createInstanceWithContext(
-							"com.sun.star.ucb.FileContentProvider",
-							this.remoteContext);
+			Object unoFileIdentifierConverter = this
+					.getService("com.sun.star.ucb.FileContentProvider");
 			XFileIdentifierConverter fileIdentifierConverter = (XFileIdentifierConverter) UnoRuntime
 					.queryInterface(XFileIdentifierConverter.class,
 							unoFileIdentifierConverter);
@@ -142,16 +191,19 @@ public class OOoServer {
 					+ output_file + "' with type '" + output_type + "'\n");
 		}
 
-		Object unoDesktop = this.remoteServiceManager
-				.createInstanceWithContext("com.sun.star.frame.Desktop",
-						this.remoteContext);
+		Object unoDesktop = this.getService("com.sun.star.frame.Desktop");
 		XComponentLoader componentLoader = (XComponentLoader) UnoRuntime
 				.queryInterface(XComponentLoader.class, unoDesktop);
 
 		XComponent doc;
 		if (local) {
+			PropertyValue[] properties = new PropertyValue[1];
+			properties[0] = new PropertyValue();
+			properties[0].Name = "Hidden";
+			properties[0].Value = new Boolean(true);
+
 			doc = componentLoader.loadComponentFromURL(input_file_url,
-					"_blank", 0, new PropertyValue[0]);
+					"_blank", 0, properties);
 		} else {
 			PropertyValue[] properties = new PropertyValue[2];
 			properties[0] = new PropertyValue();
@@ -160,14 +212,14 @@ public class OOoServer {
 			properties[0].Value = oooInStream;
 			properties[1].Name = "Hidden";
 			properties[1].Value = new Boolean(true);
+
 			doc = componentLoader.loadComponentFromURL("private:stream",
 					"_blank", 0, properties);
 		}
 
+		String input_type = "";
 		XServiceInfo docServiceInfo = (XServiceInfo) UnoRuntime.queryInterface(
 				XServiceInfo.class, doc);
-
-		String input_type = "";
 		if (docServiceInfo
 				.supportsService("com.sun.star.text.GenericTextDocument")) {
 			input_type = "writer";
@@ -241,7 +293,7 @@ public class OOoServer {
 		}
 
 		if (input_type.equals("writer")) {
-			if( local && input_file_list.size() > 0 ) {
+			if (local && input_file_list.size() > 0) {
 				this.insertDocuments(doc, input_file_list, insert_page_break);
 			}
 			this.updateIndexes(doc);
@@ -271,14 +323,15 @@ public class OOoServer {
 
 		if (output_type.equals("pdfa")) {
 			PropertyValue[] pdfFilterData = new PropertyValue[2];
+
 			pdfFilterData[0] = new PropertyValue();
 			pdfFilterData[0].Name = "UseLossLessCompression";
 			pdfFilterData[0].Value = new Boolean(true);
-			
+
 			pdfFilterData[1] = new PropertyValue();
 			pdfFilterData[1].Name = "SelectPdfVersion";
 			pdfFilterData[1].Value = new Integer(1);
-			
+
 			property = new PropertyValue();
 			property.Name = "FilterData";
 			property.Value = pdfFilterData;
@@ -286,10 +339,10 @@ public class OOoServer {
 		}
 
 		PropertyValue[] properties = new PropertyValue[propertyList.size()];
-		for( int i = 0; i < propertyList.size(); i++ ) {
+		for (int i = 0; i < propertyList.size(); i++) {
 			properties[i] = (PropertyValue) propertyList.get(i);
 		}
-		
+
 		/*
 		 * Convert the document
 		 */
@@ -322,9 +375,8 @@ public class OOoServer {
 
 		refreshableDoc.refresh();
 
-		Object unoDispatchHelper = this.remoteServiceManager
-				.createInstanceWithContext("com.sun.star.frame.DispatchHelper",
-						this.remoteContext);
+		Object unoDispatchHelper = this
+				.getService("com.sun.star.frame.DispatchHelper");
 		XDispatchHelper dispatchHelper = (XDispatchHelper) UnoRuntime
 				.queryInterface(XDispatchHelper.class, unoDispatchHelper);
 
@@ -341,7 +393,6 @@ public class OOoServer {
 	}
 
 	public void embedImages(XComponent doc) throws Exception {
-		int i;
 		Object graph;
 		PropertyValue[] mediaProperties = new PropertyValue[1];
 
@@ -350,14 +401,12 @@ public class OOoServer {
 		XNameAccess nameAccess = graphObjSupplier.getGraphicObjects();
 		String[] imageList = nameAccess.getElementNames();
 
-		Object unoGraphicProvider = this.remoteServiceManager
-				.createInstanceWithContext(
-						"com.sun.star.graphic.GraphicProvider",
-						this.remoteContext);
+		Object unoGraphicProvider = this
+				.getService("com.sun.star.graphic.GraphicProvider");
 		XGraphicProvider graphicProvider = (XGraphicProvider) UnoRuntime
 				.queryInterface(XGraphicProvider.class, unoGraphicProvider);
 
-		for (i = 0; i < imageList.length; i++) {
+		for (int i = 0; i < imageList.length; i++) {
 			graph = nameAccess.getByName(imageList[i]);
 			XPropertySet propertySet = (XPropertySet) UnoRuntime
 					.queryInterface(XPropertySet.class, graph);
@@ -387,26 +436,43 @@ public class OOoServer {
 
 		String fileUrl;
 		File file;
-		Object unoFileIdentifierConverter = this.remoteServiceManager
-				.createInstanceWithContext(
-						"com.sun.star.ucb.FileContentProvider",
-						this.remoteContext);
+
+		Object unoFileIdentifierConverter = this
+				.getService("com.sun.star.ucb.FileContentProvider");
 		XFileIdentifierConverter fileIdentifierConverter = (XFileIdentifierConverter) UnoRuntime
 				.queryInterface(XFileIdentifierConverter.class,
 						unoFileIdentifierConverter);
 
-		int i = 0;
-		for (i = 0; i < fileList.size(); i++) {
+		for (int i = 0; i < fileList.size(); i++) {
 			file = new File((String) fileList.get(i));
 			fileUrl = fileIdentifierConverter.getFileURLFromSystemPath("",
 					file.getAbsolutePath());
 			cursor.gotoEnd(false);
-
 			if (insertPageBreak) {
 				cursorProperties.setPropertyValue("BreakType",
 						BreakType.PAGE_BEFORE);
 			}
 			cursorInsert.insertDocumentFromURL(fileUrl, null);
 		}
+	}
+
+	private Object getService(String className) throws Exception {
+		try {
+			if (!this.connected) {
+				this.connect();
+			}
+			return this.remoteServiceManager.createInstanceWithContext(
+					className, this.remoteContext);
+		} catch (Exception exception) {
+			throw new Exception("Could not get service '" + className + "'");
+		}
+	}
+
+	public void disposing(EventObject arg0) {
+		this.connected = false;
+	}
+
+	public void notifyEvent(com.sun.star.document.EventObject arg0) {
+		return;
 	}
 }

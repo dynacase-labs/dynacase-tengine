@@ -44,6 +44,7 @@ public class OOoServerCli {
 
 	public static void convert(ArrayList argList) throws Exception {
 		HashMap opts = new HashMap();
+
 		opts.put("input_file", "");
 		opts.put("output_file", "");
 		opts.put("ooo_host", "127.0.0.1");
@@ -124,8 +125,12 @@ public class OOoServerCli {
 			System.err.println("Error converting '" + opts.get("input_file")
 					+ "' to '" + opts.get("output_file") + "' with type '"
 					+ opts.get("output_type") + "': " + e.getMessage());
+			OOO.disconnect();
 			System.exit(3);
 		}
+
+		OOO.disconnect();
+		return;
 	}
 
 	public static void merge(ArrayList argList) throws Exception {
@@ -221,14 +226,18 @@ public class OOoServerCli {
 		}
 
 		try {
+			System.err.print("Foo\n");
 			OOO.convert(opts);
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Error converting '" + opts.get("input_file")
 					+ "' to '" + opts.get("output_file") + "' with type '"
 					+ opts.get("output_type") + "': " + e.getMessage());
+			OOO.disconnect();
 			System.exit(3);
 		}
 
+		OOO.disconnect();
+		return;
 	}
 }
