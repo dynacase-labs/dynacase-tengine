@@ -226,7 +226,6 @@ public class OOoServerCli {
 		}
 
 		try {
-			System.err.print("Foo\n");
 			OOO.convert(opts);
 		} catch (Exception e) {
 			e.printStackTrace();

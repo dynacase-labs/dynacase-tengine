@@ -76,10 +76,6 @@ check_environment() {
 	exit 1
     fi
     if [ "$TE_OOO_SERVER_ENABLED" = "yes" ]; then
-	if [ ! -d "$TE_OOO_BASE_DIR" ]; then
-	    echo "Error: TE_OOO_BASE_DIR '$TE_OOO_BASE_DIR' (in '$TE_HOME/etc/te.conf') is not a directory!"
-	    exit 1
-	fi
 	if [ ! -x "$TE_OOO_SERVER_PYTHON" ]; then
 	    echo "Error: TE_OOO_SERVER_PYTHON '$TE_OOO_SERVER_PYTHON' (in '$TE_HOME/etc/te.conf') is not executable!"
 	    exit 1
