@@ -68,7 +68,7 @@ function check_odt2txt {
 
     echo
     echo "* Checking conversion from ODT to TXT..."
-    "$TE_HOME"/lib/engines/beagle2txt "$TESTIN" "$TESTOUT"
+    "$TE_HOME"/lib/engines/tika2txt "$TESTIN" "$TESTOUT"
     SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
 
     if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
@@ -101,7 +101,24 @@ function check_doc2pdf {
     TESTOUT=`mktemp_out test.doc .pdf`
 
     echo
-    echo "* Checking conversion from MS-Word to PDF..."
+    echo "* Checking conversion from MS-Word 97 to PDF..."
+    "$TE_HOME"/lib/engines/ooo2pdf "$TESTIN" "$TESTOUT"
+    SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
+
+    if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
+	echo "  Error: Conversion of '$TESTIN' to '$TESTOUT' failed!"
+	return 1
+    fi
+    echo "  Ok: '$TESTOUT' ($SIZE bytes)"
+    return 0
+}
+
+function check_docx2pdf {
+    TESTIN="$TE_HOME"/test-data/test.docx
+    TESTOUT=`mktemp_out test.docx .pdf`
+
+    echo
+    echo "* Checking conversion from MS-Word 2007 Open XML to PDF..."
     "$TE_HOME"/lib/engines/ooo2pdf "$TESTIN" "$TESTOUT"
     SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
 
@@ -118,7 +135,31 @@ function check_doc2pdfa {
     TESTOUT=`mktemp_out test.doc .pdfa`
 
     echo
-    echo "* Checking conversion from MS-Word to PDF/A-1..."
+    echo "* Checking conversion from MS-Word 97 to PDF/A-1..."
+    "$TE_HOME"/lib/engines/ooo2pdfa "$TESTIN" "$TESTOUT"
+    SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
+
+    if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
+	echo "  Error: conversion of '$TESTIN' to '$TESTOUT' failed!"
+	return 1
+    fi
+
+    grep "\/GTS_PDFA1\>" "$TESTOUT" 1> /dev/null 2>&1
+    RET=$?
+    if [ $RET -ne 0 ]; then
+	echo "  Warning: '$TESTOUT' ($SIZE bytes) does not seems to be a PDF/A-1 file!"
+	return 1
+    fi
+    echo "  Ok: '$TESTOUT' ($SIZE bytes)"
+    return 0
+}
+
+function check_docx2pdfa {
+    TESTIN="$TE_HOME"/test-data/test.docx
+    TESTOUT=`mktemp_out test.docx .pdfa`
+
+    echo
+    echo "* Checking conversion from MS-Word 2007 Open XML to PDF/A-1..."
     "$TE_HOME"/lib/engines/ooo2pdfa "$TESTIN" "$TESTOUT"
     SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
 
@@ -142,8 +183,25 @@ function check_doc2txt {
     TESTOUT=`mktemp_out test.doc .txt`
 
     echo
-    echo "* Checking conversion from MS-Word to TXT..."
-    "$TE_HOME"/lib/engines/beagledoc2txt "$TESTIN" "$TESTOUT"
+    echo "* Checking conversion from MS-Word 97 to TXT..."
+    "$TE_HOME"/lib/engines/tika2txt "$TESTIN" "$TESTOUT"
+    SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
+
+    if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
+	echo "Error: conversion of '$TESTIN' to '$TESTOUT' failed!"
+	return 1
+    fi
+    echo "  Ok: '$TESTOUT' ($SIZE bytes)"
+    return 0
+}
+
+function check_docx2txt {
+    TESTIN="$TE_HOME"/test-data/test.docx
+    TESTOUT=`mktemp_out test.docx .txt`
+
+    echo
+    echo "* Checking conversion from MS-Word 2007 Open XML to TXT..."
+    "$TE_HOME"/lib/engines/tika2txt "$TESTIN" "$TESTOUT"
     SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
 
     if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
@@ -159,7 +217,24 @@ function check_ppt2pdf {
     TESTOUT=`mktemp_out test.ppt .pdf`
 
     echo
-    echo "* Checking conversion from MS-PowerPoint to PDF..."
+    echo "* Checking conversion from MS-PowerPoint 97 to PDF..."
+    "$TE_HOME"/lib/engines/ooo2pdf "$TESTIN" "$TESTOUT"
+    SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
+
+    if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
+	echo "Error: conversion of '$TESTIN' to '$TESTOUT' failed!"
+	return 1
+    fi
+    echo "  Ok: '$TESTOUT' ($SIZE bytes)"
+    return 0
+}
+
+function check_pptx2pdf {
+    TESTIN="$TE_HOME"/test-data/test.pptx
+    TESTOUT=`mktemp_out test.ppt .pdf`
+
+    echo
+    echo "* Checking conversion from MS-PowerPoint 2007 Open XML to PDF..."
     "$TE_HOME"/lib/engines/ooo2pdf "$TESTIN" "$TESTOUT"
     SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
 
@@ -176,8 +251,25 @@ function check_ppt2txt {
     TESTOUT=`mktemp_out test.ppt .txt`
 
     echo
-    echo "* Checking conversion from MS-PowerPoint to TXT..."
-    "$TE_HOME"/lib/engines/beagle2txt "$TESTIN" "$TESTOUT"
+    echo "* Checking conversion from MS-PowerPoint 97 to TXT..."
+    "$TE_HOME"/lib/engines/tika2txt "$TESTIN" "$TESTOUT"
+    SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
+
+    if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
+	echo "Error: conversion of '$TESTIN' to '$TESTOUT' failed!"
+	return 1
+    fi
+    echo "  Ok: '$TESTOUT' ($SIZE bytes)"
+    return 0
+}
+
+function check_pptx2txt {
+    TESTIN="$TE_HOME"/test-data/test.pptx
+    TESTOUT=`mktemp_out test.pptx .txt`
+
+    echo
+    echo "* Checking conversion from MS-PowerPoint 2007 Open XML to TXT..."
+    "$TE_HOME"/lib/engines/tika2txt "$TESTIN" "$TESTOUT"
     SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
 
     if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
@@ -189,11 +281,28 @@ function check_ppt2txt {
 }
 
 function check_xls2pdf {
-    TESTIN="$TE_HOME"/test-data/test.3sheet.xls
-    TESTOUT=`mktemp_out test.3sheet.xls .pdf`
+    TESTIN="$TE_HOME"/test-data/test.3sheet.97.xls
+    TESTOUT=`mktemp_out test.3sheet.97.xls .pdf`
 
     echo
-    echo "* Checking conversion from MS-Excel to PDF..."
+    echo "* Checking conversion from MS-Excel 97 to PDF..."
+    "$TE_HOME"/lib/engines/ooo2pdf "$TESTIN" "$TESTOUT"
+    SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
+
+    if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
+	echo "Error: conversion of '$TESTIN' to '$TESTOUT' failed!"
+	return 1
+    fi
+    echo "  Ok: '$TESTOUT' ($SIZE bytes)"
+    return 0
+}
+
+function check_xlsx2pdf {
+    TESTIN="$TE_HOME"/test-data/test.3sheet.xlsx
+    TESTOUT=`mktemp_out test.3sheet.xlsx .pdf`
+
+    echo
+    echo "* Checking conversion from MS-Excel 2007 Open XML to PDF..."
     "$TE_HOME"/lib/engines/ooo2pdf "$TESTIN" "$TESTOUT"
     SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
 
@@ -206,12 +315,29 @@ function check_xls2pdf {
 }
 
 function check_xls2txt {
-    TESTIN="$TE_HOME"/test-data/test.3sheet.xls
-    TESTOUT=`mktemp_out test.3sheet.xls .txt`
+    TESTIN="$TE_HOME"/test-data/test.3sheet.97.xls
+    TESTOUT=`mktemp_out test.3sheet.97.xls .txt`
 
     echo
-    echo "* Checking conversion from MS-Excel to TXT..."
-    "$TE_HOME"/lib/engines/beagle2txt "$TESTIN" "$TESTOUT"
+    echo "* Checking conversion from MS-Excel 97 to TXT..."
+    "$TE_HOME"/lib/engines/tika2txt "$TESTIN" "$TESTOUT"
+    SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
+
+    if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
+	echo "Error: conversion of '$TESTIN' to '$TESTOUT' failed!"
+	return 1
+    fi
+    echo "  Ok: '$TESTOUT' ($SIZE bytes)"
+    return 0
+}
+
+function check_xlsx2txt {
+    TESTIN="$TE_HOME"/test-data/test.3sheet.xlsx
+    TESTOUT=`mktemp_out test.3sheet.xlsx .txt`
+
+    echo
+    echo "* Checking conversion from MS-Excel 2007 Open XML to TXT..."
+    "$TE_HOME"/lib/engines/tika2txt "$TESTIN" "$TESTOUT"
     SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
 
     if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
@@ -287,7 +413,7 @@ function check_html2txt {
     echo
     echo "* Checking conversion from HTML to TXT..."
 
-    "$TE_HOME"/lib/engines/beagle2txt "$TESTIN" "$TESTOUT"
+    "$TE_HOME"/lib/engines/tika2txt "$TESTIN" "$TESTOUT"
     SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
 
     if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
@@ -304,7 +430,7 @@ function check_pdf2txt {
 
     echo
     echo "* Checking conversion from PDF to TXT..."
-    "$TE_HOME"/lib/engines/beagle2txt "$TESTIN" "$TESTOUT"
+    "$TE_HOME"/lib/engines/tika2txt "$TESTIN" "$TESTOUT"
     SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
 
     if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
@@ -390,6 +516,7 @@ function check_mergepdfa {
     return 0
 }
 
+
 EXITCODE=0
 for CHECK in \
     \
@@ -399,14 +526,21 @@ for CHECK in \
     check_odt2doc \
     \
     check_doc2pdf \
+    check_docx2pdf \
     check_doc2pdfa \
+    check_docx2pdfa \
     check_doc2txt \
+    check_docx2txt \
     \
     check_ppt2pdf \
+    check_pptx2pdf \
     check_ppt2txt \
+    check_pptx2txt \
     \
     check_xls2pdf \
+    check_xlsx2pdf \
     check_xls2txt \
+    check_xlsx2txt \
     \
     check_html2odt \
     check_html2pdf \
