@@ -21,7 +21,7 @@ Class TEServer {
   public $cur_client=0;
   public $max_client=15;
   public $address = '0.0.0.0';
-  public $port = 10000;
+  public $port = 51968;
   public $dbaccess="dbname=te user=postgres";
   public $tmppath="/var/tmp";
 
@@ -66,7 +66,10 @@ Class TEServer {
 
 
     $this->sock = stream_socket_server("tcp://".$this->address.":".$this->port, $errno, $errstr);
-
+    if( $this->sock === false ) {
+      echo sprintf("Error: could not open server socket on 'tcp://%s:%s': (%s) %s", $this->address, $this->port, $errno, $errstr);
+      exit( 1 );
+    }
 
     echo "Listen on :"."tcp://".$this->address.":".$this->port."\n";
 
