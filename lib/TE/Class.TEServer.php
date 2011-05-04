@@ -21,7 +21,7 @@ Class TEServer {
   public $cur_client=0;
   public $max_client=15;
   public $address = '0.0.0.0';
-  public $port = 10000;
+  public $port = 51968;
   public $dbaccess="dbname=te user=postgres";
   public $tmppath="/var/tmp";
 

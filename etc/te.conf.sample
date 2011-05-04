@@ -3,8 +3,8 @@
 TE_PG_SERVICE="te"                # Postgresql database service name
 
 #---- REQUEST PART ----
-#PORT=10000                       # port number where listen client
-#LISTEN_ADDRESS=0.0.0.0           # address mask to listen : listen everybody by default
+PORT=51968                        # port number where listen client
+LISTEN_ADDRESS=0.0.0.0            # address mask to listen : listen everybody by default
 REQUEST_MAX_CLIENT=15             # max request in parallel 
 REQUEST_DIRECTORY=/var/tmp        # directory where source files to transform are saved
 
