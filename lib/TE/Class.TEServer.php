@@ -66,7 +66,10 @@ Class TEServer {
 
 
     $this->sock = stream_socket_server("tcp://".$this->address.":".$this->port, $errno, $errstr);
-
+    if( $this->sock === false ) {
+      echo sprintf("Error: could not open server socket on 'tcp://%s:%s': (%s) %s", $this->address, $this->port, $errno, $errstr);
+      exit( 1 );
+    }
 
     echo "Listen on :"."tcp://".$this->address.":".$this->port."\n";
 
