@@ -101,7 +101,10 @@ Class TERendering {
 		    $eng->command = preg_replace('/@TE_HOME@/', $TE_HOME, $eng->command);
 		  }
 		  $orifile = $this->task->infile;
-		  $outfile= $this->tmppath."/ter-".posix_getpid().".".$eng->name;
+		  $outfile = tempnam($this->tmppath, "ter-");
+		  if( $outfile !== false ) {
+		      unlink($outfile);
+		  }
 		  $errfile=$outfile.".err";
 		  if ((! is_file($outfile)) && (!  is_file($errfile))) {
 		    $tc=sprintf("%s %s %s 2>%s",

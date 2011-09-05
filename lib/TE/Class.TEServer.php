@@ -199,7 +199,7 @@ Class TEServer {
     // normal case : now the file	  
 
 
-    $filename=$this->tmppath."/tes-".posix_getpid().$ext;
+    $filename = tempnam($this->tmppath, "tes-");
     $this->task=new Task($this->dbaccess);
     $this->task->engine=$tename;
     $this->task->infile=$filename;
@@ -242,7 +242,9 @@ Class TEServer {
       if  ($peername) {
 	$this->task->log(sprintf(_("transferring from %s"),$peername));
       }
-      if (!is_file($filename)) $handle = @fopen($filename, "x"); // only if not
+      if( $filename !== false ) {
+          $handle = @fopen($filename, "w");
+      }
       if ($handle) {
 	$this->task->status='T'; // transferring
 	$this->task->modify();
