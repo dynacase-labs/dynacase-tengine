@@ -310,6 +310,21 @@ check() {
     script_result=$?
 }
 
+cleantmpfiles() {
+    local DEADLINE="7"
+    if [[ -n $1 && $1 =~ ^[0-9][0-9]*$ ]]; then
+	DEADLINE=$1
+    fi
+    if [ -d "$REQUEST_DIRECTORY" ]; then
+	find "$REQUEST_DIRECTORY" -maxdepth 1 -type f -name "te[rs]-*" -mtime "+$DEADLINE" -print0 | xargs -0 --no-run-if-empty rm
+	find "$REQUEST_DIRECTORY" -maxdepth 1 -type d -name "te[rs]-*" -mtime "+$DEADLINE" -print0 | xargs -0 --no-run-if-empty rm -r
+    fi
+    if [ -d "$RENDERING_DIRECTORY" ]; then
+	find "$RENDERING_DIRECTORY" -maxdepth 1 -type f -name "te[rs]-*" -mtime "+$DEADLINE" -print0 | xargs -0 --no-run-if-empty rm
+	find "$RENDERING_DIRECTORY" -maxdepth 1 -type d -name "te[rs]-*" -mtime "+$DEADLINE" -print0 | xargs -0 --no-run-if-empty rm -r
+    fi
+}
+
 # See how we were called.
 case "$1" in
     start)
@@ -330,8 +345,11 @@ case "$1" in
     check)
 	check
 	;;
-	*)
-	echo $"Usage: $0 {init|start|stop|status|restart}"
+    cleantmpfiles)
+        cleantmpfiles "$2"
+	;;
+    *)
+	echo $"Usage: $0 {init|start|stop|status|restart|check|cleantmpfiles}"
 	exit 1
 esac
 
