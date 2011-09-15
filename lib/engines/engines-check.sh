@@ -8,11 +8,15 @@ fi
 . "$TE_HOME"/etc/te.conf
 . "$TE_HOME"/etc/te.d/env
 
+if [ -n "$REQUEST_DIRECTORY" ]; then
+    export TMPDIR=$REQUEST_DIRECTORY
+fi
+
 function mktemp_out {
     IN=$1
     EXT=$2
 
-    OUT=`mktemp -u -t "$IN"XXXXXX`
+    OUT=`mktemp -u -t ter-"$IN"XXXXXX`
     if [ $? -ne 0 ]; then
 	echo "Error creating temp file!" 1>&2
 	exit 1
