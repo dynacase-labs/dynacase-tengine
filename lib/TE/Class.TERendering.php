@@ -104,6 +104,7 @@ Class TERendering {
 		  $outfile = tempnam($this->tmppath, "ter-");
 		  if( $outfile !== false ) {
 		      unlink($outfile);
+		      $outfile = $outfile.".".$eng->name;
 		  }
 		  $errfile=$outfile.".err";
 		  if ((! is_file($outfile)) && (!  is_file($errfile))) {

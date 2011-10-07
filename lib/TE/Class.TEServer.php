@@ -200,6 +200,12 @@ Class TEServer {
 
 
     $filename = tempnam($this->tmppath, "tes-");
+    if( $filename !== false ) {
+      $filename_ext = $filename.$ext;
+      if( rename($filename, $filename_ext) !== false ) {
+        $filename = $filename_ext;
+      }
+    }
     $this->task=new Task($this->dbaccess);
     $this->task->engine=$tename;
     $this->task->infile=$filename;
