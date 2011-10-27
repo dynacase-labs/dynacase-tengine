@@ -1,0 +1,41 @@
+#!/bin/bash
+
+if [ -z "$TE_HOME" ]; then
+    MY_PATH=$0
+    if [ -L "$MY_PATH" ]; then
+	MY_PATH=`readlink "$MY_PATH"`
+    fi
+    DIRNAME=`dirname "$MY_PATH"`
+    DIRNAME="$DIRNAME/../../"
+    REAL_DIRNAME=`cd "$DIRNAME" 1 > /dev/null 2>&1 && pwd`
+    export TE_HOME=$REAL_DIRNAME
+fi
+
+TE_OOO_SERVER_HOST=127.0.0.1
+TE_OOO_SERVER_PORT=8123
+
+[ -f "$TE_HOME"/etc/te.conf ] && . "$TE_HOME"/etc/te.conf
+[ -f "$TE_HOME"/etc/te.d/env ] && . "$TE_HOME"/etc/te.d/env
+
+if [ -n "$REQUEST_DIRECTORY" ]; then
+    export TMPDIR=$REQUEST_DIRECTORY
+fi
+
+ODTW=`mktemp -t -d ter-odf.XXXXXX`
+unzip -qq "$2" -d "$ODTW"
+RET=$?
+if [ $RET -ne 0 ]; then
+    echo "Error unpacking '$2' in '$ODTW'!"
+    exit $RET
+fi
+
+#find "$ODTW"  -type f -print0 | xargs -0 "$TE_OOO_SERVER_PYTHON" "$TE_HOME/lib/engines/ooo-server-merge.py"  -o "$3" -t "$1" -i
+# no support file with spaces
+find "$ODTW"  -type f -print | sort | xargs  "$TE_HOME/lib/engines/ooo-server-cli" merge -o "$3" -t "$1" -i
+RET=$?
+if [ $RET -ne 0 ]; then
+    echo "Error merging '$2' to '$3'!"
+    exit $RET
+fi
+
+rm -rf "$ODTW"

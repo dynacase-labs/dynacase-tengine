@@ -1,0 +1,3 @@
+#!/bin/bash
+pdftotext $1 $2
+#recode -f u8..l9 $2

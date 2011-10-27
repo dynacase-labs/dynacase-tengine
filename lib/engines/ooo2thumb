@@ -1,0 +1,2 @@
+#!/bin/bash
+unzip -p $1 Thumbnails/thumbnail.png > $2

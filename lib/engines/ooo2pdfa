@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [ -z "$TE_HOME" ]; then
+    MY_PATH=$0
+    if [ -L "$MY_PATH" ]; then
+	MY_PATH=`readlink "$MY_PATH"`
+    fi
+    DIRNAME=`dirname "$MY_PATH"`
+    DIRNAME="$DIRNAME/../../"
+    REAL_DIRNAME=`cd "$DIRNAME" 1 > /dev/null 2>&1 && pwd`
+    export TE_HOME=$REAL_DIRNAME
+fi
+
+TE_OOO_SERVER_HOST=127.0.0.1
+TE_OOO_SERVER_PORT=8123
+
+[ -f "$TE_HOME"/etc/te.conf ] && . "$TE_HOME"/etc/te.conf
+[ -f "$TE_HOME"/etc/te.d/env ] && . "$TE_HOME"/etc/te.d/env
+
+"$TE_HOME/lib/engines/ooo-server-cli" convert -i "$1" -o "$2" -h "$TE_OOO_SERVER_HOST" -p "$TE_OOO_SERVER_PORT" -t pdfa

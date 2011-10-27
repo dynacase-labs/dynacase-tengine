@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [ -z "$TE_HOME" ]; then
+    MY_PATH=$0
+    if [ -L "$MY_PATH" ]; then
+        MY_PATH=`readlink "$MY_PATH"`
+    fi
+    DIRNAME=`dirname "$MY_PATH"`
+    DIRNAME="$DIRNAME/../../"
+    REAL_DIRNAME=`cd "$DIRNAME" 1 > /dev/null 2>&1 && pwd`
+    export TE_HOME=$REAL_DIRNAME
+fi
+
+[ -f "$TE_HOME"/etc/te.conf ] && . "$TE_HOME"/etc/te.conf
+[ -f "$TE_HOME"/etc/te.d/env ] && . "$TE_HOME"/etc/te.d/env
+
+java -classpath "${TE_HOME}/lib/engines/OOoServer.jar:${TE_OOO_CLASSPATH}" ${TE_OOO_JVM_OPTS} com.anakeen.oooserver.OOoServerCli "$@"

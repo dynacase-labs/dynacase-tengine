@@ -1,0 +1,31 @@
+# Transformation Engine Configuration
+# - - - - - - - - - - - - - - - - - -
+TE_PG_SERVICE="te"                # Postgresql database service name
+
+#---- REQUEST PART ----
+PORT=51968                        # port number where listen client
+LISTEN_ADDRESS=0.0.0.0            # address mask to listen : listen everybody by default
+REQUEST_MAX_CLIENT=15             # max request in parallel 
+REQUEST_DIRECTORY=/var/tmp        # directory where source files to transform are saved
+
+#---- RENDERING PART ----
+
+RENDERING_MAX_CLIENT=10           # max conversion in parallel 
+RENDERING_DIRECTORY=/var/tmp      # directory where converted files are saved
+
+# -- Run TE servers as a user --
+TE_SERVER_USER=root
+
+# -- Server-mode OpenOffice.org parameters
+TE_OOO_SERVER_ENABLED=yes
+TE_OOO_BASE_DIR=/opt/openoffice.org3
+TE_OOO_SERVER_PYTHON=${TE_OOO_BASE_DIR}/program/python
+TE_OOO_SERVER_SOFFICE=${TE_OOO_BASE_DIR}/program/soffice
+TE_OOO_SERVER_UNOPKG=${TE_OOO_BASE_DIR}/program/unopkg
+TE_OOO_CLASSPATH="${TE_OOO_BASE_DIR}/basis-link/program/classes/unoil.jar:${TE_OOO_BASE_DIR}/basis-link/ure-link/share/java/juh.jar:${TE_OOO_BASE_DIR}/basis-link/ure-link/share/java/jurt.jar:${TE_OOO_BASE_DIR}/basis-link/ure-link/share/java/ridl.jar"
+TE_OOO_JVM_OPTS=""
+TE_OOO_SERVER_HOST=127.0.0.1
+TE_OOO_SERVER_PORT=8123
+
+# -- Tika-app Jar file
+TIKA_APP_JAR="${TE_HOME}/lib/engines/tika-app-0.9.jar"
