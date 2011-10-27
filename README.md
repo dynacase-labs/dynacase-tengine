@@ -1,4 +1,4 @@
 Dynacase Transformation Engine
 =================================
 
-Used it to convert files
+Server used to convert files
