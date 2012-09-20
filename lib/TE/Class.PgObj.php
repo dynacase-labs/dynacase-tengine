@@ -451,7 +451,7 @@ Class PgObj {
   }
   function CloseConnect()
   {
-    pg_close("$this->dbid");
+    pg_close($this->dbid);
     return TRUE;
   }
 
@@ -487,13 +487,38 @@ Class PgObj {
   function PostInit() {
   }
 
-  function init_dbid() {
-    //global $_DBID;
-    $this->dbid= pg_pconnect($this->dbaccess);
-    return $this->dbid;
-  
-  
+  function close_my_pg_connections() {
+      global $_DBID;
+
+      $pid = getmypid();
+
+      if (!isset($_DBID[$pid])) {
+          return;
+      }
+      foreach ($_DBID[$pid] as $conn) {
+          @pg_close($conn);
+      }
+      unset($_DBID[$pid]);
   }
+
+  function init_dbid() {
+    global $_DBID;
+
+    $pid = getmypid();
+
+    if (isset($_DBID[$pid][$this->dbaccess]) && is_resource($_DBID[$pid][$this->dbaccess])) {
+        $status = pg_connection_status($_DBID[$pid][$this->dbaccess]);
+        if ($status !== PGSQL_CONNECTION_OK) {
+            pg_connection_reset($_DBID[$pid][$this->dbaccess]);
+        }
+    } else {
+        $_DBID[$pid][$this->dbaccess] = pg_connect($this->dbaccess, PGSQL_CONNECT_FORCE_NEW);
+    }
+    $this->dbid = $_DBID[$pid][$this->dbaccess];
+
+    return $this->dbid;
+  }
+
   function exec_query($sql,$lvl=0)
   {
     global $SQLDELAY,$SQLDEBUG;
