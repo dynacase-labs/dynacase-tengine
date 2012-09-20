@@ -93,7 +93,9 @@ Class TEServer {
 	} else {
 	  $this->cur_client++;
 	  $pid = pcntl_fork();
-            
+
+	  PgObj::close_my_pg_connections();
+
 	  if ( $pid == -1 ) {       
 	    // Fork failed           
 	    exit(1);
