@@ -38,7 +38,7 @@ Class Task extends PgObj
     
     public $sqlcreate = <<< SQL
 CREATE TABLE task (
-    tid SERIAL PRIMARY KEY,
+    tid TEXT PRIMARY KEY,
     infile TEXT NOT NULL,
     inmime TEXT,
     outfile TEXT,
@@ -80,9 +80,7 @@ SQL;
     function preInsert()
     {
         if (empty($this->tid)) {
-            $res = pg_exec($this->init_dbid() , "select nextval ('task_tid_seq')");
-            $arr = pg_fetch_array($res, 0);
-            $this->tid = $arr[0];
+            $this->tid = uniqid("", true);
         }
         if (!empty($this->infile)) {
             $this->inmime = te_getSysMimeFile($this->infile);

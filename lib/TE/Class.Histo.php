@@ -38,7 +38,7 @@ Class Histo extends PgObj
     
     public $sqlcreate = <<< 'SQL'
 CREATE TABLE histo (
-    tid INT NOT NULL,
+    tid TEXT NOT NULL,
     date TIMESTAMP DEFAULT now(),
     comment TEXT
 );
