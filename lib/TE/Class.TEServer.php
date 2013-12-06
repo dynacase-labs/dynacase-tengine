@@ -3,7 +3,7 @@
  * @author Anakeen
  * @license http://www.fsf.org/licensing/licenses/agpl-3.0.html GNU Affero General Public License
  * @package FDL
- */
+*/
 
 require_once "TE/Lib.TE.php";
 require_once "TE/Class.Task.php";
@@ -209,7 +209,6 @@ Class TEServer
             $cmime = $match[1];
         }
         // normal case : now the file
-        
         $filename = tempnam($this->tmppath, "tes-");
         if ($filename !== false) {
             $filename_ext = $filename . $ext;
@@ -412,7 +411,7 @@ Class TEServer
             }
             $this->task = new Task($this->dbaccess, $tid);
             if (!$this->task->isAffected()) {
-                throw new Exception(sprintf(_("task [%s] not exist", $tid)));
+                throw new Exception(sprintf(_("task [%s] not exist") , $tid));
             }
             // normal case : now the file
             $filename = $this->task->outfile;
@@ -436,7 +435,6 @@ Class TEServer
                 $this->task->log(sprintf(_("transferring to %s") , $peername));
             }
             $mb = microtime();
-            $trbytes = 0;
             $size = 0;
             $handle = @fopen($filename, "r");
             if ($handle) {
@@ -462,4 +460,3 @@ Class TEServer
         }
     }
 }
-?>
