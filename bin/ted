@@ -96,6 +96,24 @@ check_environment() {
     fi
 }
 
+check_tcp_port() {
+    local P=$1
+    netstat -tnl | grep ":$P[[:space:]]" > /dev/null 2>&1
+}
+
+check_ports() {
+    check_tcp_port "$PORT"
+    if [ $? -eq 0 ]; then
+	echo "Error: te_request_server's TCP port $PORT is already in use!"
+	exit 1
+    fi
+    check_tcp_port 8123
+    if [ $? -eq 0 ]; then
+	echo "Error: OpenOffice's TCP port 8123 is already in use!"
+	exit 1
+    fi
+}
+
 # Get config.
 . "$TE_HOME/etc/te.conf"
 
@@ -107,6 +125,7 @@ DB="service='$TE_PG_SERVICE'"
 script_result=0
 
 start() {
+    check_ports
     ret1=0
     ret2=0
     ret3=0
