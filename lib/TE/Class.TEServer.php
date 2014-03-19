@@ -145,6 +145,13 @@ Class TEServer
                                 }
                                 break;
 
+                            case "INFO:ENGINES":
+                                $msg = $this->getEngines();
+                                if (@fputs($this->msgsock, $msg, strlen($msg)) === false) {
+                                    echo "fputs $errstr ($errno)<br />\n";
+                                }
+                                break;
+
                             case "GET":
                                 $msg = $this->retrieveFile();
                                 if (@fputs($this->msgsock, $msg, strlen($msg)) === false) {
@@ -459,4 +466,40 @@ Class TEServer
             return $this->formatErrorReturn($e->getMessage());
         }
     }
-}
+    /**
+     * @param $fp
+     * @param $string
+     * @return int
+     */
+    private function fwrite_stream($fp, $string)
+    {
+        for ($written = 0; $written < strlen($string); $written+= $fwrite) {
+            $fwrite = fwrite($fp, substr($string, $written));
+            if ($fwrite === false) {
+                return $written;
+            }
+        }
+        return $written;
+    }
+    public function getEngines()
+    {
+        try {
+            $engine = new Engine($this->dbaccess);
+            $response = $engine->getAllEngines();
+            if (!is_array($response)) {
+                throw new Exception("Found no engines");
+            }
+            $json = json_encode($response);
+            $buffer = sprintf("<response status=\"OK\" size=\"%d\" type=\"application/json\"/>\n%s", strlen($json) , $json);
+            $ret = $this->fwrite_stream($this->msgsock, $buffer);
+            if ($ret != strlen($buffer)) {
+                throw new Exception("Error writing content to socket");
+            }
+            fflush($this->msgsock);
+            return '';
+        }
+        catch(Exception $e) {
+            return $this->formatErrorReturn($e->getMessage());
+        }
+    }
+            }
