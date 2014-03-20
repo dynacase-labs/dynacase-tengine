@@ -152,6 +152,13 @@ Class TEServer
                                 }
                                 break;
 
+                            case "INFO:TASKS":
+                                $msg = $this->getTasks();
+                                if (@fputs($this->msgsock, $msg, strlen($msg)) === false) {
+                                    echo "fputs $errstr ($errno)<br />\n";
+                                }
+                                break;
+
                             case "GET":
                                 $msg = $this->retrieveFile();
                                 if (@fputs($this->msgsock, $msg, strlen($msg)) === false) {
@@ -481,6 +488,46 @@ Class TEServer
         }
         return $written;
     }
+    /**
+     * Read a specific number of bytes from the given socket file descriptor.
+     * @param $fp
+     * @param $size
+     * @return bool|string the data or bool(false) on error
+     */
+    private function read_size($fp, $size)
+    {
+        $buf = '';
+        while ($size > 0) {
+            if ($size >= 2048) {
+                $rsize = 2048;
+            } else {
+                $rsize = $size;
+            }
+            $data = fread($fp, $rsize);
+            if ($data === false || $data === "") {
+                return false;
+            }
+            $size-= strlen($data);
+            $buf.= $data;
+        }
+        return $buf;
+    }
+    /**
+     * Read all data till end-of-file from the given socket file descriptor.
+     * @param $fp
+     * @return bool|string the data or bool(false) on error
+     */
+    private function read_eof($fp)
+    {
+        $buf = '';
+        while (!feof($fp)) {
+            if (($data = fread($fp, 2048)) === false) {
+                return false;
+            }
+            $buf.= $data;
+        }
+        return $buf;
+    }
     public function getEngines()
     {
         try {
@@ -502,4 +549,53 @@ Class TEServer
             return $this->formatErrorReturn($e->getMessage());
         }
     }
+    public function getTasks()
+    {
+        try {
+            if (false === ($buf = @fgets($this->msgsock))) {
+                throw new Exception("fgets error");
             }
+            if (!preg_match('/^<args\s+/', $buf)) {
+                throw new Exception("Missing args");
+            }
+            $size = 0;
+            if (preg_match('/\bsize\s*=\s*"(?P<size>\d+)"/', $buf, $m)) {
+                $size = $m['size'];
+            }
+            if ($size <= 0) {
+                throw new Exception("Missing or empty args size");
+            }
+            $type = '';
+            if (preg_match('/\btype\s*=\s*"(?P<type>[^"]+)"/', $buf, $m)) {
+                $type = $m['type'];
+            }
+            if ($type != 'application/json') {
+                throw new Exception(sprintf("Missing or unsupported args type ('%s')", $type));
+            }
+            $buf = $this->read_size($this->msgsock, $size);
+            if ($buf === false) {
+                throw new Exception(sprintf("Error reading args data from client"));
+            }
+            $args = json_decode($buf, true);
+            if (!is_array($args)) {
+                throw new Exception("Malformed args data");
+            }
+            $task = new Task($this->dbaccess);
+            $response = $task->getTasks($args);
+            if (!is_array($response)) {
+                $response = array();
+            }
+            $json = json_encode($response);
+            $buf = sprintf("<response status=\"OK\" size=\"%d\" type=\"application/json\"/>\n%s", strlen($json) , $json);
+            $ret = $this->fwrite_stream($this->msgsock, $buf);
+            if ($ret != strlen($buf)) {
+                throw new Exception("Error writing content to socket");
+            }
+            fflush($this->msgsock);
+            return '';
+        }
+        catch(Exception $e) {
+            return $this->formatErrorReturn($e->getMessage());
+        }
+    }
+}

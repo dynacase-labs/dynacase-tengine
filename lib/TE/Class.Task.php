@@ -3,7 +3,7 @@
  * @author Anakeen
  * @license http://www.fsf.org/licensing/licenses/agpl-3.0.html GNU Affero General Public License
  * @package FDL
- */
+*/
 
 require_once "Class.PgObj.php";
 require_once "Class.Histo.php";
@@ -22,7 +22,7 @@ Class Task extends PgObj
         "callreturn",
         "fkey",
         "pid",
-        "comment"
+        "comment",
         // comment text
         
     );
@@ -106,5 +106,46 @@ SQL;
             $oh->Add();
         }
     }
+    /**
+     * @param $args array() request arguments (ex.: array("orderby" => "column1", "sort" => "desc", "start" => 20, "length" => 10))
+     * @return array|bool|resource|string
+     */
+    public function getTasks($args)
+    {
+        include_once ("Class.QueryPg.php");
+        $fields = array_merge($this->fields, $this->sup_fields);
+        $q = new QueryPg($this->dbaccess, $this->dbtable);
+        /* ORDERBY */
+        if (isset($args['orderby']) && is_scalar($args['orderby']) && in_array($args['orderby'], $fields)) {
+            $orderBy = pg_escape_string($args['orderby']);
+            /* SORT */
+            if (isset($args['sort']) && ($args['sort'] == 'asc' || $args['sort'] == 'desc')) {
+                $orderBy.= ' ' . $args['sort'];
+            }
+            $q->order_by = $orderBy;
+        }
+        /* START */
+        $start = 0;
+        if (isset($args['start']) && is_numeric($args['start'])) {
+            $start = $args['start'];
+        }
+        /* LENGTH */
+        $length = 0;
+        if (isset($args['length']) && is_numeric($args['length'])) {
+            $length = $args['length'];
+        }
+        /* FILTER */
+        if (isset($args['filter']) && is_array($args['filter'])) {
+            foreach ($args['filter'] as $column => $value) {
+                if (!in_array($column, $fields)) {
+                    return array();
+                }
+                $condition = sprintf("%s::text ~* '%s'", $column, pg_escape_string($value));
+                $q->AddQuery($condition);
+            }
+        } else {
+            $q->AddQuery("true");
+        }
+        return $q->Query($start, $length, "TABLE");
+    }
 }
-?>
