@@ -8,6 +8,7 @@
 require_once "TE/Lib.TE.php";
 require_once "TE/Class.Task.php";
 require_once "TE/Class.Engine.php";
+require_once "TE/Class.Selftest.php";
 // for signal handler function
 declare(ticks = 1);
 
@@ -175,6 +176,20 @@ Class TEServer
 
                             case "INFO:SERVER:EXTENDED":
                                 $msg = $this->serverExtendedInfo();
+                                if (@fputs($this->msgsock, $msg, strlen($msg)) === false) {
+                                    echo "fputs $errstr ($errno)<br />\n";
+                                }
+                                break;
+
+                            case "INFO:SELFTESTS":
+                                $msg = $this->getSelftests();
+                                if (@fputs($this->msgsock, $msg, strlen($msg)) === false) {
+                                    echo "fputs $errstr ($errno)<br />\n";
+                                }
+                                break;
+
+                            case "SELFTEST":
+                                $msg = $this->executeSelftest();
                                 if (@fputs($this->msgsock, $msg, strlen($msg)) === false) {
                                     echo "fputs $errstr ($errno)<br />\n";
                                 }
@@ -657,57 +672,107 @@ Class TEServer
             return $this->formatErrorReturn($e->getMessage());
         }
     }
-    private function version() {
+    private function version()
+    {
         return trim(file_get_contents(getenv('TE_HOME') . DIRECTORY_SEPARATOR . 'VERSION'));
     }
-    private function release() {
+    private function release()
+    {
         return trim(file_get_contents(getenv('TE_HOME') . DIRECTORY_SEPARATOR . 'RELEASE'));
     }
-    private function getServerInfo() {
+    private function getServerInfo()
+    {
         return array(
-            "version" => $this->version(),
-            "release" => $this->release(),
-            "load" => sys_getloadavg(),
+            "version" => $this->version() ,
+            "release" => $this->release() ,
+            "load" => sys_getloadavg() ,
             "cur_client" => $this->cur_client,
             "max_client" => $this->max_client
         );
     }
-    private function getServerExtendedInfo() {
+    private function getServerExtendedInfo()
+    {
         $task = new Task($this->dbaccess);
         $statusBreakdown = $task->getStatusBreakdown();
-        return array_merge(
-            $this->getServerInfo(),
-            array(
-                "status_breakdown" => $statusBreakdown
-            )
-        );
+        return array_merge($this->getServerInfo() , array(
+            "status_breakdown" => $statusBreakdown
+        ));
     }
-    public function serverInfo() {
+    public function serverInfo()
+    {
         try {
             $serverInfo = json_encode($this->getServerInfo());
-            $msg = sprintf("<response status=\"OK\" size=\"%d\" type=\"application/json\"/>\n%s", strlen($serverInfo), $serverInfo);
+            $msg = sprintf("<response status=\"OK\" size=\"%d\" type=\"application/json\"/>\n%s", strlen($serverInfo) , $serverInfo);
             $ret = $this->fwrite_stream($this->msgsock, $msg);
             if ($ret != strlen($msg)) {
                 throw new Exception("Error writing content to socket");
             }
         }
-        catch (Exception $e) {
+        catch(Exception $e) {
             return $this->formatErrorReturn($e->getMessage());
         }
         return '';
     }
-    public function serverExtendedInfo() {
+    public function serverExtendedInfo()
+    {
         try {
             $serverInfo = json_encode($this->getServerExtendedInfo());
-            $msg = sprintf("<response status=\"OK\" size=\"%d\" type=\"application/json\"/>\n%s", strlen($serverInfo), $serverInfo);
+            $msg = sprintf("<response status=\"OK\" size=\"%d\" type=\"application/json\"/>\n%s", strlen($serverInfo) , $serverInfo);
             $ret = $this->fwrite_stream($this->msgsock, $msg);
             if ($ret != strlen($msg)) {
                 throw new Exception("Error writing content to socket");
             }
         }
-        catch (Exception $e) {
+        catch(Exception $e) {
             return $this->formatErrorReturn($e->getMessage());
         }
         return '';
+    }
+    public function getSelftests()
+    {
+        try {
+            $test = new Selftest();
+            $selftests = json_encode($test->getSelftests());
+            $msg = sprintf("<response status=\"OK\" size=\"%d\" type=\"application/json\"/>\n%s", strlen($selftests) , $selftests);
+            $ret = $this->fwrite_stream($this->msgsock, $msg);
+            if ($ret != strlen($msg)) {
+                throw new Exception("Error writing content to socket");
+            }
+        }
+        catch(Exception $e) {
+            return $this->formatErrorReturn($e->getMessage());
+        }
+    }
+    public function executeSelftest()
+    {
+        try {
+            if (false === ($buf = @fgets($this->msgsock))) {
+                throw new Exception("fgets error");
+            }
+            if (!preg_match('/^<selftest\s+/', $buf)) {
+                throw new Exception("Missing task argument");
+            }
+            $selftestId = '';
+            if (preg_match('/\bid\s*=\s*"(?P<selftestId>[^"]+)"/', $buf, $m)) {
+                $selftestId = $m['selftestId'];
+            }
+            if ($selftestId === '') {
+                throw new Exception("Missing or empty selftest id");
+            }
+            $test = new Selftest();
+            $status = $test->executeSelftest($selftestId, $output);
+            $result = json_encode(array(
+                "status" => $status,
+                "output" => $output
+            ));
+            $msg = sprintf("<response status=\"OK\" size=\"%d\" type=\"application/json\"/>\n%s", strlen($result) , $result);
+            $ret = $this->fwrite_stream($this->msgsock, $msg);
+            if ($ret != strlen($msg)) {
+                throw new Exception("Error writing content to socket");
+            }
+        }
+        catch(Exception $e) {
+            return $this->formatErrorReturn($e->getMessage());
+        }
     }
 }
