@@ -159,6 +159,13 @@ Class TEServer
                                 }
                                 break;
 
+                            case "INFO:HISTO":
+                                $msg = $this->getHisto();
+                                if (@fputs($this->msgsock, $msg, strlen($msg)) === false) {
+                                    echo "fputs $errstr ($errno)<br />\n";
+                                }
+                                break;
+
                             case "GET":
                                 $msg = $this->retrieveFile();
                                 if (@fputs($this->msgsock, $msg, strlen($msg)) === false) {
@@ -582,6 +589,44 @@ Class TEServer
             }
             $task = new Task($this->dbaccess);
             $response = $task->getTasks($args);
+            if (!is_array($response)) {
+                $response = array();
+            }
+            $json = json_encode($response);
+            $buf = sprintf("<response status=\"OK\" size=\"%d\" type=\"application/json\"/>\n%s", strlen($json) , $json);
+            $ret = $this->fwrite_stream($this->msgsock, $buf);
+            if ($ret != strlen($buf)) {
+                throw new Exception("Error writing content to socket");
+            }
+            fflush($this->msgsock);
+            return '';
+        }
+        catch(Exception $e) {
+            return $this->formatErrorReturn($e->getMessage());
+        }
+    }
+    /**
+     * Get histo log for a single task tid
+     * @return string
+     */
+    public function getHisto()
+    {
+        try {
+            if (false === ($buf = @fgets($this->msgsock))) {
+                throw new Exception("fgets error");
+            }
+            if (!preg_match('/^<task\s+/', $buf)) {
+                throw new Exception("Missing task argument");
+            }
+            $tid = '';
+            if (preg_match('/\bid\s*=\s*"(?P<tid>[^"]+)"/', $buf, $m)) {
+                $tid = $m['tid'];
+            }
+            if ($tid === '') {
+                throw new Exception("Missing or empty tid");
+            }
+            $histo = new Histo($this->dbaccess);
+            $response = $histo->getTaskHisto($tid);
             if (!is_array($response)) {
                 $response = array();
             }

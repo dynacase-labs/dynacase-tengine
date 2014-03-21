@@ -3,7 +3,7 @@
  * @author Anakeen
  * @license http://www.fsf.org/licensing/licenses/agpl-3.0.html GNU Affero General Public License
  * @package FDL
- */
+*/
 
 require_once "Class.PgObj.php";
 
@@ -44,5 +44,13 @@ CREATE TABLE histo (
 );
 SQL;
     
+    public function getTaskHisto($tid)
+    {
+        include_once ("Class.QueryPg.php");
+        $q = new QueryPg($this->dbaccess, $this->dbtable);
+        $q->order_by = "date ASC";
+        $q->addQuery(sprintf("tid = '%s'", pg_escape_string($tid)));
+        $q->AddQuery("true");
+        return $q->Query(0, 0, "TABLE");
+    }
 }
-?>
