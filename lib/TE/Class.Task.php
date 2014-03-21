@@ -148,4 +148,19 @@ SQL;
         }
         return $q->Query($start, $length, "TABLE");
     }
+    public function getStatusBreakdown()
+    {
+        include_once ("Class.QueryPg.php");
+        $q = new QueryPg($this->dbaccess, $this->dbtable);
+        $sql = 'SELECT status, count(status) FROM task GROUP BY status ORDER BY status';
+        $res = $q->Query(0, 0, "TABLE", $sql);
+        if (!is_array($res)) {
+            return array();
+        }
+        $statusBreakdown = array();
+        foreach ($res as $tuple) {
+            $statusBreakdown[$tuple['status']] = $tuple['count'];
+        }
+        return $statusBreakdown;
+    }
 }

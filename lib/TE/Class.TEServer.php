@@ -166,6 +166,20 @@ Class TEServer
                                 }
                                 break;
 
+                            case "INFO:SERVER":
+                                $msg = $this->serverInfo();
+                                if (@fputs($this->msgsock, $msg, strlen($msg)) === false) {
+                                    echo "fputs $errstr ($errno)<br />\n";
+                                }
+                                break;
+
+                            case "INFO:SERVER:EXTENDED":
+                                $msg = $this->serverExtendedInfo();
+                                if (@fputs($this->msgsock, $msg, strlen($msg)) === false) {
+                                    echo "fputs $errstr ($errno)<br />\n";
+                                }
+                                break;
+
                             case "GET":
                                 $msg = $this->retrieveFile();
                                 if (@fputs($this->msgsock, $msg, strlen($msg)) === false) {
@@ -642,5 +656,58 @@ Class TEServer
         catch(Exception $e) {
             return $this->formatErrorReturn($e->getMessage());
         }
+    }
+    private function version() {
+        return trim(file_get_contents(getenv('TE_HOME') . DIRECTORY_SEPARATOR . 'VERSION'));
+    }
+    private function release() {
+        return trim(file_get_contents(getenv('TE_HOME') . DIRECTORY_SEPARATOR . 'RELEASE'));
+    }
+    private function getServerInfo() {
+        return array(
+            "version" => $this->version(),
+            "release" => $this->release(),
+            "load" => sys_getloadavg(),
+            "cur_client" => $this->cur_client,
+            "max_client" => $this->max_client
+        );
+    }
+    private function getServerExtendedInfo() {
+        $task = new Task($this->dbaccess);
+        $statusBreakdown = $task->getStatusBreakdown();
+        return array_merge(
+            $this->getServerInfo(),
+            array(
+                "status_breakdown" => $statusBreakdown
+            )
+        );
+    }
+    public function serverInfo() {
+        try {
+            $serverInfo = json_encode($this->getServerInfo());
+            $msg = sprintf("<response status=\"OK\" size=\"%d\" type=\"application/json\"/>\n%s", strlen($serverInfo), $serverInfo);
+            $ret = $this->fwrite_stream($this->msgsock, $msg);
+            if ($ret != strlen($msg)) {
+                throw new Exception("Error writing content to socket");
+            }
+        }
+        catch (Exception $e) {
+            return $this->formatErrorReturn($e->getMessage());
+        }
+        return '';
+    }
+    public function serverExtendedInfo() {
+        try {
+            $serverInfo = json_encode($this->getServerExtendedInfo());
+            $msg = sprintf("<response status=\"OK\" size=\"%d\" type=\"application/json\"/>\n%s", strlen($serverInfo), $serverInfo);
+            $ret = $this->fwrite_stream($this->msgsock, $msg);
+            if ($ret != strlen($msg)) {
+                throw new Exception("Error writing content to socket");
+            }
+        }
+        catch (Exception $e) {
+            return $this->formatErrorReturn($e->getMessage());
+        }
+        return '';
     }
 }
