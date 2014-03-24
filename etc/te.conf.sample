@@ -7,6 +7,8 @@ PORT=51968                        # port number where listen client
 LISTEN_ADDRESS=0.0.0.0            # address mask to listen : listen everybody by default
 REQUEST_MAX_CLIENT=15             # max request in parallel 
 REQUEST_DIRECTORY=/var/tmp        # directory where source files to transform are saved
+PURGE_DAYS=7                      # remove tasks older than 7 days
+PURGE_INTERVAL=100                # trigger tasks purge every 100 requests (set to 0 to disable purge)
 
 #---- RENDERING PART ----
 

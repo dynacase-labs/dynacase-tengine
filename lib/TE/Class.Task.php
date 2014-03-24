@@ -106,6 +106,19 @@ SQL;
             $oh->Add();
         }
     }
+    function preDelete()
+    {
+        if (file_exists($this->infile)) {
+            unlink($this->infile);
+        }
+        if (file_exists($this->outfile)) {
+            unlink($this->outfile);
+        };
+        if (file_exists($this->outfile . '.err')) {
+            unlink($this->outfile . '.err');
+        }
+        return '';
+    }
     /**
      * @param $args array() request arguments (ex.: array("orderby" => "column1", "sort" => "desc", "start" => 20, "length" => 10))
      * @return array|bool|resource|string
@@ -162,5 +175,61 @@ SQL;
             $statusBreakdown[$tuple['status']] = $tuple['count'];
         }
         return $statusBreakdown;
+    }
+    /**
+     * Delete tasks older than $maxDays days
+     * @param int|float $maxDays task's max age (in days)
+     * @param string $status delete tasks with given statuses (ex. "D", "DKW", etc.)
+     * @return bool
+     */
+    public function purgeTasks($maxDays = 0, $status = '')
+    {
+        include_once ("Class.QueryPg.php");
+        $q = new QueryPg($this->dbaccess, $this->dbtable);
+        $cond = array();
+        if ($maxDays > 0) {
+            $cond[] = sprintf("cdate < now() - INTERVAL '%f days'", pg_escape_string($maxDays));
+        }
+        if ($status != '') {
+            $in = array();
+            for ($i = 0; $i < strlen($status); $i++) {
+                $in[] = sprintf("'%s'", pg_escape_string($status[$i]));
+            }
+            if (count($in) > 0) {
+                $cond[] = sprintf("status IN (%s)", join(', ', $in));
+            }
+        }
+        $where = '';
+        if (count($cond) > 0) {
+            $where = sprintf("WHERE %s", join(' AND ', $cond));
+        }
+        /*
+         * Lock task table in exclusive mode to prevent te_rendering_server
+         * from spawning new renderers during purge.
+        */
+        $q->Query(0, 0, "TABLE", "BEGIN; LOCK TABLE task IN ACCESS EXCLUSIVE MODE NOWAIT;");
+        $sql = sprintf("DELETE FROM task %s RETURNING infile, outfile, status, pid", $where);
+        $tasks = $q->Query(0, 0, "TABLE", $sql);
+        if (!is_array($tasks)) {
+            $tasks = array();
+        }
+        foreach ($tasks as $task) {
+            if ($task['status'] == 'P' && ((int)$task['pid'] > 0)) {
+                posix_kill($task['pid'], SIGTERM);
+            }
+            if (file_exists($task['infile'])) {
+                unlink($task['infile']);
+            }
+            if (file_exists($task['outfile'])) {
+                unlink($task['outfile']);
+            }
+            if (file_exists($task['outfile'] . '.err')) {
+                unlink($task['outfile'] . '.err');
+            }
+        }
+        $q->Query(0, 0, "TABLE", "COMMIT;");
+        $histo = new Histo($this->dbaccess);
+        $histo->purgeUnreferencedLog();
+        return true;
     }
 }

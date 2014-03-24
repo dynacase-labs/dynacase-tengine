@@ -53,4 +53,16 @@ SQL;
         $q->AddQuery("true");
         return $q->Query(0, 0, "TABLE");
     }
+    /**
+     * Delete histo entries of tasks that do not exists anymore
+     * @return bool
+     */
+    public function purgeUnreferencedLog()
+    {
+        include_once ("Class.QueryPg.php");
+        $q = new QueryPg($this->dbaccess, $this->dbtable);
+        $sql = sprintf("DELETE FROM histo WHERE NOT EXISTS (SELECT 1 FROM task WHERE task.tid = histo.tid LIMIT 1)");
+        $q->Query(0, 0, "TABLE", $sql);
+        return true;
+    }
 }

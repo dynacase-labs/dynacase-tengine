@@ -128,7 +128,6 @@ Class TEServer
                         
                         if (false === ($command = @fgets($this->msgsock))) {
                             echo "fget $errstr ($errno)<br />\n";
-                            break;
                         }
                         $command = trim($command);
                         switch ($command) {
@@ -204,6 +203,13 @@ Class TEServer
 
                             case "ABORT":
                                 $msg = $this->Abort();
+                                if (@fputs($this->msgsock, $msg, strlen($msg)) === false) {
+                                    echo "fputs $errstr ($errno)<br />\n";
+                                }
+                                break;
+
+                            case "PURGE":
+                                $msg = $this->purgeTasks();
                                 if (@fputs($this->msgsock, $msg, strlen($msg)) === false) {
                                     echo "fputs $errstr ($errno)<br />\n";
                                 }
@@ -415,17 +421,6 @@ Class TEServer
             
             if (!$this->task->isAffected()) {
                 throw new Exception(sprintf(_("unknow task [%s]") , $tid));
-            }
-            
-            $outfile = $this->task->outfile;
-            if ($outfile) {
-                @unlink($outfile);
-                @unlink($outfile . ".err");
-            }
-            
-            $infile = $this->task->infile;
-            if ($infile) {
-                @unlink($infile);
             }
             
             $err = $this->task->delete();
@@ -766,6 +761,38 @@ Class TEServer
                 "output" => $output
             ));
             $msg = sprintf("<response status=\"OK\" size=\"%d\" type=\"application/json\"/>\n%s", strlen($result) , $result);
+            $ret = $this->fwrite_stream($this->msgsock, $msg);
+            if ($ret != strlen($msg)) {
+                throw new Exception("Error writing content to socket");
+            }
+        }
+        catch(Exception $e) {
+            return $this->formatErrorReturn($e->getMessage());
+        }
+    }
+    public function purgeTasks()
+    {
+        try {
+            if (false === ($buf = @fgets($this->msgsock))) {
+                throw new Exception("fgets error");
+            }
+            if (!preg_match('/^<tasks\s+/', $buf)) {
+                throw new Exception("Missing tasks argument");
+            }
+            $maxdays = 0;
+            if (preg_match('/\bmaxdays\s*=\s*"(?P<maxdays>[0-9.]+)"/', $buf, $m)) {
+                $maxdays = $m['maxdays'];
+            }
+            if (!is_numeric($maxdays)) {
+                throw new Exception("Invalid maxdays '%s'", $maxdays);
+            }
+            $status = '';
+            if (preg_match('/\bstatus\s*=\s*"(?P<status>[A-Z]+)"/', $buf, $m)) {
+                $status = $m['status'];
+            }
+            $task = new Task($this->dbaccess);
+            $task->purgeTasks($maxdays, $status);
+            $msg = sprintf("<response status=\"OK\"></response>");
             $ret = $this->fwrite_stream($this->msgsock, $msg);
             if ($ret != strlen($msg)) {
                 throw new Exception("Error writing content to socket");
