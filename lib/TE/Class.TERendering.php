@@ -3,7 +3,7 @@
  * @author Anakeen
  * @license http://www.fsf.org/licensing/licenses/agpl-3.0.html GNU Affero General Public License
  * @package FDL
- */
+*/
 
 require_once "TE/Lib.TE.php";
 require_once "TE/Class.Task.php";
@@ -20,6 +20,9 @@ Class TERendering
     public $password;
     public $login = false;
     public $tmppath = "/var/tmp";
+    public $purge_days = 7;
+    public $purge_interval = 100;
+    private $purge_count = 0;
     
     private $good = true;
     /** @var Task $task */
@@ -46,6 +49,11 @@ Class TERendering
         exit(0);
     }
     
+    function childTermReq()
+    {
+        exit(0);
+    }
+    
     function breakloop()
     {
         $this->good = false;
@@ -58,18 +66,7 @@ Class TERendering
         /* unlimit execution time. */
         set_time_limit(0);
         
-        pcntl_signal(SIGCHLD, array(&$this,
-            "decrease_child"
-        ));
-        pcntl_signal(SIGPIPE, array(&$this,
-            "decrease_child"
-        ));
-        pcntl_signal(SIGINT, array(&$this,
-            "breakloop"
-        ));
-        pcntl_signal(SIGTERM, array(&$this,
-            "breakloop"
-        ));
+        $this->setMainSignals();
         
         while ($this->good) {
             
@@ -91,6 +88,9 @@ Class TERendering
                         exit(1);
                     } else if ($pid) {
                         // We are the parent
+                        if ($this->purgeTrigger()) {
+                            $this->purgeTasks();
+                        }
                         echo "Parent Waiting Accept:" . $this->cur_client . "\n";
                         sleep(1); // need to wait rewaiting signal
                         
@@ -99,10 +99,7 @@ Class TERendering
                         // Do something with the inherited connection here
                         // It will get closed upon exit
                         /* Send instructions. */
-                        
-                        pcntl_signal(SIGINT, array(&$this,
-                            "rewaiting"
-                        ));
+                        $this->setChildSignals();
                         $this->task = $this->getNextTask();
                         if ($this->task) {
                             echo "Processing :" . $this->task->tid . "\n";
@@ -201,6 +198,32 @@ Class TERendering
             }
         }
     }
+    private function setMainSignals()
+    {
+        pcntl_signal(SIGCHLD, array(&$this,
+            "decrease_child"
+        ));
+        pcntl_signal(SIGPIPE, array(&$this,
+            "decrease_child"
+        ));
+        pcntl_signal(SIGINT, array(&$this,
+            "breakloop"
+        ));
+        pcntl_signal(SIGTERM, array(&$this,
+            "breakloop"
+        ));
+    }
+    private function setChildSignals()
+    {
+        pcntl_signal(SIGCHLD, SIG_DFL);
+        pcntl_signal(SIGPIPE, SIG_DFL);
+        pcntl_signal(SIGINT, array(&$this,
+            "rewaiting"
+        ));
+        pcntl_signal(SIGTERM, array(&$this,
+            "childTermReq"
+        ));
+    }
     /**
      * verify if has a task winting
      * @return bool
@@ -260,5 +283,19 @@ Class TERendering
         $tasks->exec_query(sprintf("DELETE FROM task WHERE status = 'P'"));
         return true;
     }
+    
+    public function purgeTrigger()
+    {
+        if ($this->purge_interval <= 0) {
+            return false;
+        }
+        $this->purge_count++;
+        $this->purge_count = $this->purge_count % $this->purge_interval;
+        return ($this->purge_count === 0);
+    }
+    public function purgeTasks()
+    {
+        $task = new Task($this->dbaccess);
+        $task->purgeTasks($this->purge_days);
+    }
 }
-?>

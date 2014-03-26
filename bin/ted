@@ -156,7 +156,7 @@ start() {
     # Start RENDERING
     if [ ! -f "$TE_RENDERING_PID" ]; then
 	echo -n "Starting te_rendering_server... "
-	$SU -s /bin/bash -c "\"$TE_HOME/bin/te_rendering_server\" --db=\"$DB\" --maxclient=$RENDERING_MAX_CLIENT --directory=$RENDERING_DIRECTORY --loginfile=\"$TE_HOME/etc/te.conf\"" "$TE_SERVER_USER" 1> /dev/null 2>&1 &
+	$SU -s /bin/bash -c "\"$TE_HOME/bin/te_rendering_server\" --db=\"$DB\" --maxclient=$RENDERING_MAX_CLIENT --directory=$RENDERING_DIRECTORY --loginfile=\"$TE_HOME/etc/te.conf\" --purge-days=$PURGE_DAYS --purge-interval=$PURGE_INTERVAL" "$TE_SERVER_USER" 1> /dev/null 2>&1 &
 	sleep 1
 	kill -0 $!
 	ret3=$?

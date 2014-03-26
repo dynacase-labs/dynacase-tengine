@@ -1,0 +1,30 @@
+#!/bin/bash
+# Description: conversion from MS-PowerPoint 97 to TXT
+
+if [ -z "$TE_HOME" ]; then
+    echo "TE_HOME not defined!"
+    exit 1
+fi
+
+. "$TE_HOME"/etc/te.conf
+. "$TE_HOME"/etc/te.d/env
+. "$TE_HOME/test-data/common.sh"
+
+if [ -n "$REQUEST_DIRECTORY" ]; then
+    export TMPDIR=$REQUEST_DIRECTORY
+fi
+
+TESTIN="$TE_HOME"/test-data/test.ppt
+TESTOUT=`mktemp_out test.ppt .txt`
+
+echo
+echo "* Checking conversion from MS-PowerPoint 97 to TXT..."
+"$TE_HOME"/lib/engines/tika2txt "$TESTIN" "$TESTOUT"
+SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
+
+if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
+    echo "Error: conversion of '$TESTIN' to '$TESTOUT' failed!"
+    exit 1
+fi
+echo "  Ok: '$TESTOUT' ($SIZE bytes)"
+exit 0

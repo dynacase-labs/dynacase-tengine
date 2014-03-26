@@ -3,7 +3,7 @@
  * @author Anakeen
  * @license http://www.fsf.org/licensing/licenses/agpl-3.0.html GNU Affero General Public License
  * @package FDL
- */
+*/
 
 require_once "Class.PgObj.php";
 
@@ -113,5 +113,12 @@ SQL;
         $q->AddQuery("name='" . pg_escape_string($engine) . "'");
         return ($q->Count() > 0);
     }
+    
+    function getAllEngines()
+    {
+        include_once ("Class.QueryPg.php");
+        $q = new QueryPg($this->dbaccess, "Engine");
+        $q->AddQuery("true");
+        return $q->Query(0, 0, "TABLE");
+    }
 }
-?>
