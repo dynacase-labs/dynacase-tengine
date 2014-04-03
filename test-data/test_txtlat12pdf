@@ -20,6 +20,11 @@ TESTOUT=`mktemp_out test.lat1.txt .pdf`
 echo
 echo "* Checking conversion from Latin1 TXT to PDF..."
 "$TE_HOME"/lib/engines/txt2pdf "$TESTIN" "$TESTOUT"
+RET=$?
+if [ $RET -ne 0 ]; then
+    echo "Engine exited with error code '$RET'!"
+    exit $RET
+fi
 SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
 
 if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then

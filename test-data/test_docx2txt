@@ -20,6 +20,11 @@ TESTOUT=`mktemp_out test.docx .txt`
 echo
 echo "* Checking conversion from MS-Word 2007 Open XML to TXT..."
 "$TE_HOME"/lib/engines/tika2txt "$TESTIN" "$TESTOUT"
+RET=$?
+if [ $RET -ne 0 ]; then
+    echo "Engine exited with error code '$RET'!"
+    exit $RET
+fi
 SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
 
 if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then

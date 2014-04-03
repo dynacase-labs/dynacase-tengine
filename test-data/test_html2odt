@@ -20,6 +20,11 @@ TESTOUT=`mktemp_out test.html .odt`
 echo
 echo "* Checking conversion from HTML to ODT..."
 "$TE_HOME"/lib/engines/html2odt "$TESTIN" "$TESTOUT"
+RET=$?
+if [ $RET -ne 0 ]; then
+    echo "Engine exited with error code '$RET'!"
+    exit $RET
+fi
 SIZE=`stat -c %s "$TESTOUT" 2> /dev/null`
 
 if [ ! -f "$TESTOUT" -o "$SIZE" = "0" ]; then
