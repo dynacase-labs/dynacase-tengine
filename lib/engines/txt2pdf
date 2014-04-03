@@ -1,9 +1,45 @@
 #!/bin/bash
 
-charset=`file -i "$1" | cut -d= -f2`
-
-if [ $charset ]; then   
-    iconv -f "$charset" -t latin1//TRANSLIT "$1" | /usr/bin/a2ps -q -1 -B -o - | ps2pdf14 -sPAPERSIZE=a4 - "$2"
-else
-    /usr/bin/a2ps -q -1 -B "$1" -o - | ps2pdf14 -sPAPERSIZE=a4 - "$2"
+TMPF=`mktemp -t ter-txt2pdf.XXXXXX`
+if [ $? -ne 0 ]; then
+    echo "Error creating temporary file!"
+    exit 1
 fi
+
+charset=`file -i "$1" | cut -d= -f2`
+if [ -n "$charset" ]; then
+    iconv -f "$charset" -t latin1//TRANSLIT "$1" > "$2"
+    if [ $? -ne 0 ]; then
+	echo "Error converting text from charset '$charset' to 'latin1//TRANSLIT'!"
+	rm "$TMPF"
+	exit 1
+    fi
+    a2ps -q -1 -B -o "$TMPF" < "$2"
+    if [ $? -ne 0 ]; then
+	echo "Error converting text to PostScript!"
+	rm "$TMPF"
+	exit 1
+    fi
+    ps2pdf14 -sPAPERSIZE=a4 "$TMPF" "$2"
+    if [ $? -ne 0 ]; then
+	echo "Error converting PostScript to PDF!"
+	rm "$TMPF"
+	exit 1
+    fi
+else
+    a2ps -q -1 -B -o "$TMPF" < "$1"
+    if [ $? -ne 0 ]; then
+	echo "Error converting text to PostScript!"
+	rm "$TMPF"
+	exit 1
+    fi
+    ps2pdf14 -sPAPERSIZE=a4 "$TMPF" "$2"
+    if [ $? -ne 0 ]; then
+	echo "Error converting PostScript to PDF!"
+	rm "$TMPF"
+	exit 1
+    fi
+fi
+
+rm "$TMPF"
+exit 0
