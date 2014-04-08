@@ -153,14 +153,16 @@ SQL;
         $response['count_all'] = $q->Count();
 
         /* FILTER */
-        if (isset($args['filter']) && is_array($args['filter'])) {
+        $qFilter = "";
+        if (!empty($args['filter']) && is_array($args['filter'])) {
             foreach ($args['filter'] as $column => $value) {
                 if (!in_array($column, $fields)) {
                     return array();
                 }
-                $condition = sprintf("%s::text ~* '%s'", $column, pg_escape_string($value));
-                $q->AddQuery($condition);
+                $qFilter .= ($qFilter!="" ? " OR " : "");
+                $qFilter .= sprintf("(%s::text ~* '%s')", $column, pg_escape_string($value));
             }
+            $q->AddQuery($qFilter);
         }
         $response['count_filter'] = $q->Count();
         $response['tasks'] = $q->Query($start, $length, "TABLE");
