@@ -126,6 +126,11 @@ SQL;
     public function getTasks($args)
     {
         include_once ("Class.QueryPg.php");
+        $response = array(
+            'count_all' => 0,
+            'count_filter' => 0,
+            'tasks' => array()
+        );
         $fields = array_merge($this->fields, $this->sup_fields);
         $q = new QueryPg($this->dbaccess, $this->dbtable);
         /* ORDERBY */
@@ -147,19 +152,23 @@ SQL;
         if (isset($args['length']) && is_numeric($args['length'])) {
             $length = $args['length'];
         }
+        
+        $q->AddQuery("true");
+        $response['count_all'] = $q->Count();
         /* FILTER */
-        if (isset($args['filter']) && is_array($args['filter'])) {
+        $qFilter = "";
+        if (!empty($args['filter']) && is_array($args['filter'])) {
             foreach ($args['filter'] as $column => $value) {
-                if (!in_array($column, $fields)) {
-                    return array();
+                if (in_array($column, $fields)) {
+                    $qFilter.= ($qFilter != "" ? " OR " : "");
+                    $qFilter.= sprintf("(%s::text ~* '%s')", $column, pg_escape_string($value));
                 }
-                $condition = sprintf("%s::text ~* '%s'", $column, pg_escape_string($value));
-                $q->AddQuery($condition);
             }
-        } else {
-            $q->AddQuery("true");
+            $q->AddQuery($qFilter);
         }
-        return $q->Query($start, $length, "TABLE");
+        $response['count_filter'] = $q->Count();
+        $response['tasks'] = $q->Query($start, $length, "TABLE");
+        return $response;
     }
     public function getStatusBreakdown()
     {
