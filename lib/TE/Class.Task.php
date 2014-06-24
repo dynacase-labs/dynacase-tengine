@@ -11,6 +11,14 @@ require_once "Lib.TE.php";
 
 Class Task extends PgObj
 {
+    const STATE_BEGINNING    = 'B';  // C/S start of transaction
+    const STATE_TRANSFERRING = 'T';  // Data (file) transfer is in progress
+    const STATE_ERROR        = 'K';  // Job ends with error
+    const STATE_SUCCESS      = 'D';  // Job ends successfully
+    const STATE_PROCESSING   = 'P';  // Engine is running
+    const STATE_WAITING      = 'W';  // Job registered, waiting to start engine
+    const STATE_INTERRUPTED  = 'I';  // Job was interrupted
+
     public $fields = array(
         "tid",
         "infile",

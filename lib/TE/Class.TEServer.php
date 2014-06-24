@@ -46,7 +46,7 @@ Class TEServer
         print "\nCLOSE SOCKET " . $this->msgsock . "\n";
         @fclose($this->msgsock);
         if (isset($this->task)) {
-            $this->task->status = 'I'; // interrupted
+            $this->task->status = Task::STATE_INTERRUPTED; // interrupted
             $this->task->Modify();
         }
         $this->good = false;
@@ -277,7 +277,7 @@ Class TEServer
         $this->task->infile = $filename;
         $this->task->fkey = $fkey;
         $this->task->callback = $callback;
-        $this->task->status = 'B'; // Initializing
+        $this->task->status = Task::STATE_BEGINNING; // Initializing
         $peername = stream_socket_get_name($this->msgsock, true);
         
         $err = $this->task->Add();
@@ -313,7 +313,7 @@ Class TEServer
                 $handle = @fopen($filename, "w");
             }
             if ($handle) {
-                $this->task->status = 'T'; // transferring
+                $this->task->status = Task::STATE_TRANSFERRING; // transferring
                 $this->task->modify();
                 $orig_size = $size;
                 do {
@@ -338,7 +338,7 @@ Class TEServer
                 if ($err == "") {
                     //sleep(3);
                     $this->task->log(sprintf("%d bytes read in %.03f sec", $trbytes, te_microtime_diff(microtime() , $mb)));
-                    $this->task->status = 'W'; // waiting
+                    $this->task->status = Task::STATE_WAITING; // waiting
                     $this->task->inmime = ""; // reset mime type
                     $this->task->Modify();
                 }
@@ -351,7 +351,7 @@ Class TEServer
             $talkback = "<response status=\"KO\">";
             $this->task->comment = $err;
             $this->task->log($err);
-            $this->task->status = 'K'; // KO
+            $this->task->status = Task::STATE_ERROR; // KO
             $this->task->Modify();
         } else $talkback = "<response status=\"OK\">";
         
@@ -460,7 +460,7 @@ Class TEServer
             }
             // normal case : now the file
             $filename = $this->task->outfile;
-            if ($this->task->status != 'D') {
+            if ($this->task->status != Task::STATE_SUCCESS) {
                 $err = sprintf("status is not Done [%s] for task %s", $this->task->status, $this->task->tid);
                 $this->task->log($err);
                 throw new Exception($err);
@@ -548,6 +548,7 @@ Class TEServer
      * @param $fp
      * @return bool|string the data or bool(false) on error
      */
+    /** @noinspection PhpUnusedPrivateMethodInspection */
     private function read_eof($fp)
     {
         $buf = '';
@@ -737,6 +738,7 @@ Class TEServer
         catch(Exception $e) {
             return $this->formatErrorReturn($e->getMessage());
         }
+        return '';
     }
     public function executeSelftest()
     {
@@ -769,6 +771,7 @@ Class TEServer
         catch(Exception $e) {
             return $this->formatErrorReturn($e->getMessage());
         }
+        return '';
     }
     public function purgeTasks()
     {
@@ -801,5 +804,6 @@ Class TEServer
         catch(Exception $e) {
             return $this->formatErrorReturn($e->getMessage());
         }
+        return '';
     }
 }
