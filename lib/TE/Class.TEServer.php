@@ -422,10 +422,11 @@ Class TEServer
             if (!$this->task->isAffected()) {
                 throw new Exception(sprintf(_("unknow task [%s]") , $tid));
             }
-            
-            $err = $this->task->delete();
-            if ($err != "") {
-                throw new Exception($err);
+            if ($this->task->status != Task::STATE_INTERRUPTED && $this->task->status != Task::STATE_SENT) {
+                $this->task->status = Task::STATE_INTERRUPTED;
+                $this->task->log(sprintf("Abort requested"));
+                $this->task->cleanupFiles();
+                $this->task->Modify();
             }
             
             $message = "<response status=\"OK\"></response>\n";
@@ -496,8 +497,9 @@ Class TEServer
             
             fflush($this->msgsock);
             $this->task->log(sprintf("%d bytes wroted in %.03f sec", $size, te_microtime_diff(microtime() , $mb)));
+            $this->task->status = Task::STATE_SENT;
             $this->task->Modify();
-            
+            $this->task->cleanupFiles();
             return "<response status=\"OK\"></response>";
         }
         catch(Exception $e) {
