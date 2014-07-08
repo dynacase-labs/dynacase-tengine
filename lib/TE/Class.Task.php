@@ -11,14 +11,14 @@ require_once "Lib.TE.php";
 
 Class Task extends PgObj
 {
-    const STATE_BEGINNING    = 'B';  // C/S start of transaction
-    const STATE_TRANSFERRING = 'T';  // Data (file) transfer is in progress
-    const STATE_ERROR        = 'K';  // Job ends with error
-    const STATE_SUCCESS      = 'D';  // Job ends successfully
-    const STATE_PROCESSING   = 'P';  // Engine is running
-    const STATE_WAITING      = 'W';  // Job registered, waiting to start engine
-    const STATE_INTERRUPTED  = 'I';  // Job was interrupted
-
+    const STATE_BEGINNING = 'B'; // C/S start of transaction
+    const STATE_TRANSFERRING = 'T'; // Data (file) transfer is in progress
+    const STATE_ERROR = 'K'; // Job ends with error
+    const STATE_SUCCESS = 'D'; // Job ends successfully
+    const STATE_PROCESSING = 'P'; // Engine is running
+    const STATE_WAITING = 'W'; // Job registered, waiting to start engine
+    const STATE_INTERRUPTED = 'I'; // Job was interrupted
+    const STATE_SENT = 'S'; // Resulting file has been retrieved/sent
     public $fields = array(
         "tid",
         "infile",
@@ -114,7 +114,7 @@ SQL;
             $oh->Add();
         }
     }
-    function preDelete()
+    function cleanupFiles()
     {
         if (file_exists($this->infile)) {
             unlink($this->infile);
@@ -126,6 +126,10 @@ SQL;
             unlink($this->outfile . '.err');
         }
         return '';
+    }
+    function preDelete()
+    {
+        return $this->cleanupFiles();
     }
     /**
      * @param $args array() request arguments (ex.: array("orderby" => "column1", "sort" => "desc", "start" => 20, "length" => 10))
