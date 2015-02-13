@@ -1,4 +1,0 @@
-TE_XVFB_RUN=$TE_HOME/lib/engines/te-xvfb-run
-
-# -- Stand-alone OpenOffice.org parameters
-SOFFICE=/opt/openoffice.org3/program/soffice

@@ -161,7 +161,7 @@ start() {
     # Start OOO
     if [ "$TE_OOO_SERVER_ENABLED" = "yes" ] && [ ! -f "$TE_OOO_PID" ]; then
 	echo -n "Starting OOO server... "
-	$SU -s /bin/bash -c "\"$TE_HOME/lib/engines/te-xvfb-run\" -a \"$TE_OOO_SERVER_SOFFICE\" -headless -invisible -nofirststartwizard '-accept=socket,host=$TE_OOO_SERVER_HOST,port=$TE_OOO_SERVER_PORT;urp;'" "$TE_SERVER_USER" 1> /dev/null 2>&1 &
+	$SU -s /bin/bash -c "\"$TE_OOO_SERVER_SOFFICE\" -headless -invisible -nofirststartwizard -accept='socket,host=$TE_OOO_SERVER_HOST,port=$TE_OOO_SERVER_PORT;urp;'" "$TE_SERVER_USER" 1> /dev/null 2>&1 &
 	sleep 1
 	kill -0 $!
 	ret1=$?
