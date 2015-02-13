@@ -1,0 +1,79 @@
+#!/usr/bin/env php
+<?php
+/*
+ * @author Anakeen
+ * @license http://www.fsf.org/licensing/licenses/agpl-3.0.html GNU Affero General Public License
+ * @package TE
+*/
+
+ini_set("error_log", null);
+
+function usage($me)
+{
+    print <<<EOF
+
+Usage:
+
+    $me <tikaServerURL> <inputFile> <outputFile>
+
+
+EOF;
+    
+    
+}
+
+$me = array_shift($argv);
+if (count($argv) != 3) {
+    usage($me);
+    exit(1);
+}
+
+$tikaUrl = array_shift($argv);
+if ($tikaUrl === null) {
+    throw new Exception("Missing Tika server URL.");
+}
+$inputFile = array_shift($argv);
+if ($inputFile === null) {
+    throw new Exception("Missing input file.");
+}
+$outputFile = array_shift($argv);
+if ($outputFile === null) {
+    throw new Exception("Missing output file.");
+}
+$fin = fopen($inputFile, 'r');
+if ($fin === false) {
+    throw new Exception(sprintf("Error opening input file '%s'.", $inputFile));
+}
+$size = filesize($inputFile);
+if ($size === false) {
+    fclose($fin);
+    throw new Exception(sprintf("Error getting input file size '%s'.", $inputFile));
+}
+$fout = fopen($outputFile, 'w');
+if ($fout === false) {
+    fclose($fin);
+    throw new Exception(sprintf("Error opening output file '%s'.", $outputFile));
+}
+
+$ch = curl_init($tikaUrl);
+if ($ch === false) {
+    fclose($fin);
+    fclose($fout);
+    throw new Exception(sprintf("Error initializing curl with URL '%s'.", $tikaUrl));
+}
+curl_setopt($ch, CURLOPT_FILE, $fout);
+curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+    'Accept: text/plain'
+));
+curl_setopt($ch, CURLOPT_PUT, TRUE);
+curl_setopt($ch, CURLOPT_INFILE, $fin);
+curl_setopt($ch, CURLOPT_INFILESIZE, $size);
+$ret = curl_exec($ch);
+if ($ret === false) {
+    fclose($fin);
+    fclose($fout);
+    throw new Exception(sprintf("Error executing request: %s", curl_error($ch)));
+}
+fclose($fin);
+fclose($fout);
+exit(0);

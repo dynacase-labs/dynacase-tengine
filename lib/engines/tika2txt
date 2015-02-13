@@ -19,13 +19,12 @@ function usage {
     exit 1
 }
 
-if [ -z "${TIKA_APP_JAR}" ]; then
-    echo "Undefined or missing TIKA_APP_JAR environment variable: check your '$TE_HOME/etc/te.conf' file."
+if [ -z "${TE_TIKA_SERVER_HOST}" ]; then
+    echo "Undefined or missing TE_TIKA_SERVER_HOST environment variable: check your '$TE_HOME/etc/te.conf' file."
     exit 1
 fi
-
-if [ ! -f "${TIKA_APP_JAR}" ]; then
-    echo "TIKA_APP_JAR '${TIKA_APP_JAR}' does not exists."
+if [ -z "${TE_TIKA_SERVER_PORT}" ]; then
+    echo "Undefined or missing TE_TIKA_SERVER_PORT environment variable: check your '$TE_HOME/etc/te.conf' file."
     exit 1
 fi
 
@@ -33,10 +32,10 @@ if [ -z "$1" ] || [ -z "$2" ]; then
     usage
 fi
 
-java -jar "${TIKA_APP_JAR}" --text "$1" > "$2"
+"$TE_HOME/lib/engines/tika-server-put" "http://${TE_TIKA_SERVER_HOST}:${TE_TIKA_SERVER_PORT}/tika" "$1" "$2"
 RET=$?
 if [ $RET -ne 0 ]; then
-    echo "Error running 'java -jar ${TIKA_APP_JAR} --text $1'"
+    echo "Error running '$TE_HOME/lib/engines/tika-server-put' 'http://${TE_TIKA_SERVER_HOST}:${TE_TIKA_SERVER_PORT}/tika' '$1' '$2'"
     exit $RET
 fi
 
