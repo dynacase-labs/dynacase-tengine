@@ -22,9 +22,7 @@ TE_SERVER_USER=root
 # -- Server-mode OpenOffice.org parameters
 TE_OOO_SERVER_ENABLED=yes
 TE_OOO_BASE_DIR=/replace/me/with/path/to/openoffice.org/directory
-TE_OOO_SERVER_PYTHON=${TE_OOO_BASE_DIR}/program/python
 TE_OOO_SERVER_SOFFICE=${TE_OOO_BASE_DIR}/program/soffice
-TE_OOO_SERVER_UNOPKG=${TE_OOO_BASE_DIR}/program/unopkg
 TE_OOO_CLASSPATH="${TE_OOO_BASE_DIR}/program/classes/unoil.jar:${TE_OOO_BASE_DIR}/program/classes/juh.jar:${TE_OOO_BASE_DIR}/program/classes/jurt.jar:${TE_OOO_BASE_DIR}/program/classes/ridl.jar"
 TE_OOO_JVM_OPTS=""
 TE_OOO_SERVER_HOST=127.0.0.1

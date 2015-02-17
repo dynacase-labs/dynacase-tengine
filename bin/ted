@@ -75,16 +75,8 @@ function check_environment {
 	exit 1
     fi
     if [ "$TE_OOO_SERVER_ENABLED" = "yes" ]; then
-	if [ ! -x "$TE_OOO_SERVER_PYTHON" ]; then
-	    echo "Error: TE_OOO_SERVER_PYTHON '$TE_OOO_SERVER_PYTHON' (in '$TE_HOME/etc/te.conf') is not executable!"
-	    exit 1
-	fi
 	if [ ! -x "$TE_OOO_SERVER_SOFFICE" ]; then
 	    echo "Error: TE_OOO_SERVER_SOFFICE '$TE_OOO_SERVER_SOFFICE' (in '$TE_HOME/etc/te.conf') is not executable!"
-	    exit 1
-	fi
-	if [ ! -x "$TE_OOO_SERVER_UNOPKG" ]; then
-	    echo "Error: TE_OOO_SERVER_UNOPKG '$TE_OOO_SERVER_UNOPKG' (in '$TE_HOME/etc/te.conf') is not executable!"
 	    exit 1
 	fi
 	if [ -z "$(which java)" ]; then
