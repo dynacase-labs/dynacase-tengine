@@ -18,7 +18,6 @@ Class Task extends PgObj
     const STATE_PROCESSING = 'P'; // Engine is running
     const STATE_WAITING = 'W'; // Job registered, waiting to start engine
     const STATE_INTERRUPTED = 'I'; // Job was interrupted
-    const STATE_SENT = 'S'; // Resulting file has been retrieved/sent
     public $fields = array(
         "tid",
         "infile",
@@ -252,5 +251,24 @@ SQL;
         $histo = new Histo($this->dbaccess);
         $histo->purgeUnreferencedLog();
         return true;
+    }
+    
+    public function interrupt()
+    {
+        error_log(__METHOD__ . " " . sprintf("Interrupting task '%s' with status '%s'.", $this->tid, $this->status));
+        switch ($this->status) {
+            case self::STATE_INTERRUPTED:
+                return;
+            case self::STATE_ERROR:
+                return;
+        }
+        if ((int)$this->pid > 0) {
+            error_log(__METHOD__ . " " . sprintf("Killing task '%s' with pid '%s'.", $this->tid, $this->pid));
+            posix_kill($this->pid, SIGKILL);
+        }
+        $this->status = Task::STATE_INTERRUPTED;
+        $this->log(sprintf("Abort requested"));
+        $this->cleanupFiles();
+        $this->Modify();
     }
 }
