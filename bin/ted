@@ -95,6 +95,31 @@ function check_environment {
 	fi
     fi
     check_php
+    check_te_pg_service
+}
+
+function check_te_pg_service {
+    local OUTPUT
+    if [ -z "$TE_PG_SERVICE" ]; then
+	echo "Error: TE_PG_SERVICE must not be empty in '$TE_HOME/etc/te.conf'."
+	exit 1
+    fi
+    OUTPUT=$(php -- "service=$TE_PG_SERVICE" <<'EOF'
+<?php
+ini_set("error_log", null);
+ini_set("track_errors", true);
+if (($r = @pg_connect($argv[1])) === false) {
+    printf("%s\n", $php_errormsg);
+    exit(1);
+}
+pg_close($r);
+exit(0);
+EOF
+    )
+    if [ $? -ne 0 ]; then
+	echo "Error: could not connect to postgresql service '$TE_PG_SERVICE': $OUTPUT"
+	exit 1
+    fi
 }
 
 function php_function_exists {
