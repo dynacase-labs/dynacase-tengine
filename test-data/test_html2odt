@@ -10,10 +10,6 @@ fi
 . "$TE_HOME"/etc/te.d/env
 . "$TE_HOME/test-data/common.sh"
 
-if [ -n "$REQUEST_DIRECTORY" ]; then
-    export TMPDIR=$REQUEST_DIRECTORY
-fi
-
 TESTIN="$TE_HOME"/test-data/test.html
 TESTOUT=`mktemp_out test.html .odt`
 

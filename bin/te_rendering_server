@@ -32,12 +32,10 @@ $targ = getArgv($argv);
 
 $db = $targ["db"];
 $maxclient = $targ["maxclient"];
-$tmppath = $targ["directory"];
+$workDir = $targ["work-directory"];
 $filelogin = $targ["loginfile"];
 $purge_days = $targ["purge-days"];
 $purge_interval = $targ["purge-interval"];
-$login = null;
-$pwd = null;
 if ($filelogin) {
     $logincontent = file_get_contents($filelogin);
     if (preg_match('/URL_CALLBACK_LOGIN=([^ \n\r\t]+)/', $logincontent, $matches)) {
@@ -54,9 +52,7 @@ if ($filelogin) {
 $s = new TERendering();
 if ($db) $s->dbaccess = $db;
 if ($maxclient) $s->max_client = $maxclient;
-if ($tmppath) $s->tmppath = $tmppath;
-if ($login) $s->login = $login;
-if ($pwd) $s->password = $pwd;
+if ($workDir) $s->workDir = $workDir;
 if ($purge_days) $s->purge_days = $purge_days;
 if ($purge_interval) $s->purge_interval = $purge_interval;
 

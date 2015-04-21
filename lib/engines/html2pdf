@@ -19,10 +19,6 @@ TE_OOO_SERVER_PORT=8123
 [ -f "$TE_HOME"/etc/te.conf ] && . "$TE_HOME"/etc/te.conf
 [ -f "$TE_HOME"/etc/te.d/env ] && . "$TE_HOME"/etc/te.d/env
 
-if [ -n "$REQUEST_DIRECTORY" ]; then
-    export TMPDIR=$REQUEST_DIRECTORY
-fi
-
 ODTW=`mktemp -t ter-html2pdf.XXXXXX`
 RET=$?
 if [ $RET -ne 0 ]; then

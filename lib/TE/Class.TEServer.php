@@ -19,7 +19,7 @@ Class TEServer
     public $address = '0.0.0.0';
     public $port = 51968;
     public $dbaccess = "dbname=te user=postgres";
-    public $tmppath = "/var/tmp";
+    public $workDir = "/var/tmp";
     
     private $good = true;
     private $msgsock;
@@ -46,6 +46,7 @@ Class TEServer
         print "\nCLOSE SOCKET " . $this->msgsock . "\n";
         @fclose($this->msgsock);
         if (isset($this->task)) {
+            $this->task->pid = '';
             $this->task->status = Task::STATE_INTERRUPTED; // interrupted
             $this->task->Modify();
         }
@@ -234,129 +235,132 @@ Class TEServer
      */
     function transfertFile()
     {
-        if (false === ($buf = @fgets($this->msgsock))) {
-            throw new Exception("fgets error");
-        }
-        $tename = false;
-        if (preg_match("/name=[ ]*\"([^\"]*)\"/i", $buf, $match)) {
-            $tename = $match[1];
-        }
-        $fkey = '';
-        if (preg_match("/fkey=[ ]*\"([^\"]*)\"/i", $buf, $match)) {
-            $fkey = $match[1];
-        }
-        $size = '';
-        if (preg_match("/size=[ ]*\"([^\"]*)\"/i", $buf, $match)) {
-            $size = intval($match[1]);
-        }
-        $callback = '';
-        if (preg_match("/callback=[ ]*\"([^\"]*)\"/i", $buf, $match)) {
-            $callback = $match[1];
-        }
-        $ext = "";
-        $fname = "";
-        if (preg_match("/fname=[ ]*\"([^\"]*)\"/i", $buf, $match)) {
-            $fname = $match[1];
-            $ext = te_fileextension($fname);
-            if ($ext) $ext = '.' . $ext;
-        }
-        $cmime = "";
-        if (preg_match("/mime=[ ]*\"([^\"]*)\"/i", $buf, $match)) {
-            $cmime = $match[1];
-        }
-        // normal case : now the file
-        $filename = tempnam($this->tmppath, "tes-");
-        if ($filename !== false) {
+        try {
+            if (false === ($buf = @fgets($this->msgsock))) {
+                throw new Exception("fgets error");
+            }
+            $tename = false;
+            if (preg_match("/name=[ ]*\"([^\"]*)\"/i", $buf, $match)) {
+                $tename = $match[1];
+            }
+            $fkey = '';
+            if (preg_match("/fkey=[ ]*\"([^\"]*)\"/i", $buf, $match)) {
+                $fkey = $match[1];
+            }
+            $size = '';
+            if (preg_match("/size=[ ]*\"([^\"]*)\"/i", $buf, $match)) {
+                $size = intval($match[1]);
+            }
+            $callback = '';
+            if (preg_match("/callback=[ ]*\"([^\"]*)\"/i", $buf, $match)) {
+                $callback = $match[1];
+            }
+            $ext = "";
+            $fname = "";
+            if (preg_match("/fname=[ ]*\"([^\"]*)\"/i", $buf, $match)) {
+                $fname = $match[1];
+                $ext = te_fileextension($fname);
+                if ($ext) $ext = '.' . $ext;
+            }
+            $cmime = "";
+            if (preg_match("/mime=[ ]*\"([^\"]*)\"/i", $buf, $match)) {
+                $cmime = $match[1];
+            }
+            // normal case : now the file
+            $taskDir = Task::newTaskWorkDir($this->workDir);
+            if ($taskDir === false) {
+                throw new Exception(sprintf("Error creating new task's work directory in '%s'.", $this->workDir));
+            }
+            $filename = tempnam($taskDir, "tes-");
+            if ($filename === false) {
+                throw new Exception(sprintf("Error creating new file in task's work directory '%s'.", $taskDir));
+            }
             $filename_ext = $filename . $ext;
             if (rename($filename, $filename_ext) !== false) {
                 $filename = $filename_ext;
             }
-        }
-        $this->task = new Task($this->dbaccess);
-        $this->task->engine = $tename;
-        $this->task->infile = $filename;
-        $this->task->fkey = $fkey;
-        $this->task->callback = $callback;
-        $this->task->status = Task::STATE_BEGINNING; // Initializing
-        $peername = stream_socket_get_name($this->msgsock, true);
-        
-        $err = $this->task->Add();
-        // find first a compatible engine
-        $eng = new Engine($this->dbaccess);
-        if ($eng->existsEngine($this->task->engine)) {
+            
+            $this->task = new Task($this->dbaccess);
+            $this->task->engine = $tename;
+            $this->task->infile = $filename;
+            $this->task->fkey = $fkey;
+            $this->task->callback = $callback;
+            $this->task->status = Task::STATE_BEGINNING; // Initializing
+            $err = $this->task->Add();
+            if ($err != '') {
+                throw new Exception("Error adding new task in database: %s", $err);
+            }
+            // find first a compatible engine
+            $eng = new Engine($this->dbaccess);
+            if (!$eng->existsEngine($this->task->engine)) {
+                throw new Exception(sprintf(_("Engine %s not found") , $this->task->engine));
+            }
             if ($cmime) {
                 if (!$eng->isAffected()) {
                     $eng = $eng->GetNearEngine($this->task->engine, $cmime);
                 }
-                if ($eng && $eng->isAffected()) {
-                    $talkback = "<response status=\"OK\">";
-                    $talkback.= sprintf("<task id=\"%s\" status=\"%s\"><comment>%s</comment></task>", $this->task->tid, $this->task->status, str_replace("\n", "; ", $this->task->comment));
-                    
-                    $talkback.= "</response>\n";
-                    fputs($this->msgsock, $talkback, strlen($talkback));
-                } else {
-                    $err = sprintf(_("No compatible engine %s found for %s") , $tename, $fname);
+                if (!$eng || !$eng->isAffected()) {
                     $this->task->log("Incompatible mime [$cmime]");
+                    $this->task->Modify();
+                    $err = sprintf(_("No compatible engine %s found for %s") , $tename, $fname);
+                    throw new Exception($err);
                 }
+                $talkback = "<response status=\"OK\">";
+                $talkback.= sprintf("<task id=\"%s\" status=\"%s\"><comment>%s</comment></task>", $this->task->tid, $this->task->status, str_replace("\n", "; ", $this->task->comment));
+                $talkback.= "</response>\n";
+                fputs($this->msgsock, $talkback, strlen($talkback));
             }
-        } else {
-            $err = sprintf(_("Engine %s not found") , $this->task->engine);
-        }
-        if ($err == "") {
             $mb = microtime();
             $handle = false;
             $trbytes = 0;
-            if ($peername) {
-                $this->task->log(sprintf(_("transferring from %s") , $peername));
-            }
             if ($filename !== false) {
                 $handle = @fopen($filename, "w");
             }
-            if ($handle) {
-                $this->task->status = Task::STATE_TRANSFERRING; // transferring
-                $this->task->modify();
-                $orig_size = $size;
-                do {
-                    if ($size >= 2048) {
-                        $rsize = 2048;
-                    } else {
-                        $rsize = $size;
-                    }
-                    $out = @fread($this->msgsock, $rsize);
-                    if ($out === false || $out === "") {
-                        $err = sprintf("error reading from msgsock (%s/%s bytes transferred))", $trbytes, $orig_size);
-                        break;
-                    }
-                    $l = strlen($out);
-                    $trbytes+= $l;
-                    $size-= $l;
-                    fwrite($handle, $out);
-                    //echo "file:$l []";
-                    
-                } while ($size > 0);
-                fclose($handle);
-                if ($err == "") {
-                    //sleep(3);
-                    $this->task->log(sprintf("%d bytes read in %.03f sec", $trbytes, te_microtime_diff(microtime() , $mb)));
-                    $this->task->status = Task::STATE_WAITING; // waiting
-                    $this->task->inmime = ""; // reset mime type
-                    $this->task->Modify();
-                }
-            } else {
-                $err = sprintf(_("cannot create temporary file [%s]") , $filename);
+            if ($handle === false) {
+                throw new Exception(sprintf(_("Error opening task's file '%s' for writing.") , $filename));
             }
+            $peername = stream_socket_get_name($this->msgsock, true);
+            if ($peername) {
+                $this->task->log(sprintf(_("transferring from %s") , $peername));
+            }
+            $this->task->status = Task::STATE_TRANSFERRING; // transferring
+            $this->task->Modify();
+            $orig_size = $size;
+            do {
+                if ($size >= 2048) {
+                    $rsize = 2048;
+                } else {
+                    $rsize = $size;
+                }
+                $out = @fread($this->msgsock, $rsize);
+                if ($out === false || $out === "") {
+                    fclose($handle);
+                    throw new Exception(sprintf("error reading from msgsock (%s/%s bytes transferred))", $trbytes, $orig_size));
+                }
+                $l = strlen($out);
+                $trbytes+= $l;
+                $size-= $l;
+                if (fwrite($handle, $out) === false) {
+                    fclose($handle);
+                    throw new Exception(sprintf("Error writing to file '%s'.", $filename));
+                }
+            } while ($size > 0);
+            fclose($handle);
+            $this->task->log(sprintf("%d bytes read in %.03f sec", $trbytes, te_microtime_diff(microtime() , $mb)));
+            $this->task->status = Task::STATE_WAITING; // waiting
+            $this->task->inmime = ""; // reset mime type
+            $this->task->Modify();
         }
-        
-        if ($err != "") {
-            $talkback = "<response status=\"KO\">";
-            $this->task->comment = $err;
-            $this->task->log($err);
+        catch(Exception $e) {
+            $this->task->comment = $e->getMessage();
+            $this->task->log($e->getMessage());
             $this->task->status = Task::STATE_ERROR; // KO
             $this->task->Modify();
-        } else $talkback = "<response status=\"OK\">";
+            return $this->formatErrorReturn($e->getMessage());
+        }
         
+        $talkback = "<response status=\"OK\">";
         $talkback.= sprintf("<task id=\"%s\" status=\"%s\"><comment>%s</comment></task>", $this->task->tid, $this->task->status, str_replace("\n", "; ", $this->task->comment));
-        
         $talkback.= "</response>\n";
         
         return $talkback;
@@ -477,12 +481,9 @@ Class TEServer
             if ($peername) {
                 $this->task->log(sprintf(_("transferring to %s") , $peername));
             }
-            $mb = microtime();
-            $size = 0;
             $handle = @fopen($filename, "r");
             if ($handle) {
                 $size = filesize($filename);
-                
                 $buffer = sprintf("<response status=\"OK\"><task id=\"%s\" size=\"%d\"></response>\n", $this->task->tid, $size);
                 fputs($this->msgsock, $buffer, strlen($buffer));
                 while (!feof($handle)) {
@@ -539,12 +540,11 @@ Class TEServer
         }
         return $buf;
     }
-    /**
+    /** @noinspection PhpUnusedPrivateMethodInspection
      * Read all data till end-of-file from the given socket file descriptor.
      * @param $fp
      * @return bool|string the data or bool(false) on error
      */
-    /** @noinspection PhpUnusedPrivateMethodInspection */
     private function read_eof($fp)
     {
         $buf = '';
@@ -723,7 +723,7 @@ Class TEServer
     public function getSelftests()
     {
         try {
-            $test = new Selftest();
+            $test = new Selftest($this->workDir);
             $selftests = json_encode($test->getSelftests());
             $msg = sprintf("<response status=\"OK\" size=\"%d\" type=\"application/json\"/>\n%s", strlen($selftests) , $selftests);
             $ret = $this->fwrite_stream($this->msgsock, $msg);
@@ -752,7 +752,7 @@ Class TEServer
             if ($selftestId === '') {
                 throw new Exception("Missing or empty selftest id");
             }
-            $test = new Selftest();
+            $test = new Selftest($this->workDir);
             $status = $test->executeSelftest($selftestId, $output);
             $result = json_encode(array(
                 "status" => $status,
@@ -789,8 +789,20 @@ Class TEServer
             if (preg_match('/\bstatus\s*=\s*"(?P<status>[A-Z]+)"/', $buf, $m)) {
                 $status = $m['status'];
             }
-            $task = new Task($this->dbaccess);
-            $task->purgeTasks($maxdays, $status);
+            $tid = '';
+            if (preg_match('/\btid\s*=\s*"(?P<tid>[^"]+)"/', $buf, $m)) {
+                $tid = $m['tid'];
+            }
+            if ($tid != '') {
+                $task = new Task($this->dbaccess, $tid);
+                $err = $task->delete();
+                if ($err != '') {
+                    throw new Exception($err);
+                }
+            } else {
+                $task = new Task($this->dbaccess);
+                $task->purgeTasks($maxdays, $status);
+            }
             $msg = sprintf("<response status=\"OK\"></response>");
             $ret = $this->fwrite_stream($this->msgsock, $msg);
             if ($ret != strlen($msg)) {
