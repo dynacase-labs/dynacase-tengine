@@ -7,14 +7,12 @@ TE_SERVER_DEBUG=no
 PORT=51968                        # port number where listen client
 LISTEN_ADDRESS=0.0.0.0            # address mask to listen : listen everybody by default
 REQUEST_MAX_CLIENT=15             # max request in parallel 
-REQUEST_DIRECTORY=/var/tmp        # directory where source files to transform are saved
 PURGE_DAYS=7                      # remove tasks older than 7 days
 PURGE_INTERVAL=100                # trigger tasks purge every 100 requests (set to 0 to disable purge)
+TE_WORK_DIR=/var/tmp		  # Directory where task's files and engine's temporary files are stored 
 
 #---- RENDERING PART ----
-
 RENDERING_MAX_CLIENT=10           # max conversion in parallel 
-RENDERING_DIRECTORY=/var/tmp      # directory where converted files are saved
 
 # -- Run TE servers as a user --
 TE_SERVER_USER=root

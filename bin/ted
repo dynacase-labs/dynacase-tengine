@@ -51,10 +51,9 @@ TE_SERVER_DEBUG=no
 PORT=51968
 LISTEN_ADDRESS=0.0.0.0
 REQUEST_MAX_CLIENT=15
-REQUEST_DIRECTORY=/var/tmp
 RENDERING_MAX_CLIENT=10
-RENDERING_DIRECTORY=/var/tmp
 TE_SERVER_USER=root
+TE_WORK_DIR=/var/tmp
 
 function check_environment {
     if [ ! -d "$TE_HOME" ]; then
@@ -72,6 +71,14 @@ function check_environment {
     fi
     if [ ! -d "$PID_DIR" -a ! -w "$PID_DIR" ]; then
 	echo "Error: pid dir '$PID_DIR' not found or not writable."
+	exit 1
+    fi
+    if [ ! -d "$TE_WORK_DIR" ]; then
+	echo "Error: TE_WORK_DIR '$TE_WORK_DIR' is not a valid directory."
+	exit 1
+    fi
+    if [ ! -w "$TE_WORK_DIR" ]; then
+	echo "Error: TE_WORK_DIR '$TE_WORK_DIR' is not writable."
 	exit 1
     fi
     if [ "$TE_OOO_SERVER_ENABLED" = "yes" ]; then
@@ -145,7 +152,6 @@ function check_php {
     exit_if_not_php_function_exists gettext "Error: missing 'gettext' PHP extension!"
     exit_if_not_php_function_exists pcntl_fork "Error: missing 'pcntl' PHP extension!"
     exit_if_not_php_function_exists posix_kill "Error: missing 'posix' PHP extension!"
-    exit_if_not_php_function_exists utf8_encode "Error: missing 'xml' PHP extension!"
     exit_if_not_php_function_exists curl_init "Error: missing 'curl' PHP extension!"
 }
 
@@ -415,13 +421,8 @@ function cleantmpfiles {
     if [[ -n $1 && $1 =~ ^[0-9][0-9]*$ ]]; then
 	DEADLINE=$1
     fi
-    if [ -d "$REQUEST_DIRECTORY" ]; then
-	find "$REQUEST_DIRECTORY" -maxdepth 1 -type f -name "te[rs]-*" -mtime "+$DEADLINE" -print0 | xargs -0 --no-run-if-empty rm
-	find "$REQUEST_DIRECTORY" -maxdepth 1 -type d -name "te[rs]-*" -mtime "+$DEADLINE" -print0 | xargs -0 --no-run-if-empty rm -r
-    fi
-    if [ -d "$RENDERING_DIRECTORY" ]; then
-	find "$RENDERING_DIRECTORY" -maxdepth 1 -type f -name "te[rs]-*" -mtime "+$DEADLINE" -print0 | xargs -0 --no-run-if-empty rm
-	find "$RENDERING_DIRECTORY" -maxdepth 1 -type d -name "te[rs]-*" -mtime "+$DEADLINE" -print0 | xargs -0 --no-run-if-empty rm -r
+    if [ -d "$TE_WORK_DIR" ]; then
+	find "$TE_WORK_DIR" -maxdepth 1 -type d -name "te-task-*" -mtime "+$DEADLINE" -print0 | xargs -0 --no-run-if-empty rm -r
     fi
 }
 
@@ -440,10 +441,10 @@ function run {
 		    exec "$TE_OOO_SERVER_SOFFICE" -headless -invisible -nofirststartwizard -accept="socket,host=$TE_OOO_SERVER_HOST,port=$TE_OOO_SERVER_PORT;urp;"
 		    ;;
 	    te-request-server)
-		    exec "$TE_HOME/bin/te_request_server" --port="$PORT" --laddr="$LISTEN_ADDRESS" --db="$DB" --maxclient="$REQUEST_MAX_CLIENT" --directory="$REQUEST_DIRECTORY"
+		    exec "$TE_HOME/bin/te_request_server" --port="$PORT" --laddr="$LISTEN_ADDRESS" --db="$DB" --maxclient="$REQUEST_MAX_CLIENT" --work-directory="$TE_WORK_DIR"
 		    ;;
 	    te-rendering-server)
-		    exec "$TE_HOME/bin/te_rendering_server" --db="$DB" --maxclient="$RENDERING_MAX_CLIENT" --directory="$RENDERING_DIRECTORY" --loginfile="$TE_HOME/etc/te.conf" --purge-days="$PURGE_DAYS" --purge-interval="$PURGE_INTERVAL"
+		    exec "$TE_HOME/bin/te_rendering_server" --db="$DB" --maxclient="$RENDERING_MAX_CLIENT" --work-directory="$TE_WORK_DIR" --loginfile="$TE_HOME/etc/te.conf" --purge-days="$PURGE_DAYS" --purge-interval="$PURGE_INTERVAL"
 		    ;;
 	    *)
 		    echo "Unknown run command '$1'."

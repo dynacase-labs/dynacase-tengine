@@ -11,6 +11,7 @@ require_once "Lib.TE.php";
 
 Class Task extends PgObj
 {
+    const TASK_WORK_DIR_PREFIX = 'te-task-';
     const STATE_BEGINNING = 'B'; // C/S start of transaction
     const STATE_TRANSFERRING = 'T'; // Data (file) transfer is in progress
     const STATE_ERROR = 'K'; // Job ends with error
@@ -84,6 +85,19 @@ SQL;
      */
     public $comment;
     
+    public static function newTaskWorkDir($workDir)
+    {
+        $taskDir = tempnam($workDir, self::TASK_WORK_DIR_PREFIX);
+        if ($taskDir === false) {
+            return false;
+        }
+        unlink($taskDir);
+        if (mkdir($taskDir) === false) {
+            return false;
+        }
+        return $taskDir;
+    }
+    
     function preInsert()
     {
         if (empty($this->tid)) {
@@ -113,22 +127,11 @@ SQL;
             $oh->Add();
         }
     }
-    function cleanupFiles()
-    {
-        if (file_exists($this->infile)) {
-            unlink($this->infile);
-        }
-        if (file_exists($this->outfile)) {
-            unlink($this->outfile);
-        };
-        if (file_exists($this->outfile . '.err')) {
-            unlink($this->outfile . '.err');
-        }
-        return '';
-    }
+    
     function preDelete()
     {
-        return $this->cleanupFiles();
+        self::deleteTaskWorkDir($this->getTaskWorkDir());
+        return '';
     }
     /**
      * @param $args array() request arguments (ex.: array("orderby" => "column1", "sort" => "desc", "start" => 20, "length" => 10))
@@ -200,6 +203,7 @@ SQL;
      * Delete tasks older than $maxDays days
      * @param int|float $maxDays task's max age (in days)
      * @param string $status delete tasks with given statuses (ex. "D", "DKW", etc.)
+     * @param string $tid delete task with given identifier
      * @return bool
      */
     public function purgeTasks($maxDays = 0, $status = '')
@@ -227,7 +231,7 @@ SQL;
          * Lock task table in exclusive mode to prevent te_rendering_server
          * from spawning new renderers during purge.
         */
-        $q->Query(0, 0, "TABLE", "BEGIN; LOCK TABLE task IN ACCESS EXCLUSIVE MODE NOWAIT;");
+        $q->Query(0, 0, "TABLE", "BEGIN; LOCK TABLE task IN ACCESS EXCLUSIVE MODE;");
         $sql = sprintf("DELETE FROM task %s RETURNING infile, outfile, status, pid", $where);
         $tasks = $q->Query(0, 0, "TABLE", $sql);
         if (!is_array($tasks)) {
@@ -235,16 +239,14 @@ SQL;
         }
         foreach ($tasks as $task) {
             if ($task['status'] == 'P' && ((int)$task['pid'] > 0)) {
-                posix_kill($task['pid'], SIGTERM);
+                /* Kill process group */
+                posix_kill(-$task['pid'], SIGKILL);
             }
             if (file_exists($task['infile'])) {
-                unlink($task['infile']);
+                self::deleteTaskWorkDir(dirname($task['infile']));
             }
             if (file_exists($task['outfile'])) {
-                unlink($task['outfile']);
-            }
-            if (file_exists($task['outfile'] . '.err')) {
-                unlink($task['outfile'] . '.err');
+                self::deleteTaskWorkDir(dirname($task['outfile']));
             }
         }
         $q->Query(0, 0, "TABLE", "COMMIT;");
@@ -252,23 +254,166 @@ SQL;
         $histo->purgeUnreferencedLog();
         return true;
     }
-    
+    /**
+     * Interrupt a task which is not in a final state (i.e. status not in {K, D, I})
+     *
+     * If pid is set, the the corresponding process is killed with a SIGKILL, and
+     * the task's work dir is removed.
+     */
     public function interrupt()
     {
-        error_log(__METHOD__ . " " . sprintf("Interrupting task '%s' with status '%s'.", $this->tid, $this->status));
         switch ($this->status) {
-            case self::STATE_INTERRUPTED:
-                return;
-            case self::STATE_ERROR:
+            case self::STATE_BEGINNING:
+            case self::STATE_TRANSFERRING:
+            case self::STATE_WAITING:
+            case self::STATE_PROCESSING:
+                /* Interrupt only work with these states */
+                break;
+
+            default:
+                /* Other states are not subject to interruption */
                 return;
         }
         if ((int)$this->pid > 0) {
-            error_log(__METHOD__ . " " . sprintf("Killing task '%s' with pid '%s'.", $this->tid, $this->pid));
-            posix_kill($this->pid, SIGKILL);
+            /* Kill process group */
+            posix_kill(-$this->pid, SIGKILL);
         }
+        $this->pid = '';
         $this->status = Task::STATE_INTERRUPTED;
         $this->log(sprintf("Abort requested"));
-        $this->cleanupFiles();
         $this->Modify();
+        $this->runCallback();
+    }
+    /**
+     * rewrite URL from parse_url array
+     * @param array $turl the url array
+     * @return string
+     */
+    function implode_url($turl)
+    {
+        
+        if (isset($turl["scheme"])) $url = $turl["scheme"] . "://";
+        else $url = "http://";
+        if (isset($turl["user"]) && isset($turl["pass"])) $url.= $turl["user"] . ':' . $turl["pass"] . '@';
+        if (isset($turl["host"])) $url.= $turl["host"];
+        else $url.= "localhost";
+        if (isset($turl["port"])) $url.= ':' . $turl["port"];
+        if (isset($turl["path"]) && ($turl["path"][0] == '&')) {
+            $turl["query"] = $turl["path"] . $turl["query"];
+            $turl["path"] = '';
+        }
+        if (isset($turl["path"])) $url.= $turl["path"];
+        if (isset($turl["query"])) $url.= '?' . $turl["query"];
+        if (isset($turl["fragment"])) $url.= '#' . $turl["fragment"];
+        
+        return $url;
+    }
+    /**
+     * Run the callback if a callback is declared.
+     * Return successfully if no callback is declared.
+     * @return string error message on failure or empty string on success
+     */
+    public function runCallback()
+    {
+        $callback = $this->callback;
+        if (!$callback) {
+            return '';
+        }
+        $turl = parse_url($callback);
+        $turl["query"].= "&tid=" . $this->tid;
+        $this->log(_("call : ") . $turl["host"] . '://' . $turl["query"]);
+        $url = $this->implode_url($turl);
+        $response = @file_get_contents($url);
+        if ($response === false) {
+            if (function_exists("error_get_last")) {
+                $terr = error_get_last();
+                $this->callreturn = "ERROR:" . $terr["message"];
+            } else {
+                $this->callreturn = "ERROR:$php_errormsg";
+            }
+        } else {
+            
+            $this->callreturn = str_replace('<', '', $response);
+        }
+        $this->log(_("return call : ") . $this->callreturn);
+        $this->Modify();
+        /*
+         * Return error message or empty string on success
+        */
+        if ($response === false) {
+            return $this->callreturn;
+        }
+        return '';
+    }
+    /**
+     * Recursively delete a directory or a file
+     * @param $path
+     * @return bool true on success or false if an error occurred (i.e. a file/dir could not be remove)
+     */
+    public static function rm_rf($path)
+    {
+        $filetype = filetype($path);
+        if ($filetype === false) {
+            return false;
+        }
+        if ($filetype == 'dir') {
+            /* Recursively delete content */
+            $ret = true;
+            foreach (scandir($path) as $file) {
+                if ($file == "." || $file == "..") {
+                    continue;
+                };
+                $ret = ($ret && self::rm_rf(sprintf("%s%s%s", $path, DIRECTORY_SEPARATOR, $file)));
+            }
+            /* The main directory should now be empty, so we can delete it. */
+            $ret = ($ret && rmdir($path));
+            if ($ret === false) {
+                return false;
+            }
+        } else {
+            /* Delete a single file */
+            $ret = unlink($path);
+        }
+        return $ret;
+    }
+    /**
+     * Get the task's work dir from the 'infile' filename.
+     * @return bool|string false if infile is empty
+     */
+    public function getTaskWorkDir()
+    {
+        if ($this->infile == '') {
+            return false;
+        }
+        $taskWorkDir = dirname($this->infile);
+        if (!self::isATaskWorkDir($taskWorkDir)) {
+            return false;
+        }
+        
+        return $taskWorkDir;
+    }
+    /**
+     * Recursively delete the given task's work dir if
+     * it is a valid task's work dir.
+     * @param string $taskWorkDir Path to task's work dir
+     */
+    protected static function deleteTaskWorkDir($taskWorkDir)
+    {
+        if (!is_string($taskWorkDir)) {
+            return;
+        }
+        if (self::isATaskWorkDir($taskWorkDir)) {
+            self::rm_rf($taskWorkDir);
+        }
+    }
+    /**
+     * Check if a given directory has the task's work dir prefix and is
+     * hence a valid task's work dir.
+     * @param $path
+     * @return int
+     */
+    protected static function isATaskWorkDir($path)
+    {
+        return (preg_match(sprintf('/^%s/', preg_quote(self::TASK_WORK_DIR_PREFIX, '/')) , basename($path)) === 1);
     }
 }

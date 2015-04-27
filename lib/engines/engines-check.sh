@@ -9,9 +9,12 @@ fi
 . "$TE_HOME"/etc/te.d/env
 . "$TE_HOME"/test-data/common.sh
 
-if [ -n "$REQUEST_DIRECTORY" ]; then
-    export TMPDIR=$REQUEST_DIRECTORY
+TEST_WORK_DIR=$(mktemp -d "$TE_WORK_DIR/te-task-test-XXXXXX")
+if [ $? -ne 0 ]; then
+    echo "Error creating test work dir!"
+    exit 1
 fi
+export TMPDIR=$TEST_WORK_DIR
 
 EXITCODE=0
 
@@ -22,5 +25,7 @@ for CHECK in "$TE_HOME"/test-data/test_*; do
         EXITCODE=$RET
     fi
 done
+
+rm -Rf "$TEST_WORK_DIR"
 
 exit $EXITCODE
