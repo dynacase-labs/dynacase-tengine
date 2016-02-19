@@ -17,11 +17,17 @@ RENDERING_MAX_CLIENT=10           # max conversion in parallel
 # -- Run TE servers as a user --
 TE_SERVER_USER=root
 
-# -- Server-mode OpenOffice.org parameters
+# -- Server-mode (Libre|Open)Office.org parameters
 TE_OOO_SERVER_ENABLED=yes
-TE_OOO_BASE_DIR=/replace/me/with/path/to/openoffice.org/directory
+TE_OOO_BASE_DIR=/replace/me/with/path/to/libreoffice_or_openoffice/directory
+#
+# Example:
+#
+#   TE_OOO_BASE_DIR=/opt/libreoffice5.0
+#   TE_OOO_BASE_DIR=/opt/libreoffice4.4
+#   TE_OOO_BASE_DIR=/opt/openoffice4
+#
 TE_OOO_SERVER_SOFFICE=${TE_OOO_BASE_DIR}/program/soffice
-TE_OOO_CLASSPATH="${TE_OOO_BASE_DIR}/program/classes/unoil.jar:${TE_OOO_BASE_DIR}/program/classes/juh.jar:${TE_OOO_BASE_DIR}/program/classes/jurt.jar:${TE_OOO_BASE_DIR}/program/classes/ridl.jar"
 TE_OOO_JVM_OPTS=""
 TE_OOO_SERVER_HOST=127.0.0.1
 TE_OOO_SERVER_PORT=8123

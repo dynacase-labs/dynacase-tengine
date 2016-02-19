@@ -7,55 +7,103 @@
 # processname: te_request_server te_rendering_server
 # pidfile: /var/run/te_request_server.pid /var/run/te_rendering_server.pid /var/run/te_ooo.pid
 
-cd /
+function main {
+    cd /
 
-# Source function library.
-. /lib/lsb/init-functions
+    # Source function library.
+    . /lib/lsb/init-functions
 
-# Find the name of the script
-NAME=$(basename "$0")
-if [ ${NAME:0:1} = "S" -o ${NAME:0:1} = "K" ]
-then
-    NAME=${NAME:3}
-fi
-
-# For SELinux we need to use 'runuser' not 'su'
-if [ -x /sbin/runuser ]
-then
-    SU=runuser
-else
-    SU=su
-fi
-
-# Try to locate TE_HOME from script pathname
-if [ -z "$TE_HOME" ]; then
-    MY_PATH=$0
-    if [ -L "$MY_PATH" ]; then
-	MY_PATH=$(readlink -f "$MY_PATH")
+    # Find the name of the script
+    NAME=$(basename "$0")
+    if [ ${NAME:0:1} = "S" -o ${NAME:0:1} = "K" ]
+    then
+	NAME=${NAME:3}
     fi
-    DIRNAME=$(dirname "$MY_PATH")
-    DIRNAME="$DIRNAME/../"
-    REAL_DIRNAME=$(cd "$DIRNAME" 1 > /dev/null 2>&1 && pwd)
-    export TE_HOME=$REAL_DIRNAME
-fi
 
-# Set defaults for configuration variables
-PID_DIR=/var/run
-TE_REQUEST_PID=$PID_DIR/te_request_server.pid
-TE_RENDERING_PID=$PID_DIR/te_rendering_server.pid
-TE_OOO_PID=$PID_DIR/te_ooo.pid
-TE_TIKA_PID=$PID_DIR/te_tika.pid
+    # For SELinux we need to use 'runuser' not 'su'
+    if [ -x /sbin/runuser ]
+    then
+	SU=runuser
+    else
+	SU=su
+    fi
 
-TE_PG_SERVICE=te
-TE_SERVER_DEBUG=no
-PORT=51968
-LISTEN_ADDRESS=0.0.0.0
-REQUEST_MAX_CLIENT=15
-RENDERING_MAX_CLIENT=10
-TE_SERVER_USER=root
-TE_WORK_DIR=/var/tmp
+    # Try to locate TE_HOME from script pathname
+    if [ -z "$TE_HOME" ]; then
+	MY_PATH=$0
+	if [ -L "$MY_PATH" ]; then
+	    MY_PATH=$(readlink -f "$MY_PATH")
+	fi
+	DIRNAME=$(dirname "$MY_PATH")
+	DIRNAME="$DIRNAME/../"
+	REAL_DIRNAME=$(cd "$DIRNAME" 1 > /dev/null 2>&1 && pwd)
+	export TE_HOME=$REAL_DIRNAME
+    fi
+
+    # Set defaults for configuration variables
+    PID_DIR=/var/run
+    TE_REQUEST_PID=$PID_DIR/te_request_server.pid
+    TE_RENDERING_PID=$PID_DIR/te_rendering_server.pid
+    TE_OOO_PID=$PID_DIR/te_ooo.pid
+    TE_TIKA_PID=$PID_DIR/te_tika.pid
+
+    TE_PG_SERVICE=te
+    TE_SERVER_DEBUG=no
+    PORT=51968
+    LISTEN_ADDRESS=0.0.0.0
+    REQUEST_MAX_CLIENT=15
+    RENDERING_MAX_CLIENT=10
+    TE_SERVER_USER=root
+    TE_WORK_DIR=/var/tmp
+
+    # Get config.
+    . "$TE_HOME/etc/te.conf"
+
+    check_environment "$1"
+
+    # Postgresql database service
+    DB="service='$TE_PG_SERVICE'"
+
+    script_result=0
+
+    # See how we were called.
+    case "$1" in
+	start)
+	    start
+	    ;;
+	stop)
+	    stop
+	    ;;
+	init)
+	    init
+	    ;;
+	status)
+	    status2
+	    ;;
+	restart)
+	    restart
+	    ;;
+	check)
+	    check
+	    ;;
+	cleantmpfiles)
+	    cleantmpfiles "$2"
+	    ;;
+	run)
+	    shift
+	    run "$@"
+	    ;;
+	*)
+	    echo "Usage: $0 {init|start|stop|status|restart|check|cleantmpfiles}"
+	    exit 1
+    esac
+
+    exit $script_result
+}
 
 function check_environment {
+    local CMD
+    CMD=$1
     if [ ! -d "$TE_HOME" ]; then
 	echo "Error: TE_HOME directory '$TE_HOME' not found."
 	exit 1
@@ -90,6 +138,9 @@ function check_environment {
 	    echo "Error: java interpreter not found in PATH!"
 	    exit 1
 	fi
+	if [ -z "$TE_OOO_PRODUCTKEY" ]; then
+	    TE_OOO_PRODUCTKEY=$(te_ooo_productkey)
+	fi
     fi
     if [ "$TE_TIKA_SERVER_ENABLED" = "yes" ]; then
 	if [ ! -f "$TE_TIKA_SERVER_JAR" ]; then
@@ -102,7 +153,9 @@ function check_environment {
 	fi
     fi
     check_php
-    check_te_pg_service
+    if [ "$CMD" != "stop" ]; then
+	check_te_pg_service
+    fi
 }
 
 function check_te_pg_service {
@@ -182,15 +235,17 @@ function check_ports {
     fi
 }
 
-# Get config.
-. "$TE_HOME/etc/te.conf"
-
-check_environment
-
-# Postgresql database service
-DB="service='$TE_PG_SERVICE'"
-
-script_result=0
+function te_ooo_productkey {
+    local SOFFICE_DIR
+    SOFFICE_DIR=$(dirname "$TE_OOO_SERVER_SOFFICE")
+    local BOOTSTRAPRC
+    BOOTSTRAPRC="$SOFFICE_DIR/bootstraprc"
+    if [ -f "$BOOTSTRAPRC" ]; then
+	sed -n -e 's/^[[:space:]]*ProductKey[[:space:]]*=[[:space:]]*//p' "$BOOTSTRAPRC" 2> /dev/null | head -1
+    else
+	echo ""
+    fi
+}
 
 function _service {
     local RET
@@ -243,7 +298,7 @@ function start {
 	
     # Start OOO
     if [ "$TE_OOO_SERVER_ENABLED" = "yes" ] && [ ! -f "$TE_OOO_PID" ]; then
-        _service start "OOO server" "te-ooo-server" "$TE_OOO_PID"
+        _service start "OOO server ($TE_OOO_PRODUCTKEY)" "te-ooo-server" "$TE_OOO_PID"
 	RET=$(($RET||$?))
     fi
 
@@ -310,7 +365,7 @@ function stop {
     if [ "$TE_OOO_SERVER_ENABLED" = "yes" ]; then
 	if [ -f $TE_OOO_PID ]
 	then
-	    _service stop "OOO server" "te-ooo-server" "$TE_OOO_PID"
+	    _service stop "OOO server ($TE_OOO_PRODUCTKEY)" "te-ooo-server" "$TE_OOO_PID"
 	    RET=$(($RET||$?))
 	else
 	    echo "ooo server not running"
@@ -373,9 +428,9 @@ function status2 {
     if [ "$TE_OOO_SERVER_ENABLED" = "yes" ] && [ -f $TE_OOO_PID ]; then
 	PID=$(_service status "$TE_OOO_PID")
 	if [ $? -eq 0 ]; then
-	    echo "OOO server running ($PID)"
+	    echo "OOO server ($TE_OOO_PRODUCTKEY) running ($PID)"
 	else
-	    echo "OOO server is down"
+	    echo "OOO server ($TE_OOO_PRODUCTKEY) is down"
 	    script_result=1
 	fi
     fi
@@ -438,7 +493,15 @@ function run {
 		    exec java -jar "$TE_TIKA_SERVER_JAR" --host="$TE_TIKA_SERVER_HOST" --port="$TE_TIKA_SERVER_PORT"
 		    ;;
 	    te-ooo-server)
-		    exec "$TE_OOO_SERVER_SOFFICE" -headless -invisible -nofirststartwizard -accept="socket,host=$TE_OOO_SERVER_HOST,port=$TE_OOO_SERVER_PORT;urp;"
+		    case "$TE_OOO_PRODUCTKEY" in
+			OpenOffice*)
+			    exec "$TE_OOO_SERVER_SOFFICE" -headless -invisible -nofirststartwizard -accept="socket,host=$TE_OOO_SERVER_HOST,port=$TE_OOO_SERVER_PORT;urp;"
+			    ;;
+			*)
+			    exec "$TE_OOO_SERVER_SOFFICE" --headless --invisible --nofirststartwizard --accept="socket,host=$TE_OOO_SERVER_HOST,port=$TE_OOO_SERVER_PORT;urp;"
+			    ;;
+		    esac
+		    exit 1
 		    ;;
 	    te-request-server)
 		    exec "$TE_HOME/bin/te_request_server" --port="$PORT" --laddr="$LISTEN_ADDRESS" --db="$DB" --maxclient="$REQUEST_MAX_CLIENT" --work-directory="$TE_WORK_DIR"
@@ -455,36 +518,4 @@ function run {
     exit 1
 }
 
-# See how we were called.
-case "$1" in
-    start)
-	start
-	;;
-    stop)
-	stop
-	;;
-    init)
-	init
-	;;
-    status)
-	status2
-	;;
-    restart)
-	restart
-	;;
-    check)
-	check
-	;;
-    cleantmpfiles)
-        cleantmpfiles "$2"
-	;;
-    run)
-	shift
-	run "$@"
-	;;
-    *)
-	echo "Usage: $0 {init|start|stop|status|restart|check|cleantmpfiles}"
-	exit 1
-esac
-
-exit $script_result
+main "$@"
