@@ -1,0 +1,18 @@
+#!/bin/bash
+
+function te_ooo_classpath {
+    local SOFFICE_DIR
+    SOFFICE_DIR=$(dirname "$TE_OOO_SERVER_SOFFICE")
+    local UNOINFO
+    UNOINFO="$SOFFICE_DIR/unoinfo"
+    if [ ! -x "$UNOINFO" ]; then
+	echo ""
+	return
+    fi
+    "$UNOINFO" java | tr "\0" ":" | sed -e 's/^0//'
+}
+
+if [ -z "$TE_OOO_CLASSPATH" ]; then
+    TE_OOO_CLASSPATH=$(te_ooo_classpath)
+fi
+
