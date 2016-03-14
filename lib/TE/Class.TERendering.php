@@ -217,7 +217,7 @@ Class TERendering
             if (is_file($errfile)) {
                 throw new Exception(sprintf(_("error file '%s' already exists.") , $errfile));
             }
-            $tc = sprintf("%s %s %s 2>%s", $eng->command, escapeshellarg($orifile) , escapeshellarg($outfile) , escapeshellarg($errfile));
+            $tc = sprintf("%s %s %s > %s 2>&1", $eng->command, escapeshellarg($orifile) , escapeshellarg($outfile) , escapeshellarg($errfile));
             $this->task->log(sprintf(_("execute [%s] command") , $tc));
             /* Save original TMPDIR */
             $TMPDIR = $this->setTmpDir($taskWorkDir);
