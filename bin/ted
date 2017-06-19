@@ -1,11 +1,20 @@
 #!/bin/bash
-# ted	This is the init script for starting up the Transformation Engine
-#		server
 #
-# chkconfig: - 64 36
-# description: Starts and stops the request and rendering backend daemon 
-# processname: te_request_server te_rendering_server
-# pidfile: /var/run/te_request_server.pid /var/run/te_rendering_server.pid /var/run/te_ooo.pid
+# ted  This is the init script for starting up the Transformation Engine
+#      server
+#
+# chkconfig: 2345 99 01
+# description: Starts and stops the request and rendering backend daemon
+
+### BEGIN INIT INFO
+# Provides:          ted
+# Required-Start:    $all
+# Required-Stop:     $all
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: This is the init script for starting up the Transformation Engine server
+# Description:       This is the init script for starting up the Transformation Engine server
+### END INIT INFO
 
 function main {
     cd /
@@ -519,3 +528,5 @@ function run {
 }
 
 main "$@"
+
+# vim: tabstop=8 softtabstop=4 shiftwidth=4 noexpandtab
