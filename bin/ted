@@ -17,6 +17,8 @@
 ### END INIT INFO
 
 function main {
+    local MY_PATH=$(readlink -f "$0")
+
     cd /
 
     # Source function library.
@@ -39,14 +41,8 @@ function main {
 
     # Try to locate TE_HOME from script pathname
     if [ -z "$TE_HOME" ]; then
-	MY_PATH=$0
-	if [ -L "$MY_PATH" ]; then
-	    MY_PATH=$(readlink -f "$MY_PATH")
-	fi
-	DIRNAME=$(dirname "$MY_PATH")
-	DIRNAME="$DIRNAME/../"
-	REAL_DIRNAME=$(cd "$DIRNAME" 1 > /dev/null 2>&1 && pwd)
-	export TE_HOME=$REAL_DIRNAME
+	local DIRNAME=$(dirname "$MY_PATH")
+	export TE_HOME=$(readlink -f "$DIRNAME/../")
     fi
 
     # Set defaults for configuration variables
