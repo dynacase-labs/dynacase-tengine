@@ -399,11 +399,11 @@ function stop {
     if [ "$TE_OOO_SERVER_ENABLED" = "yes" ]; then
 	rm -f "$TE_OOO_PID"
     fi
+    sleep 3
 }
 
 function restart  {
     stop
-    sleep 2
     start
 }
 
