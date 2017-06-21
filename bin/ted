@@ -31,14 +31,6 @@ function main {
 	NAME=${NAME:3}
     fi
 
-    # For SELinux we need to use 'runuser' not 'su'
-    if [ -x /sbin/runuser ]
-    then
-	SU=runuser
-    else
-	SU=su
-    fi
-
     # Try to locate TE_HOME from script pathname
     if [ -z "$TE_HOME" ]; then
 	local DIRNAME=$(dirname "$MY_PATH")
@@ -270,7 +262,7 @@ function _service {
 	    local SERVICE_NAME=$2
 	    local SERVICE_PID_FILE=$3
 	    echo -n "Starting $SERVICE_LABEL... "
-	    $SU -s /bin/bash -c "$(printf "%q run %q" "$0" "$SERVICE_NAME")" "$TE_SERVER_USER" > /dev/null 2>&1 &
+	    "${TE_HOME}/bin/runas.php" "$TE_SERVER_USER" $(printf "%q run %q" "$0" "$SERVICE_NAME") > /dev/null 2>&1 &
 	    sleep 1
 	    kill -0 $!
 	    RET=$?
@@ -479,7 +471,7 @@ function init {
 }
 
 function check {
-    $SU -s /bin/bash -c "\"$TE_HOME/lib/engines/engines-check.sh\"" "$TE_SERVER_USER"
+    "${TE_HOME}/bin/runas.php" "$TE_SERVER_USER" "${TE_HOME}/lib/engines/engines-check.sh"
     script_result=$?
 }
 
