@@ -1,13 +1,24 @@
 #!/bin/bash
-# ted	This is the init script for starting up the Transformation Engine
-#		server
 #
-# chkconfig: - 64 36
-# description: Starts and stops the request and rendering backend daemon 
-# processname: te_request_server te_rendering_server
-# pidfile: /var/run/te_request_server.pid /var/run/te_rendering_server.pid /var/run/te_ooo.pid
+# ted  This is the init script for starting up the Transformation Engine
+#      server
+#
+# chkconfig: 2345 99 01
+# description: Starts and stops the request and rendering backend daemon
+
+### BEGIN INIT INFO
+# Provides:          ted
+# Required-Start:    $all
+# Required-Stop:     $all
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: This is the init script for starting up the Transformation Engine server
+# Description:       This is the init script for starting up the Transformation Engine server
+### END INIT INFO
 
 function main {
+    local MY_PATH=$(readlink -f "$0")
+
     cd /
 
     # Source function library.
@@ -20,24 +31,10 @@ function main {
 	NAME=${NAME:3}
     fi
 
-    # For SELinux we need to use 'runuser' not 'su'
-    if [ -x /sbin/runuser ]
-    then
-	SU=runuser
-    else
-	SU=su
-    fi
-
     # Try to locate TE_HOME from script pathname
     if [ -z "$TE_HOME" ]; then
-	MY_PATH=$0
-	if [ -L "$MY_PATH" ]; then
-	    MY_PATH=$(readlink -f "$MY_PATH")
-	fi
-	DIRNAME=$(dirname "$MY_PATH")
-	DIRNAME="$DIRNAME/../"
-	REAL_DIRNAME=$(cd "$DIRNAME" 1 > /dev/null 2>&1 && pwd)
-	export TE_HOME=$REAL_DIRNAME
+	local DIRNAME=$(dirname "$MY_PATH")
+	export TE_HOME=$(readlink -f "$DIRNAME/../")
     fi
 
     # Set defaults for configuration variables
@@ -210,7 +207,14 @@ function check_php {
 
 function check_tcp_port {
     local P=$1
-    netstat -tnl | grep ":$P[[:space:]]" > /dev/null 2>&1
+    if which netstat > /dev/null 2>&1; then
+	netstat -tnl | grep ":$P[[:space:]]" > /dev/null 2>&1
+    elif which ss > /dev/null 2>&1; then
+	ss -tnl | grep ":$P[[:space:]]" > /dev/null 2>&1
+    else
+	# The port cannot be checked so assume it is not already opened...
+	false
+    fi
 }
 
 function check_ports {
@@ -258,7 +262,7 @@ function _service {
 	    local SERVICE_NAME=$2
 	    local SERVICE_PID_FILE=$3
 	    echo -n "Starting $SERVICE_LABEL... "
-	    $SU -s /bin/bash -c "$(printf "%q run %q" "$0" "$SERVICE_NAME")" "$TE_SERVER_USER" > /dev/null 2>&1 &
+	    "${TE_HOME}/bin/runas.php" "$TE_SERVER_USER" $(printf "%q run %q" "$0" "$SERVICE_NAME") > /dev/null 2>&1 &
 	    sleep 1
 	    kill -0 $!
 	    RET=$?
@@ -387,11 +391,11 @@ function stop {
     if [ "$TE_OOO_SERVER_ENABLED" = "yes" ]; then
 	rm -f "$TE_OOO_PID"
     fi
+    sleep 3
 }
 
 function restart  {
     stop
-    sleep 2
     start
 }
 
@@ -467,7 +471,7 @@ function init {
 }
 
 function check {
-    $SU -s /bin/bash -c "\"$TE_HOME/lib/engines/engines-check.sh\"" "$TE_SERVER_USER"
+    "${TE_HOME}/bin/runas.php" "$TE_SERVER_USER" "${TE_HOME}/lib/engines/engines-check.sh"
     script_result=$?
 }
 
@@ -519,3 +523,5 @@ function run {
 }
 
 main "$@"
+
+# vim: tabstop=8 softtabstop=4 shiftwidth=4 noexpandtab
