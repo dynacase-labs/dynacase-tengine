@@ -1,0 +1,216 @@
+#!/bin/bash
+
+function usage {
+    cat <<EOF
+Usage
+-----
+
+  respawn [<options>] <command> [<args>]
+
+Options:
+
+    -w <respawn-interval-second>
+
+	Wait for this many seconds before respawning the command.
+
+	Default: 0 (0 seconds: respawn immediately without pause)
+
+    -n <command-name>
+
+	Command name (used for displaying messages)
+
+    -t <immediate-failure-threshold-second>
+
+	Commands that exits under this time (expressed in seconds) will be
+	considered as immediate failures, and their repeated immediate failures
+	will be limited by the '-f' option.
+
+	Default: 1
+
+    -f <max-immediate-failures>
+
+	Maximum number of immediate failures (command exits with less than '-t'
+	second of runtime).
+
+	Default: 5
+
+    --exit-on-success
+
+	Do not respawn the command if it exits with exitcode == 0
+
+EOF
+}
+
+function _sig {
+    local SIG=$1
+    log "Received SIG${SIG}..."
+    if [ -n "${PROC_PID}" ]; then
+	    log "Killing process (${PROC_PID})..."
+	    kill "-${SIG}" "${PROC_PID}"
+	    log "Done."
+    fi
+    exit
+}
+
+function _sig_term {
+    _sig TERM
+}
+
+function _sig_int {
+    _sig INT
+}
+
+function log {
+    if [ -t 1 ]; then
+	    echo "[${COMMAND_NAME}] $@" 1>&2
+    fi
+    echo "(respawn) $@" | logger -t "${COMMAND_NAME}"
+}
+
+function escape_command_args {
+    local COMMAND=$(printf "%q" "$1")
+    shift
+    while [ $# -gt 0 ]; do
+	COMMAND=$(printf "%s %q" "${COMMAND}" "$1")
+	shift
+    done
+    echo "${COMMAND}"
+}
+
+function main {
+    local RET=""
+    local T1=""
+    local T2=""
+    local DELTA=""
+    local RESPAWN_INTERVAL=0
+    local MAX_FAILS=5
+    local FAILS_COUNT=0
+    local FAILURE_THRESHOLD=1
+    local EXIT_ON_SUCCESS=no
+    COMMAND_NAME=""
+    PROC_PID=""
+
+    while [ "${1:0:1}" = "-" ]; do
+	case "$1" in
+
+	    --)
+		shift
+		break
+		;;
+
+	    -h|--help)
+		shift
+		usage
+		exit 1
+		;;
+
+	    -w)
+		shift
+		RESPAWN_INTERVAL=$1
+		if ! [[ ${RESPAWN_INTERVAL} =~ ^[0-9]+$ ]]; then
+		    echo "Inavlid respawn interval value '${RESPAWN_INTERVAL}': must be an integer (number of seconds)" 1>&2
+		    exit 1
+		fi
+		shift
+		;;
+
+	    -n)
+		shift
+		COMMAND_NAME=$1
+		shift
+		;;
+
+	    -f)
+		shift
+		MAX_FAILS=$1
+		if [[ ! ${MAX_FAILS} =~ ^[0-9]+$ ]]; then
+		    echo "Invalid max immediate failures value '${MAX_FAILS}': must be an integer" 1>&2
+		    exit 1
+		fi
+		shift
+		;;
+
+	    -t)
+		shift
+		FAILURE_THRESHOLD=$1
+		if [[ ! ${FAILURE_THRESHOLD} =~ ^[0-9]+$ ]]; then
+		    echo "Invalid immediate failure threshold value '${FAILURE_THRESHOLD}': must be an integer" 1>&2
+		    exit 1
+		fi
+		if [[ ${FAILURE_THRESHOLD} -lt 1 ]]; then
+		    echo "Invalid immediate failure threshold value '${FAILURE_THRESHOLD}': must be > 0" 1>&2
+		    exit 1
+		fi
+		shift
+		;;
+
+	    --exit-on-success)
+		shift
+		EXIT_ON_SUCCESS=yes
+		;;
+
+	    *)
+		echo "Unknown option '$1'" 1>&2
+		usage
+		exit 1
+		;;
+
+	esac
+    done
+    if [ -z "${COMMAND_NAME}" ]; then
+	COMMAND_NAME="$1"
+    fi
+    if [ $# -le 0 ]; then
+	echo "Missing command line to respawn!" 1>&2
+	exit 1
+    fi
+    local COMMAND=$(escape_command_args "$@")
+    if [ -z "${COMMAND}" ]; then
+	    echo "Missing command!" 1>&2
+	    usage
+	    exit 1
+    fi
+    PROC_PID="";
+
+    trap _sig_term SIGTERM
+    trap _sig_int SIGINT
+
+    while [ 1 ]; do
+	    log "Executing '${COMMAND}'"
+	    /bin/bash -c "exec ${COMMAND}" &
+	    PROC_PID=$!
+	    T1=$(date +%s)
+	    log "Command running with PID '${PROC_PID}'."
+	    wait "${PROC_PID}"
+	    RET=$?
+	    T2=$(date +%s)
+	    DELTA=$(( ${T2} - ${T1} ))
+	    log "Command exited after ${DELTA}s with code '$RET'."
+	    if [ "${EXIT_ON_SUCCESS}" = "yes" -a $RET -eq 0 ]; then
+		    log "Clean exit requested."
+		    exit 0
+	    else
+		if [ "${DELTA}" -le "${FAILURE_THRESHOLD}" ]; then
+			if [ ${MAX_FAILS} -gt 0 ]; then
+			    FAILS_COUNT=$(( $FAILS_COUNT + 1 ))
+			    if [ ${FAILS_COUNT} -ge ${MAX_FAILS} ]; then
+				log "Max failures count reached (${FAILS_COUNT}/${MAX_FAILS}): ending with global failure!"
+				exit 1
+			    else
+				log "Command failed ${FAILS_COUNT}/${MAX_FAILS}"
+			    fi
+			fi
+		else
+			FAILS_COUNT=0
+		fi
+	    fi
+	    PROC_PID=""
+	    log "Waiting ${RESPAWN_INTERVAL} seconds..."
+	    sleep "${RESPAWN_INTERVAL}"
+	    log "Respawning command."
+    done
+}
+
+main "$@"
+
+# vim: tabstop=8 softtabstop=4 shiftwidth=4 noexpandtab
