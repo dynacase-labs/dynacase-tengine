@@ -39,10 +39,10 @@ function main {
 
     # Set defaults for configuration variables
     PID_DIR=/var/run
-    TE_REQUEST_PID=$PID_DIR/te_request_server.pid
-    TE_RENDERING_PID=$PID_DIR/te_rendering_server.pid
-    TE_OOO_PID=$PID_DIR/te_ooo.pid
-    TE_TIKA_PID=$PID_DIR/te_tika.pid
+    TE_REQUEST_PID=$PID_DIR/te-request-server.pid
+    TE_RENDERING_PID=$PID_DIR/te-rendering-server.pid
+    TE_OOO_PID=$PID_DIR/te-ooo-server.pid
+    TE_TIKA_PID=$PID_DIR/te-tika-server.pid
 
     TE_PG_SERVICE=te
     TE_SERVER_DEBUG=no
@@ -55,30 +55,38 @@ function main {
 
     # Get config.
     . "$TE_HOME/etc/te.conf"
+    # Services
+    . "$TE_HOME/lib/services/common.sh"
+    . "$TE_HOME/lib/services/te-request-server.sh"
+    . "$TE_HOME/lib/services/te-rendering-server.sh"
+    . "$TE_HOME/lib/services/te-ooo-server.sh"
+    . "$TE_HOME/lib/services/te-tika-server.sh"
 
     check_environment "$1"
 
     # Postgresql database service
     DB="service='$TE_PG_SERVICE'"
 
-    script_result=0
-
     # See how we were called.
     case "$1" in
 	start)
-	    start
+	    shift
+	    start "$@"
 	    ;;
 	stop)
-	    stop
+	    shift
+	    stop "$@"
 	    ;;
 	init)
 	    init
 	    ;;
 	status)
-	    status2
+	    shift
+	    status2 "$@"
 	    ;;
 	restart)
-	    restart
+	    shift
+	    restart "$@"
 	    ;;
 	check)
 	    check
@@ -95,160 +103,7 @@ function main {
 	    exit 1
     esac
 
-    exit $script_result
-}
-
-function check_environment {
-    local CMD
-    CMD=$1
-    if [ ! -d "$TE_HOME" ]; then
-	echo "Error: TE_HOME directory '$TE_HOME' not found."
-	exit 1
-    fi
-    if [ ! -d "$TE_HOME/etc" ]; then
-	echo "Error: directory '$TE_HOME/etc' not found."
-	exit 1
-    fi
-    if [ ! -f "$TE_HOME/etc/te.conf" ]; then
-	echo "Error: config file '$TE_HOME/etc/te.conf' not found."
-	echo "Hint: you might need to create 'te.conf' by copying '$TE_HOME/etc/te.conf.sample'."
-	exit 1
-    fi
-    if [ ! -d "$PID_DIR" -a ! -w "$PID_DIR" ]; then
-	echo "Error: pid dir '$PID_DIR' not found or not writable."
-	exit 1
-    fi
-    if [ ! -d "$TE_WORK_DIR" ]; then
-	echo "Error: TE_WORK_DIR '$TE_WORK_DIR' is not a valid directory."
-	exit 1
-    fi
-    if [ ! -w "$TE_WORK_DIR" ]; then
-	echo "Error: TE_WORK_DIR '$TE_WORK_DIR' is not writable."
-	exit 1
-    fi
-    if [ "$TE_OOO_SERVER_ENABLED" = "yes" ]; then
-	if [ ! -x "$TE_OOO_SERVER_SOFFICE" ]; then
-	    echo "Error: TE_OOO_SERVER_SOFFICE '$TE_OOO_SERVER_SOFFICE' (in '$TE_HOME/etc/te.conf') is not executable!"
-	    exit 1
-	fi
-	if [ -z "$(which java)" ]; then
-	    echo "Error: java interpreter not found in PATH!"
-	    exit 1
-	fi
-	if [ -z "$TE_OOO_PRODUCTKEY" ]; then
-	    TE_OOO_PRODUCTKEY=$(te_ooo_productkey)
-	fi
-    fi
-    if [ "$TE_TIKA_SERVER_ENABLED" = "yes" ]; then
-	if [ ! -f "$TE_TIKA_SERVER_JAR" ]; then
-	    echo "Error: TE_TIKA_SERVER_JAR '$TE_TIKA_SERVER_JAR' (in '$TE_HOME/etc/te.conf') does not exists!"
-	    exit 1
-	fi
-	if [ -z "$(which java)" ]; then
-	    echo "Error: java interpreter not found in PATH!"
-	    exit 1
-	fi
-    fi
-    check_php
-    if [ "$CMD" != "stop" ]; then
-	check_te_pg_service
-    fi
-}
-
-function check_te_pg_service {
-    local OUTPUT
-    if [ -z "$TE_PG_SERVICE" ]; then
-	echo "Error: TE_PG_SERVICE must not be empty in '$TE_HOME/etc/te.conf'."
-	exit 1
-    fi
-    OUTPUT=$(php -- "service=$TE_PG_SERVICE" <<'EOF'
-<?php
-ini_set("error_log", null);
-ini_set("track_errors", true);
-if (($r = @pg_connect($argv[1])) === false) {
-    printf("%s\n", $php_errormsg);
-    exit(1);
-}
-pg_close($r);
-exit(0);
-EOF
-    )
-    if [ $? -ne 0 ]; then
-	echo "Error: could not connect to postgresql service '$TE_PG_SERVICE': $OUTPUT"
-	exit 1
-    fi
-}
-
-function php_function_exists {
-    php -r 'exit(function_exists($argv[1])?0:1);' "$1"
-}
-
-function exit_if_not_php_function_exists {
-    php_function_exists "$1"
-    if [ $? -ne 0 ]; then
-	echo "$2"
-	exit 1
-    fi
-}
-	
-function check_php {
-    if [ -z "$(which php)" ]; then
-	echo "Error: php interpreter not found in PATH!"
-	exit 1
-    fi
-    exit_if_not_php_function_exists pg_connect "Error: missing 'pgsql' PHP extension!"
-    exit_if_not_php_function_exists json_encode "Error: missing 'json' PHP extension!"
-    exit_if_not_php_function_exists simplexml_load_file "Error: missing 'SimpleXML' PHP extension!"
-    exit_if_not_php_function_exists gettext "Error: missing 'gettext' PHP extension!"
-    exit_if_not_php_function_exists pcntl_fork "Error: missing 'pcntl' PHP extension!"
-    exit_if_not_php_function_exists posix_kill "Error: missing 'posix' PHP extension!"
-    exit_if_not_php_function_exists curl_init "Error: missing 'curl' PHP extension!"
-}
-
-function check_tcp_port {
-    local P=$1
-    if which netstat > /dev/null 2>&1; then
-	netstat -tnl | grep ":$P[[:space:]]" > /dev/null 2>&1
-    elif which ss > /dev/null 2>&1; then
-	ss -tnl | grep ":$P[[:space:]]" > /dev/null 2>&1
-    else
-	# The port cannot be checked so assume it is not already opened...
-	false
-    fi
-}
-
-function check_ports {
-    check_tcp_port "$PORT"
-    if [ $? -eq 0 ]; then
-	echo "Error: te_request_server's TCP port $PORT is already in use!"
-	exit 1
-    fi
-    if [ "$TE_OOO_SERVER_ENABLED" = "yes" ]; then
-	check_tcp_port "$TE_OOO_SERVER_PORT"
-	if [ $? -eq 0 ]; then
-	    echo "Error: OpenOffice's TCP port $TE_OOO_SERVER_PORT is already in use!"
-	    exit 1
-	fi
-    fi
-    if [ "$TE_TIKA_SERVER_ENABLED" = "yes" ]; then
-	check_tcp_port "$TE_TIKA_SERVER_PORT"
-	if [ $? -eq 0 ]; then
-	    echo "Error: Tika's TCP port $TE_TIKA_SERVER_PORT is already in use!"
-	    exit 1
-	fi
-    fi
-}
-
-function te_ooo_productkey {
-    local SOFFICE_DIR
-    SOFFICE_DIR=$(dirname "$TE_OOO_SERVER_SOFFICE")
-    local BOOTSTRAPRC
-    BOOTSTRAPRC="$SOFFICE_DIR/bootstraprc"
-    if [ -f "$BOOTSTRAPRC" ]; then
-	sed -n -e 's/^[[:space:]]*ProductKey[[:space:]]*=[[:space:]]*//p' "$BOOTSTRAPRC" 2> /dev/null | head -1
-    else
-	echo ""
-    fi
+    exit $?
 }
 
 function _service {
@@ -278,6 +133,7 @@ function _service {
 	    PID=$(cat "$SERVICE_PID_FILE")
 	    kill -TERM "$PID" 1> /dev/null 2>&1
 	    RET=$?
+	    rm -f "${SERVICE_PID_FILE}" > /dev/null 2>&1
 	    echo "$PID"
 	    return $RET
 	    ;;
@@ -296,193 +152,148 @@ function _service {
 }
 
 function start {
-    local RET=0
-    check_ports
-    TE_START=$"Starting ${NAME} service: "
-	
-    # Start OOO
-    if [ "$TE_OOO_SERVER_ENABLED" = "yes" ] && [ ! -f "$TE_OOO_PID" ]; then
-        _service start "OOO server ($TE_OOO_PRODUCTKEY)" "te-ooo-server" "$TE_OOO_PID"
-	RET=$(($RET||$?))
+    if [ $# -le 0 ]; then
+	set \
+	    te-ooo-server \
+	    te-tika-server \
+	    te-request-server \
+	    te-rendering-server \
+	    ;
     fi
 
-    # Start Tika
-    if [ "$TE_TIKA_SERVER_ENABLED" = "yes" ] && [ ! -f "$TE_TIKA_PID" ]; then
-	_service start "Tika server" "te-tika-server" "$TE_TIKA_PID"
-	RET=$(($RET||$?))
-    fi
+    local GLOBAL_STATUS=0
+    local SERVICE_NAME=""
+    for SERVICE_NAME in "$@"; do
+	case "${SERVICE_NAME}" in
+	    te-request-server)
+		te_request_server start
+		;;
+	    te-rendering-server)
+		te_rendering_server start
+		;;
+	    te-tika-server)
+		te_tika_server start
+		;;
+	    te-ooo-server)
+		te_ooo_server start
+		;;
+	    *)
+		echo "Unknown service name '${SERVICE_NAME}'!"
+		GLOBAL_STATUS=1
+		;;
+	esac
+	if [ $? -ne 0 ]; then
+	    GLOBAL_STATUS=1
+	fi
+    done
 
-    # Start REQUEST
-    if [ ! -f "$TE_REQUEST_PID" ]; then
-	_service start "te_request_server" "te-request-server" "$TE_REQUEST_PID"
-	RET=$(($RET||$?))
-    fi
-
-    # Start RENDERING
-    if [ ! -f "$TE_RENDERING_PID" ]; then
-	_service start "te_rendering_server" "te-rendering-server" "$TE_RENDERING_PID"
-	RET=$(($RET||$?))
-    fi
-
-    # if [ "$TE_OOO_SERVER_ENABLED" = "yes" && -f "$TE_OOO_PID" ] && [ -f "$TE_REQUEST_PID" ] && [ -f "$TE_RENDERING_PID" ]
-    if [ $RET -eq 0 ]; then
-	log_success_msg "$TE_START" "OK"
+    if [ $GLOBAL_STATUS -eq 0 ]; then
+	log_success_msg "Starting ${NAME} service: " "OK"
 	echo
     else
-	log_failure_msg "$TE_START" "FAILED"
+	log_failure_msg "Starting ${NAME} service: " "FAILED"
 	echo
-	script_result=1
-    fi    
+	return 1
+    fi
 }
 
 function stop {
-    local RET=0
-    TE_STOP=$"Stopping ${NAME} service: "
-
-    # Stop REQUEST
-    if [ -f $TE_REQUEST_PID ]; then
-	_service stop "te_request_server" "te-request-server" "$TE_REQUEST_PID"
-	RET=$(($RET||$?))
-    else
-    	echo "request server not running"
-    fi
- 
-    # Stop RENDERING
-    if [ -f $TE_RENDERING_PID ]; then
-	_service stop "te_rendering_server" "te-rendering-server" "$TE_RENDERING_PID"
-	RET=$(($RET||$?))
-    else
-    	echo "rendering server not running"
+    if [ $# -le 0 ]; then
+	set \
+	    te-request-server \
+	    te-rendering-server \
+	    te-tika-server \
+	    te-ooo-server \
+	    ;
     fi
 
-    # Stop Tika
-    if [ "$TE_TIKA_SERVER_ENABLED" = "yes" ]; then
-	if [ -f $TE_TIKA_PID ]; then
-	    _service stop "Tika server" "te-tika-server" "$TE_TIKA_PID"
-	    RET=$(($RET||$?))
-	else
-	    echo "Tika server not running"
+    local GLOBAL_STATUS=0
+    local SERVICE_NAME=""
+    for SERVICE_NAME in "$@"; do
+	case "${SERVICE_NAME}" in
+	    te-request-server)
+		te_request_server stop
+		;;
+	    te-rendering-server)
+		te_rendering_server stop
+		;;
+	    te-tika-server)
+		te_tika_server stop
+		;;
+	    te-ooo-server)
+		te_ooo_server stop
+		;;
+	    *)
+		echo "Unknown service name '${SERVICE_NAME}'!"
+		GLOBAL_STATUS=1
+		;;
+	esac
+	if [ $? -ne 0 ]; then
+	    GLOBAL_STATUS=1
 	fi
-    fi
+    done
 
-    # Stop OOO
-    if [ "$TE_OOO_SERVER_ENABLED" = "yes" ]; then
-	if [ -f $TE_OOO_PID ]
-	then
-	    _service stop "OOO server ($TE_OOO_PRODUCTKEY)" "te-ooo-server" "$TE_OOO_PID"
-	    RET=$(($RET||$?))
-	else
-	    echo "ooo server not running"
-	fi
-    fi
-
-    if [ $RET -eq 0 ]; then
-	log_success_msg "$TE_STOP" "OK"
+    if [ $GLOBAL_STATUS -eq 0 ]; then
+	log_success_msg "Stopping ${NAME} service: " "OK"
+	echo
     else
-	log_failure_msg "$TE_STOP" "FAILED"
-	script_result=1
+	log_failure_msg "Stopping ${NAME} service: " "FAILED"
+	echo
     fi
-    echo
-    rm -f "$TE_REQUEST_PID"
-    rm -f "$TE_RENDERING_PID"
-    if [ "$TE_TIKA_SERVER_ENABLED" = "yes" ]; then
-	rm -f "$TE_TIKA_PID"
-    fi
-    if [ "$TE_OOO_SERVER_ENABLED" = "yes" ]; then
-	rm -f "$TE_OOO_PID"
-    fi
+
     sleep 3
+
+    return $GLOBAL_STATUS
 }
 
 function restart  {
-    stop
-    start
+    stop "$@"
+    start "$@"
 }
 
 function status2 {
+    if [ $# -le 0 ]; then
+	set \
+	    te-request-server \
+	    te-rendering-server \
+	    te-tika-server \
+	    te-ooo-server \
+	    ;
+    fi
+
     local PID
-
-    if [ -f $TE_REQUEST_PID ]; then
-	PID=$(_service status "$TE_REQUEST_PID")
-	if [ $? -eq 0 ]; then
-	    echo "Request server running ($PID)"
-	else
-	    echo "Request server is down"
-	    script_result=1
+    local GLOBAL_STATUS=0
+    local SERVICE_NAME=""
+    for SERVICE_NAME in "$@"; do
+	case "${SERVICE_NAME}" in
+	    te-request-server)
+		te_request_server status
+		;;
+	    te-rendering-server)
+		te_rendering_server status
+		;;
+	    te-tika-server)
+		te_tika_server status
+		;;
+	    te-ooo-server)
+		te_ooo_server status
+		;;
+	    *)
+		echo "Unknown service name '${SERVICE_NAME}'!"
+		GLOBAL_STATUS=1
+		;;
+	esac
+	if [ $? -ne 0 ]; then
+	    GLOBAL_STATUS=1
 	fi
-    fi
-    if [ -f $TE_RENDERING_PID ]; then
-	PID=$(_service status "$TE_RENDERING_PID")
-	if [ $? -eq 0 ]; then
-	    echo "Rendering server running ($PID)"
-	else
-	    echo "Rendering server is down"
-	    script_result=1
-	fi
-    fi
-    if [ "$TE_TIKA_SERVER_ENABLED" = "yes" ] && [ -f $TE_TIKA_PID ]; then
-	PID=$(_service status "$TE_TIKA_PID")
-	if [ $? -eq 0 ]; then
-	    echo "Tika server running ($PID)"
-	else
-	    echo "Tika server is down"
-	    script_result=1
-	fi
-    fi
-    if [ "$TE_OOO_SERVER_ENABLED" = "yes" ] && [ -f $TE_OOO_PID ]; then
-	PID=$(_service status "$TE_OOO_PID")
-	if [ $? -eq 0 ]; then
-	    echo "OOO server ($TE_OOO_PRODUCTKEY) running ($PID)"
-	else
-	    echo "OOO server ($TE_OOO_PRODUCTKEY) is down"
-	    script_result=1
-	fi
-    fi
-    return $script_result
+    done
+    return $GLOBAL_STATUS
 }
 
-function init {
-    TE_INIT=$"Initializing ${NAME} service: "
-    if  [ ! -d "$TE_HOME/" ]
-	then
-	echo "Transformation Engine not installed in $TE_HOME"
-	log_failure_msg "$TE_INIT" "FAILED"
-	script_result=1
-	exit 1;
-    fi
-    "$TE_HOME/bin/te_server_init"  --db="$DB" 
-    ret=$?
-    if [ $ret -eq 0 ]; then
-	log_success_msg "$TE_INIT""OK"
-	echo
-    else
-	if [ $ret -eq 1 ]; then
-	    echo
-	    echo -n  "Database already created"
-	    log_warning_msg "$TE_INIT" "WARNING"
-	    echo
-	else
-	    log_failure_msg "$TE_INIT" "FAILED"
-	    echo
-	    script_result=1
-	    return 1
-	fi
-    fi
-}
-
-function check {
-    "${TE_HOME}/bin/runas.php" "$TE_SERVER_USER" "${TE_HOME}/lib/engines/engines-check.sh"
-    script_result=$?
-}
-
-function cleantmpfiles {
-    local DEADLINE="7"
-    if [[ -n $1 && $1 =~ ^[0-9][0-9]*$ ]]; then
-	DEADLINE=$1
-    fi
-    if [ -d "$TE_WORK_DIR" ]; then
-	find "$TE_WORK_DIR" -maxdepth 1 -type d -name "te-task-*" -mtime "+$DEADLINE" -print0 | xargs -0 --no-run-if-empty rm -r
-    fi
+function exec_respawn {
+    local COMMAND_NAME=$1
+    shift
+    exec "${TE_HOME}/bin/respawn" -n "${COMMAND_NAME}" "$@"
 }
 
 function run {
@@ -494,24 +305,24 @@ function run {
     exec 2>&1
     case "$1" in
 	    te-tika-server)
-		    exec java -jar "$TE_TIKA_SERVER_JAR" --host="$TE_TIKA_SERVER_HOST" --port="$TE_TIKA_SERVER_PORT"
+		    exec_respawn "$1" java -jar "$TE_TIKA_SERVER_JAR" --host="$TE_TIKA_SERVER_HOST" --port="$TE_TIKA_SERVER_PORT"
 		    ;;
 	    te-ooo-server)
 		    case "$TE_OOO_PRODUCTKEY" in
 			OpenOffice*)
-			    exec "$TE_OOO_SERVER_SOFFICE" -headless -invisible -nofirststartwizard -accept="socket,host=$TE_OOO_SERVER_HOST,port=$TE_OOO_SERVER_PORT;urp;"
+			    exec_respawn "$1" "$TE_OOO_SERVER_SOFFICE" -headless -invisible -nofirststartwizard -accept="socket,host=$TE_OOO_SERVER_HOST,port=$TE_OOO_SERVER_PORT;urp;"
 			    ;;
 			*)
-			    exec "$TE_OOO_SERVER_SOFFICE" --headless --invisible --nofirststartwizard --accept="socket,host=$TE_OOO_SERVER_HOST,port=$TE_OOO_SERVER_PORT;urp;"
+			    exec_respawn "$1" "$TE_OOO_SERVER_SOFFICE" --headless --invisible --nofirststartwizard --accept="socket,host=$TE_OOO_SERVER_HOST,port=$TE_OOO_SERVER_PORT;urp;"
 			    ;;
 		    esac
 		    exit 1
 		    ;;
 	    te-request-server)
-		    exec "$TE_HOME/bin/te_request_server" --port="$PORT" --laddr="$LISTEN_ADDRESS" --db="$DB" --maxclient="$REQUEST_MAX_CLIENT" --work-directory="$TE_WORK_DIR"
+		    exec_respawn "$1" "$TE_HOME/bin/te_request_server" --port="$PORT" --laddr="$LISTEN_ADDRESS" --db="$DB" --maxclient="$REQUEST_MAX_CLIENT" --work-directory="$TE_WORK_DIR"
 		    ;;
 	    te-rendering-server)
-		    exec "$TE_HOME/bin/te_rendering_server" --db="$DB" --maxclient="$RENDERING_MAX_CLIENT" --work-directory="$TE_WORK_DIR" --loginfile="$TE_HOME/etc/te.conf" --purge-days="$PURGE_DAYS" --purge-interval="$PURGE_INTERVAL"
+		    exec_respawn "$1" "$TE_HOME/bin/te_rendering_server" --db="$DB" --maxclient="$RENDERING_MAX_CLIENT" --work-directory="$TE_WORK_DIR" --loginfile="$TE_HOME/etc/te.conf" --purge-days="$PURGE_DAYS" --purge-interval="$PURGE_INTERVAL"
 		    ;;
 	    *)
 		    echo "Unknown run command '$1'."
